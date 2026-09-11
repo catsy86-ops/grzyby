@@ -29,6 +29,9 @@ export interface Photo {
   id?: number
   findingId: number
   blob: Blob
+  // Skompresowana miniatura (max 200px, JPEG) do szybkiego wyświetlania w listach/mapie
+  // bez ładowania pełnego zdjęcia.
+  thumbnailBlob: Blob
 }
 
 export interface Trip {

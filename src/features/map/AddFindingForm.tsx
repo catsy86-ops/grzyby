@@ -3,6 +3,7 @@ import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
+import { createThumbnail } from '../../utils/imageUtils'
 
 interface AddFindingFormProps {
   initialPosition: [number, number] | null
@@ -31,7 +32,8 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
         tripId: activeTripId ?? undefined,
       })
       if (photo) {
-        await db.photos.add({ findingId, blob: photo })
+        const thumbnailBlob = await createThumbnail(photo)
+        await db.photos.add({ findingId, blob: photo, thumbnailBlob })
       }
       onClose(true)
     } finally {

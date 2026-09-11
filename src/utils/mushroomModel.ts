@@ -36,6 +36,22 @@ export async function isModelAvailable(): Promise<boolean> {
   }
 }
 
+// Czysta funkcja (bez zależności od TFJS/canvasu), żeby dało się ją przetestować w izolacji.
+export function rankPredictions(scores: ArrayLike<number>, topN = 3): Prediction[] {
+  return Array.from(scores)
+    .map((confidence, index) => {
+      const speciesId = CLASS_LABELS[index]
+      const species = (speciesData as Species[]).find((s) => s.id === speciesId) ?? null
+      return {
+        species,
+        labelRaw: speciesId ?? `klasa-${index}`,
+        confidence,
+      }
+    })
+    .sort((a, b) => b.confidence - a.confidence)
+    .slice(0, topN)
+}
+
 export async function identifyMushroom(imageElement: HTMLImageElement): Promise<Prediction[]> {
   const tf = await import('@tensorflow/tfjs')
   const model = await loadModel()
@@ -53,18 +69,5 @@ export async function identifyMushroom(imageElement: HTMLImageElement): Promise<
   const scores = await predictions.data()
   predictions.dispose()
 
-  const results: Prediction[] = Array.from(scores as Float32Array)
-    .map((confidence, index) => {
-      const speciesId = CLASS_LABELS[index]
-      const species = (speciesData as Species[]).find((s) => s.id === speciesId) ?? null
-      return {
-        species,
-        labelRaw: speciesId ?? `klasa-${index}`,
-        confidence,
-      }
-    })
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, 3)
-
-  return results
+  return rankPredictions(scores as Float32Array)
 }

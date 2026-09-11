@@ -1,5 +1,6 @@
 import { db } from '../db/db'
 import type { Finding, Trip } from '../db/schema'
+import { createThumbnail } from './imageUtils'
 
 interface ExportPayload {
   exportedAt: string
@@ -53,12 +54,14 @@ export async function importData(file: File): Promise<{ findingsImported: number
   const text = await file.text()
   const payload = JSON.parse(text) as ExportPayload
 
-  // Zdekodowanie zdjęć (fetch na data: URI) musi zajść PRZED transakcją Dexie:
+  // Zdekodowanie zdjęć i wygenerowanie miniatur musi zajść PRZED transakcją Dexie:
   // operacje asynchroniczne spoza API Dexie w środku transakcji przedwcześnie ją zamykają.
-  const decodedPhotosByOldFindingId = new Map<number, Blob>()
+  const decodedPhotosByOldFindingId = new Map<number, { blob: Blob; thumbnailBlob: Blob }>()
   await Promise.all(
     Object.entries(payload.photosByFindingId ?? {}).map(async ([oldFindingId, base64]) => {
-      decodedPhotosByOldFindingId.set(Number(oldFindingId), await base64ToBlob(base64))
+      const blob = await base64ToBlob(base64)
+      const thumbnailBlob = await createThumbnail(blob)
+      decodedPhotosByOldFindingId.set(Number(oldFindingId), { blob, thumbnailBlob })
     }),
   )
 
@@ -77,9 +80,9 @@ export async function importData(file: File): Promise<{ findingsImported: number
         tripId: tripId != null ? tripIdMap.get(tripId) : undefined,
       })
 
-      const photoBlob = oldFindingId != null ? decodedPhotosByOldFindingId.get(oldFindingId) : undefined
-      if (photoBlob) {
-        await db.photos.add({ findingId: newFindingId, blob: photoBlob })
+      const photo = oldFindingId != null ? decodedPhotosByOldFindingId.get(oldFindingId) : undefined
+      if (photo) {
+        await db.photos.add({ findingId: newFindingId, blob: photo.blob, thumbnailBlob: photo.thumbnailBlob })
       }
     }
   })

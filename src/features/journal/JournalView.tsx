@@ -5,6 +5,7 @@ import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { downloadBlob, exportData, importData } from '../../utils/exportImport'
+import { FindingThumbnail } from './FindingThumbnail'
 import { TripManager } from './TripManager'
 import { TripsHistory } from './TripsHistory'
 
@@ -55,7 +56,10 @@ export function JournalView() {
   }
 
   async function handleDelete(id: number) {
-    await db.findings.delete(id)
+    await db.transaction('rw', db.findings, db.photos, async () => {
+      await db.photos.where('findingId').equals(id).delete()
+      await db.findings.delete(id)
+    })
   }
 
   return (
@@ -105,26 +109,29 @@ export function JournalView() {
 
       <div className="flex flex-col gap-3">
         {filteredFindings?.map((finding) => (
-          <div key={finding.id} className="flex items-start justify-between rounded border border-gray-200 p-3">
-            <div>
-              <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
-              <p className="text-xs text-gray-500">
-                {new Date(finding.createdAt).toLocaleString('pl-PL')}
-                {finding.latitude != null && finding.longitude != null && (
-                  <>
-                    {' '}
-                    · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
-                  </>
-                )}
-              </p>
-              {finding.notes && <p className="mt-1 text-sm text-gray-700">{finding.notes}</p>}
+          <div key={finding.id} className="flex items-start gap-3 rounded border border-gray-200 p-3">
+            {finding.id != null && <FindingThumbnail findingId={finding.id} />}
+            <div className="flex flex-1 items-start justify-between">
+              <div>
+                <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+                <p className="text-xs text-gray-500">
+                  {new Date(finding.createdAt).toLocaleString('pl-PL')}
+                  {finding.latitude != null && finding.longitude != null && (
+                    <>
+                      {' '}
+                      · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
+                    </>
+                  )}
+                </p>
+                {finding.notes && <p className="mt-1 text-sm text-gray-700">{finding.notes}</p>}
+              </div>
+              <button
+                onClick={() => finding.id != null && handleDelete(finding.id)}
+                className="text-xs text-red-600 hover:underline"
+              >
+                Usuń
+              </button>
             </div>
-            <button
-              onClick={() => finding.id != null && handleDelete(finding.id)}
-              className="text-xs text-red-600 hover:underline"
-            >
-              Usuń
-            </button>
           </div>
         ))}
         {filteredFindings?.length === 0 && (
