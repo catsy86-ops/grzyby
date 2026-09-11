@@ -6,7 +6,7 @@ import { useAppStore } from '../../stores/appStore'
 
 interface AddFindingFormProps {
   initialPosition: [number, number] | null
-  onClose: () => void
+  onClose: (saved: boolean) => void
 }
 
 export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps) {
@@ -21,17 +21,19 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
     setSaving(true)
     const species = (speciesData as Species[]).find((s) => s.id === speciesId) ?? null
     try {
-      await db.findings.add({
+      const findingId = await db.findings.add({
         speciesId: species?.id ?? null,
         speciesNameGuess: species?.nameCommon ?? null,
-        photoBlob: photo ?? null,
         latitude: initialPosition?.[0] ?? null,
         longitude: initialPosition?.[1] ?? null,
         notes,
         createdAt: Date.now(),
         tripId: activeTripId ?? undefined,
       })
-      onClose()
+      if (photo) {
+        await db.photos.add({ findingId, blob: photo })
+      }
+      onClose(true)
     } finally {
       setSaving(false)
     }
@@ -91,7 +93,7 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
         <div className="flex justify-end gap-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onClose(false)}
             className="rounded px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
           >
             Anuluj

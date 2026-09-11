@@ -14,6 +14,13 @@ export function IdentifyView() {
     isModelAvailable().then(setModelReady)
   }, [])
 
+  // Sprząta poprzedni object URL przy każdej nowej selekcji zdjęcia i przy odmontowaniu komponentu.
+  useEffect(() => {
+    return () => {
+      if (imageUrl) URL.revokeObjectURL(imageUrl)
+    }
+  }, [imageUrl])
+
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return

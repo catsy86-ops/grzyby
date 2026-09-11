@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
 import L from 'leaflet'
 import { db } from '../../db/db'
@@ -19,6 +19,16 @@ const defaultIcon = L.icon({
   popupAnchor: [1, -34],
 })
 
+const pinIcon = L.icon({
+  iconUrl,
+  iconRetinaUrl,
+  shadowUrl,
+  iconSize: [30, 49],
+  iconAnchor: [15, 49],
+  popupAnchor: [1, -40],
+  className: 'hue-rotate-90', // wizualnie odróżnia wybrany pinezkę od pozycji użytkownika
+})
+
 const DEFAULT_CENTER: [number, number] = [52.0693, 19.4803] // środek Polski
 
 function RecenterOnLocate({ position }: { position: [number, number] | null }) {
@@ -31,8 +41,23 @@ function RecenterOnLocate({ position }: { position: [number, number] | null }) {
   return null
 }
 
+function MapClickHandler({
+  enabled,
+  onPick,
+}: {
+  enabled: boolean
+  onPick: (position: [number, number]) => void
+}) {
+  useMapEvent('click', (event) => {
+    if (!enabled) return
+    onPick([event.latlng.lat, event.latlng.lng])
+  })
+  return null
+}
+
 export function MapView() {
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null)
+  const [pinPosition, setPinPosition] = useState<[number, number] | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [locateError, setLocateError] = useState<string | null>(null)
 
@@ -52,6 +77,8 @@ export function MapView() {
     handleLocate()
   }, [])
 
+  const findingPosition = pinPosition ?? userPosition
+
   return (
     <div className="relative h-full w-full">
       <MapContainer center={DEFAULT_CENTER} zoom={6} className="h-full w-full">
@@ -62,9 +89,15 @@ export function MapView() {
           maxZoom={20}
         />
         <RecenterOnLocate position={userPosition} />
+        <MapClickHandler enabled={!showAddForm} onPick={setPinPosition} />
         {userPosition && (
           <Marker position={userPosition} icon={defaultIcon}>
             <Popup>Twoja pozycja</Popup>
+          </Marker>
+        )}
+        {pinPosition && (
+          <Marker position={pinPosition} icon={pinIcon}>
+            <Popup>Wybrane miejsce znaleziska</Popup>
           </Marker>
         )}
         {findings?.map(
@@ -84,9 +117,14 @@ export function MapView() {
         )}
       </MapContainer>
 
-      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
+      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col items-end gap-2">
         {locateError && (
           <p className="max-w-56 rounded bg-red-100 p-2 text-xs text-red-800 shadow">{locateError}</p>
+        )}
+        {!pinPosition && (
+          <p className="max-w-56 rounded bg-white/90 p-2 text-xs text-gray-600 shadow">
+            Stuknij na mapie, aby wybrać dokładne miejsce znaleziska (domyślnie Twoja pozycja)
+          </p>
         )}
         <button
           onClick={handleLocate}
@@ -98,14 +136,17 @@ export function MapView() {
           onClick={() => setShowAddForm(true)}
           className="rounded-full bg-green-800 px-4 py-2 text-sm font-medium text-white shadow hover:bg-green-900"
         >
-          + Dodaj znalezisko tutaj
+          + Dodaj znalezisko
         </button>
       </div>
 
       {showAddForm && (
         <AddFindingForm
-          initialPosition={userPosition}
-          onClose={() => setShowAddForm(false)}
+          initialPosition={findingPosition}
+          onClose={(saved) => {
+            setShowAddForm(false)
+            if (saved) setPinPosition(null)
+          }}
         />
       )}
     </div>

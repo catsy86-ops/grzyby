@@ -16,12 +16,19 @@ export interface Finding {
   id?: number
   speciesId: string | null
   speciesNameGuess: string | null
-  photoBlob: Blob | null
   latitude: number | null
   longitude: number | null
   notes: string
   createdAt: number
   tripId?: number
+}
+
+// Zdjęcia trzymane w osobnej tabeli, żeby listy/mapa (findings.toArray()) nie musiały
+// odczytywać dużych blobów tylko po to, by wyświetlić znaczniki czy tekst.
+export interface Photo {
+  id?: number
+  findingId: number
+  blob: Blob
 }
 
 export interface Trip {
