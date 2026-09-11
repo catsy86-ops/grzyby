@@ -1,9 +1,8 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
-import { useAppStore } from '../../stores/appStore'
+import { useActiveTrip } from '../../stores/useActiveTrip'
 
 interface AddFindingFormProps {
   initialPosition: [number, number] | null
@@ -15,11 +14,7 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   const [notes, setNotes] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
-  const activeTripId = useAppStore((s) => s.activeTripId)
-  const activeTrip = useLiveQuery(
-    () => (activeTripId != null ? db.trips.get(activeTripId) : undefined),
-    [activeTripId],
-  )
+  const { activeTripId, activeTrip } = useActiveTrip()
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()

@@ -2,17 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
+import { useActiveTrip } from '../../stores/useActiveTrip'
 
 export function TripManager() {
-  const activeTripId = useAppStore((s) => s.activeTripId)
+  const { activeTripId, activeTrip } = useActiveTrip()
   const setActiveTripId = useAppStore((s) => s.setActiveTripId)
   const [newTripName, setNewTripName] = useState('')
   const [showNewTripInput, setShowNewTripInput] = useState(false)
 
-  const activeTrip = useLiveQuery(
-    () => (activeTripId != null ? db.trips.get(activeTripId) : undefined),
-    [activeTripId],
-  )
   const activeTripFindingCount = useLiveQuery(
     () => (activeTripId != null ? db.findings.where('tripId').equals(activeTripId).count() : 0),
     [activeTripId],
