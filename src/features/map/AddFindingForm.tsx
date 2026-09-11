@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
@@ -15,6 +16,10 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   const [photo, setPhoto] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const activeTripId = useAppStore((s) => s.activeTripId)
+  const activeTrip = useLiveQuery(
+    () => (activeTripId != null ? db.trips.get(activeTripId) : undefined),
+    [activeTripId],
+  )
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -45,7 +50,10 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
         onSubmit={handleSubmit}
         className="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-lg sm:rounded-2xl"
       >
-        <h2 className="mb-3 text-lg font-semibold">Nowe znalezisko</h2>
+        <h2 className="mb-1 text-lg font-semibold">Nowe znalezisko</h2>
+        {activeTrip && (
+          <p className="mb-3 text-xs text-green-700">🥾 Zostanie dodane do wyprawy: {activeTrip.name}</p>
+        )}
 
         <label className="mb-3 block text-sm">
           Gatunek (opcjonalnie)

@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import L from 'leaflet'
 import { db } from '../../db/db'
 import { getCurrentPosition } from '../../utils/geolocation'
+import { useAppStore } from '../../stores/appStore'
 import { AddFindingForm } from './AddFindingForm'
 
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
@@ -62,6 +63,11 @@ export function MapView() {
   const [locateError, setLocateError] = useState<string | null>(null)
 
   const findings = useLiveQuery(() => db.findings.toArray(), [])
+  const activeTripId = useAppStore((s) => s.activeTripId)
+  const activeTrip = useLiveQuery(
+    () => (activeTripId != null ? db.trips.get(activeTripId) : undefined),
+    [activeTripId],
+  )
 
   async function handleLocate() {
     setLocateError(null)
@@ -116,6 +122,12 @@ export function MapView() {
             ),
         )}
       </MapContainer>
+
+      {activeTrip && (
+        <div className="absolute left-4 top-4 z-[1000] rounded-full bg-green-800/90 px-3 py-1.5 text-xs font-medium text-white shadow">
+          🥾 Aktywna wyprawa: {activeTrip.name}
+        </div>
+      )}
 
       <div className="absolute bottom-4 right-4 z-[1000] flex flex-col items-end gap-2">
         {locateError && (

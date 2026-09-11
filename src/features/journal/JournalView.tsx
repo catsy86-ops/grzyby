@@ -5,22 +5,34 @@ import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { downloadBlob, exportData, importData } from '../../utils/exportImport'
+import { TripManager } from './TripManager'
+import { TripsHistory } from './TripsHistory'
+
+type TripFilter = number | 'wszystkie' | 'bez-wyprawy'
 
 export function JournalView() {
   const findings = useLiveQuery(() => db.findings.orderBy('createdAt').reverse().toArray(), [])
   const [importMessage, setImportMessage] = useState<string | null>(null)
+  const [tripFilter, setTripFilter] = useState<TripFilter>('wszystkie')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const filteredFindings = useMemo(() => {
+    if (!findings) return findings
+    if (tripFilter === 'wszystkie') return findings
+    if (tripFilter === 'bez-wyprawy') return findings.filter((f) => f.tripId == null)
+    return findings.filter((f) => f.tripId === tripFilter)
+  }, [findings, tripFilter])
+
   const chartData = useMemo(() => {
-    if (!findings) return []
+    if (!filteredFindings) return []
     const counts = new Map<string, number>()
-    for (const finding of findings) {
+    for (const finding of filteredFindings) {
       const species = (speciesData as Species[]).find((s) => s.id === finding.speciesId)
       const label = species?.nameCommon ?? 'Nieokreślony'
       counts.set(label, (counts.get(label) ?? 0) + 1)
     }
     return Array.from(counts.entries()).map(([name, count]) => ({ name, count }))
-  }, [findings])
+  }, [filteredFindings])
 
   async function handleExport() {
     const blob = await exportData()
@@ -75,6 +87,9 @@ export function JournalView() {
 
       {importMessage && <p className="rounded bg-blue-50 p-2 text-xs text-blue-800">{importMessage}</p>}
 
+      <TripManager />
+      <TripsHistory selectedTripId={tripFilter} onSelectTrip={setTripFilter} />
+
       {chartData.length > 0 && (
         <div className="h-56 rounded border border-gray-200 p-2">
           <ResponsiveContainer width="100%" height="100%">
@@ -89,7 +104,7 @@ export function JournalView() {
       )}
 
       <div className="flex flex-col gap-3">
-        {findings?.map((finding) => (
+        {filteredFindings?.map((finding) => (
           <div key={finding.id} className="flex items-start justify-between rounded border border-gray-200 p-3">
             <div>
               <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
@@ -112,8 +127,8 @@ export function JournalView() {
             </button>
           </div>
         ))}
-        {findings?.length === 0 && (
-          <p className="text-sm text-gray-500">Brak zapisanych znalezisk. Dodaj pierwsze na mapie.</p>
+        {filteredFindings?.length === 0 && (
+          <p className="text-sm text-gray-500">Brak zapisanych znalezisk dla wybranego filtru.</p>
         )}
       </div>
     </div>
