@@ -31,10 +31,10 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/[abcd]\.basemaps\.cartocdn\.com\/.*/i,
+            urlPattern: /^https:\/\/maps\.wikimedia\.org\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'carto-tiles',
+              cacheName: 'map-tiles',
               expiration: {
                 maxEntries: 4000,
                 maxAgeSeconds: 60 * 60 * 24 * 90,
