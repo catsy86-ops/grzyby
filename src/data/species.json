@@ -1,0 +1,68 @@
+[
+  {
+    "id": "borowik-szlachetny",
+    "nameCommon": "Borowik szlachetny",
+    "nameLatin": "Boletus edulis",
+    "edibility": "jadalny",
+    "description": "Jeden z najcenniejszych grzybów jadalnych. Kapelusz brązowy, lekko lśniący, rurki białe do żółtozielonych, trzon beczułkowaty z białym siateczkowaniem u góry.",
+    "habitat": "Lasy liściaste i iglaste, zwłaszcza pod dębami, bukami i świerkami",
+    "season": "Czerwiec - październik",
+    "lookalikes": ["borowik-szatanski", "goryczak-zolciowy"],
+    "imageUrls": []
+  },
+  {
+    "id": "goryczak-zolciowy",
+    "nameCommon": "Goryczak żółciowy",
+    "nameLatin": "Tylopilus felleus",
+    "edibility": "niejadalny",
+    "description": "Niejadalny z powodu bardzo gorzkiego smaku (nie jest trujący, ale psuje potrawę). Podobny do borowika, ale rurki różowieją, a trzon ma ciemną siateczkę.",
+    "habitat": "Lasy iglaste, zwłaszcza przy pniach sosen i świerków",
+    "season": "Czerwiec - październik",
+    "lookalikes": ["borowik-szlachetny"],
+    "imageUrls": []
+  },
+  {
+    "id": "muchomor-sromotnikowy",
+    "nameCommon": "Muchomor sromotnikowy",
+    "nameLatin": "Amanita phalloides",
+    "edibility": "śmiertelnie-trujący",
+    "description": "Odpowiada za większość śmiertelnych zatruć grzybami w Europie. Posiada pochwę u nasady trzonu (wolwę), pierścień na trzonie i białe blaszki. Objawy zatrucia pojawiają się dopiero po 6-24h, gdy toksyny już uszkodziły wątrobę.",
+    "habitat": "Lasy liściaste, zwłaszcza pod dębami i bukami",
+    "season": "Lipiec - październik",
+    "lookalikes": ["czubajka-kania", "gaska-zielonka"],
+    "imageUrls": []
+  },
+  {
+    "id": "czubajka-kania",
+    "nameCommon": "Czubajka kania",
+    "nameLatin": "Macrolepiota procera",
+    "edibility": "jadalny",
+    "description": "Duży grzyb z wyraźną, ruchomą obrączką na trzonie i łuskowatym kapeluszem. WAŻNE: zawsze sprawdzać brak wolwy (pochwy) u nasady trzonu, by odróżnić od młodych muchomorów.",
+    "habitat": "Skraje lasów, łąki, przydroża",
+    "season": "Lipiec - październik",
+    "lookalikes": ["muchomor-sromotnikowy"],
+    "imageUrls": []
+  },
+  {
+    "id": "maslak-zwyczajny",
+    "nameCommon": "Maślak zwyczajny",
+    "nameLatin": "Suillus luteus",
+    "edibility": "jadalny",
+    "description": "Kapelusz lśniący, śluzowaty w wilgotną pogodę, brązowy. Charakterystyczny pierścień błoniasty na trzonie. Zaleca się zdejmowanie śluzowatej skórki przed spożyciem.",
+    "habitat": "Lasy sosnowe, zwłaszcza młodniki",
+    "season": "Maj - listopad",
+    "lookalikes": [],
+    "imageUrls": []
+  },
+  {
+    "id": "pieprznik-jadalny",
+    "nameCommon": "Pieprznik jadalny (kurka)",
+    "nameLatin": "Cantharellus cibarius",
+    "edibility": "jadalny",
+    "description": "Jaskrawożółty, lejkowaty, o fałdach zamiast blaszek biegnących daleko na trzon. Rzadko zaatakowany przez larwy owadów.",
+    "habitat": "Lasy iglaste i mieszane, mchy",
+    "season": "Czerwiec - listopad",
+    "lookalikes": ["lisowka-pomaranczowa"],
+    "imageUrls": []
+  }
+]
