@@ -1,22 +1,39 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useRef, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { toast } from 'sonner'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
 import { downloadBlob, exportData, importData } from '../../utils/exportImport'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
 import { countSpeciesDiversity, formatDuration } from '../../utils/tripStats'
+import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent } from '../../components/ui/card'
+import { Input } from '../../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import { Textarea } from '../../components/ui/textarea'
+import { NotificationPermissionBanner } from '../../components/NotificationPermissionBanner'
 import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
 import { TripManager } from './TripManager'
 import { TripsHistory } from './TripsHistory'
 
 type TripFilter = number | 'wszystkie' | 'bez-wyprawy'
+const NONE_SPECIES = '__none__'
 
 export function JournalView() {
   const findings = useLiveQuery(() => db.findings.orderBy('createdAt').reverse().toArray(), [])
-  const [importMessage, setImportMessage] = useState<string | null>(null)
   const [tripFilter, setTripFilter] = useState<TripFilter>('wszystkie')
   const [searchQuery, setSearchQuery] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -45,6 +62,11 @@ export function JournalView() {
     }
     return result
   }, [findings, tripFilter, searchQuery])
+
+  const confirmDeleteFinding = useMemo(
+    () => (confirmDeleteId != null ? findings?.find((f) => f.id === confirmDeleteId) : undefined),
+    [findings, confirmDeleteId],
+  )
 
   // Ostrzeżenie, gdy jakiekolwiek spożyte znalezisko zgłosiło ciężką reakcję - pomaga
   // szybko znaleźć powiązane znaleziska zjedzone w tym samym oknie czasowym (zatrucia
@@ -75,11 +97,9 @@ export function JournalView() {
     if (!file) return
     try {
       const result = await importData(file)
-      setImportMessage(
-        `Zaimportowano ${result.findingsImported} znalezisk i ${result.tripsImported} wypraw.`,
-      )
+      toast.success(`Zaimportowano ${result.findingsImported} znalezisk i ${result.tripsImported} wypraw.`)
     } catch (err) {
-      setImportMessage(err instanceof Error ? `Błąd importu: ${err.message}` : 'Błąd importu pliku')
+      toast.error(err instanceof Error ? `Błąd importu: ${err.message}` : 'Błąd importu pliku')
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
@@ -114,18 +134,17 @@ export function JournalView() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Dziennik zbiorów</h1>
         <div className="flex gap-2">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-green-800 text-green-800 hover:bg-green-50"
             onClick={handleExport}
-            className="rounded border border-green-800 px-3 py-1.5 text-xs font-medium text-green-800 hover:bg-green-50"
           >
             Eksportuj
-          </button>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-          >
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
             Importuj
-          </button>
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -136,53 +155,56 @@ export function JournalView() {
         </div>
       </div>
 
-      {importMessage && <p className="rounded bg-blue-50 p-2 text-xs text-blue-800">{importMessage}</p>}
+      <NotificationPermissionBanner />
 
       {severeReactionFindings.length > 0 && (
-        <div className="rounded border border-red-400 bg-red-50 p-3 text-sm text-red-900">
-          <p className="font-semibold">⚠️ Zgłoszono ciężką reakcję po spożyciu</p>
-          <p className="mt-1 text-xs">
-            Jeśli objawy są poważne (wymioty, biegunka, zaburzenia widzenia, żółtaczka), niezwłocznie
-            skontaktuj się z Centrum Ostrych Zatruć lub zadzwoń pod 112. Zabierz ze sobą resztki grzybów
-            i to znalezisko z dziennika jako informację dla lekarza.
-          </p>
-          <ul className="mt-1 list-inside list-disc text-xs">
-            {severeReactionFindings.map((f) => {
-              const overlapping = findOverlappingConsumedFindings(f, findings ?? [])
-              return (
-                <li key={f.id}>
-                  {f.speciesNameGuess ?? 'Nieokreślony gatunek'} —{' '}
-                  {f.consumedAt ? new Date(f.consumedAt).toLocaleString('pl-PL') : ''}
-                  {overlapping.length > 0 && ` (inne zjedzone w tym czasie: ${overlapping.length})`}
-                </li>
-              )
-            })}
-          </ul>
-        </div>
+        <Alert variant="destructive-soft" className="border-red-400">
+          <AlertTitle>⚠️ Zgłoszono ciężką reakcję po spożyciu</AlertTitle>
+          <AlertDescription className="text-current">
+            <p>
+              Jeśli objawy są poważne (wymioty, biegunka, zaburzenia widzenia, żółtaczka), niezwłocznie
+              skontaktuj się z Centrum Ostrych Zatruć lub zadzwoń pod 112. Zabierz ze sobą resztki grzybów
+              i to znalezisko z dziennika jako informację dla lekarza.
+            </p>
+            <ul className="mt-1 list-inside list-disc text-xs">
+              {severeReactionFindings.map((f) => {
+                const overlapping = findOverlappingConsumedFindings(f, findings ?? [])
+                return (
+                  <li key={f.id}>
+                    {f.speciesNameGuess ?? 'Nieokreślony gatunek'} —{' '}
+                    {f.consumedAt ? new Date(f.consumedAt).toLocaleString('pl-PL') : ''}
+                    {overlapping.length > 0 && ` (inne zjedzone w tym czasie: ${overlapping.length})`}
+                  </li>
+                )
+              })}
+            </ul>
+          </AlertDescription>
+        </Alert>
       )}
 
-      <input
+      <Input
         type="search"
         placeholder="Szukaj po gatunku lub notatkach..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="rounded border border-gray-300 p-2 text-sm"
       />
 
       <TripManager />
       <TripsHistory selectedTripId={tripFilter} onSelectTrip={setTripFilter} />
 
       {selectedTrip && filteredFindings && (
-        <div className="rounded border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-          <p className="font-medium">{selectedTrip.name}</p>
-          <p className="mt-1 text-xs text-gray-500">
-            {new Date(selectedTrip.startedAt).toLocaleString('pl-PL')}
-            {selectedTrip.endedAt != null && ` – ${new Date(selectedTrip.endedAt).toLocaleString('pl-PL')}`}
-            {' · '}
-            {formatDuration(selectedTrip.startedAt, selectedTrip.endedAt)} ·{' '}
-            {filteredFindings.length} znalezisk · {countSpeciesDiversity(filteredFindings)} gatunków
-          </p>
-        </div>
+        <Card size="sm" className="bg-muted/50">
+          <CardContent>
+            <p className="text-sm font-medium">{selectedTrip.name}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {new Date(selectedTrip.startedAt).toLocaleString('pl-PL')}
+              {selectedTrip.endedAt != null && ` – ${new Date(selectedTrip.endedAt).toLocaleString('pl-PL')}`}
+              {' · '}
+              {formatDuration(selectedTrip.startedAt, selectedTrip.endedAt)} ·{' '}
+              {filteredFindings.length} znalezisk · {countSpeciesDiversity(filteredFindings)} gatunków
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {chartData.length > 0 && (
@@ -202,86 +224,70 @@ export function JournalView() {
         {filteredFindings?.map((finding) => {
           if (finding.id != null && editingId === finding.id) {
             return (
-              <div key={finding.id} className="flex flex-col gap-2 rounded border border-green-300 p-3">
-                <label className="text-sm">
-                  Gatunek
-                  <select
-                    value={editSpeciesId}
-                    onChange={(e) => setEditSpeciesId(e.target.value)}
-                    className="mt-1 w-full rounded border border-gray-300 p-2"
-                  >
-                    <option value="">-- nieokreślony --</option>
-                    {(speciesData as Species[]).map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nameCommon} ({s.nameLatin})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-sm">
-                  Notatki
-                  <textarea
-                    value={editNotes}
-                    onChange={(e) => setEditNotes(e.target.value)}
-                    className="mt-1 w-full rounded border border-gray-300 p-2"
-                    rows={2}
-                  />
-                </label>
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100"
-                  >
-                    Anuluj
-                  </button>
-                  <button
-                    onClick={() => handleSaveEdit(finding.id!)}
-                    className="rounded bg-green-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-900"
-                  >
-                    Zapisz
-                  </button>
-                </div>
-              </div>
+              <Card key={finding.id} size="sm" className="ring-green-300">
+                <CardContent className="flex flex-col gap-2">
+                  <label className="text-sm">
+                    Gatunek
+                    <Select
+                      value={editSpeciesId || NONE_SPECIES}
+                      onValueChange={(value) => setEditSpeciesId(value == null || value === NONE_SPECIES ? '' : value)}
+                    >
+                      <SelectTrigger className="mt-1 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE_SPECIES}>-- nieokreślony --</SelectItem>
+                        {(speciesData as Species[]).map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.nameCommon} ({s.nameLatin})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </label>
+                  <label className="text-sm">
+                    Notatki
+                    <Textarea
+                      value={editNotes}
+                      onChange={(e) => setEditNotes(e.target.value)}
+                      className="mt-1"
+                      rows={2}
+                    />
+                  </label>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
+                      Anuluj
+                    </Button>
+                    <Button size="sm" onClick={() => handleSaveEdit(finding.id!)}>
+                      Zapisz
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )
           }
 
           return (
-            <div key={finding.id} className="flex items-start gap-3 rounded border border-gray-200 p-3">
-              {finding.id != null && <FindingThumbnail findingId={finding.id} />}
-              <div className="flex flex-1 items-start justify-between">
-                <div>
-                  <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(finding.createdAt).toLocaleString('pl-PL')}
-                    {finding.latitude != null && finding.longitude != null && (
-                      <>
-                        {' '}
-                        · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
-                      </>
-                    )}
-                  </p>
-                  {finding.notes && <p className="mt-1 text-sm text-gray-700">{finding.notes}</p>}
-                  <ConsumptionTracker finding={finding} />
-                </div>
-                {confirmDeleteId === finding.id ? (
-                  <div className="flex shrink-0 items-center gap-2 text-xs">
-                    <span className="text-gray-600">Na pewno?</span>
-                    <button
-                      onClick={() => finding.id != null && handleDelete(finding.id)}
-                      className="font-medium text-red-600 hover:underline"
-                    >
-                      Tak, usuń
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeleteId(null)}
-                      className="text-gray-500 hover:underline"
-                    >
-                      Anuluj
-                    </button>
+            <Card key={finding.id} size="sm">
+              <CardContent className="flex items-start gap-3">
+                {finding.id != null && <FindingThumbnail findingId={finding.id} />}
+                <div className="flex flex-1 items-start justify-between">
+                  <div>
+                    <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(finding.createdAt).toLocaleString('pl-PL')}
+                      {finding.latitude != null && finding.longitude != null && (
+                        <>
+                          {' '}
+                          · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
+                        </>
+                      )}
+                    </p>
+                    {finding.notes && <p className="mt-1 text-sm text-foreground/80">{finding.notes}</p>}
+                    <ConsumptionTracker finding={finding} />
                   </div>
-                ) : (
                   <div className="flex shrink-0 gap-2 text-xs">
-                    <button onClick={() => handleStartEdit(finding)} className="text-gray-600 hover:underline">
+                    <button onClick={() => handleStartEdit(finding)} className="text-muted-foreground hover:underline">
                       Edytuj
                     </button>
                     <button
@@ -291,15 +297,39 @@ export function JournalView() {
                       Usuń
                     </button>
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           )
         })}
         {filteredFindings?.length === 0 && (
           <p className="text-sm text-gray-500">Brak zapisanych znalezisk dla wybranego filtru.</p>
         )}
       </div>
+
+      <AlertDialog
+        open={confirmDeleteId != null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDeleteId(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>Usunąć znalezisko?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {confirmDeleteFinding?.speciesNameGuess ?? 'To znalezisko'} zostanie trwale usunięte razem ze
+            zdjęciem. Tej operacji nie można cofnąć.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => confirmDeleteId != null && handleDelete(confirmDeleteId)}
+            >
+              Tak, usuń
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

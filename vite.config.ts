@@ -1,3 +1,4 @@
+import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
@@ -5,6 +6,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, './src'),
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -15,8 +21,8 @@ export default defineConfig({
         name: 'ŁYSY - dziennik grzybiarza',
         short_name: 'ŁYSY',
         description: 'Mapa, rozpoznawanie i dziennik zbiorów grzybów - działa offline',
-        theme_color: '#2f5233',
-        background_color: '#f5f3ee',
+        theme_color: '#166534',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',

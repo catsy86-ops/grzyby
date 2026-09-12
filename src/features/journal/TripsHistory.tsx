@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
+import { Button } from '../../components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
 
 interface TripsHistoryProps {
   selectedTripId: number | 'wszystkie' | 'bez-wyprawy'
@@ -28,67 +30,62 @@ export function TripsHistory({ selectedTripId, onSelectTrip }: TripsHistoryProps
 
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="text-sm font-semibold text-gray-700">Wyprawy</h2>
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => onSelectTrip('wszystkie')}
-          className={`rounded-full border px-3 py-1 text-xs font-medium ${
-            selectedTripId === 'wszystkie'
-              ? 'border-green-800 bg-green-800 text-white'
-              : 'border-gray-300 text-gray-700'
-          }`}
-        >
+      <h2 className="text-sm font-semibold text-muted-foreground">Wyprawy</h2>
+      <ToggleGroup
+        variant="outline"
+        value={[String(selectedTripId)]}
+        onValueChange={(values) => {
+          const [v] = values
+          if (v == null) return
+          if (v === 'wszystkie' || v === 'bez-wyprawy') onSelectTrip(v)
+          else onSelectTrip(Number(v))
+        }}
+        className="w-full flex-wrap"
+      >
+        <ToggleGroupItem value="wszystkie" className="rounded-full">
           Wszystkie znaleziska
-        </button>
-        <button
-          onClick={() => onSelectTrip('bez-wyprawy')}
-          className={`rounded-full border px-3 py-1 text-xs font-medium ${
-            selectedTripId === 'bez-wyprawy'
-              ? 'border-green-800 bg-green-800 text-white'
-              : 'border-gray-300 text-gray-700'
-          }`}
-        >
+        </ToggleGroupItem>
+        <ToggleGroupItem value="bez-wyprawy" className="rounded-full">
           Bez wyprawy
-        </button>
+        </ToggleGroupItem>
         {trips.map((trip) => {
           // Wyprawa bez daty zakończenia, która nie jest aktywną wyprawą w tej sesji -
           // najczęściej po utracie stanu (zamknięcie appki w lesie) lub imporcie danych.
           const isOrphanedOpen = trip.endedAt == null && trip.id !== activeTripId
           return (
             <div key={trip.id} className="flex items-center gap-1">
-              <button
-                onClick={() => trip.id != null && onSelectTrip(trip.id)}
-                className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                  selectedTripId === trip.id
-                    ? 'border-green-800 bg-green-800 text-white'
-                    : 'border-gray-300 text-gray-700'
-                }`}
-              >
+              <ToggleGroupItem value={String(trip.id)} className="rounded-full">
                 {trip.name} ({findingCounts?.get(trip.id!) ?? 0})
                 {trip.endedAt == null && ' 🥾'}
-              </button>
+              </ToggleGroupItem>
               {isOrphanedOpen && (
                 <>
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
                     onClick={() => setActiveTripId(trip.id!)}
-                    className="rounded-full border border-green-800 px-2 py-1 text-xs font-medium text-green-800 hover:bg-green-50"
                     title="Ustaw jako aktywną wyprawę i kontynuuj dodawanie do niej znalezisk"
                   >
                     Wznów
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
                     onClick={() => handleEndOrphanedTrip(trip.id!)}
-                    className="rounded-full border border-gray-300 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
                     title="Oznacz tę wyprawę jako zakończoną"
                   >
                     Zakończ
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
           )
         })}
-      </div>
+      </ToggleGroup>
     </div>
   )
 }

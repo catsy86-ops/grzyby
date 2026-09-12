@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { db } from '../../db/db'
 import type { Finding, ReactionSeverity } from '../../db/schema'
 import { severityLabel } from '../../utils/reactionTracking'
+import { Button } from '../../components/ui/button'
+import { Textarea } from '../../components/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
 
 const SEVERITIES: ReactionSeverity[] = ['brak', 'lekka', 'ciężka']
 
@@ -35,48 +38,51 @@ export function ConsumptionTracker({ finding }: { finding: Finding }) {
 
   if (!finding.consumed) {
     return (
-      <button
-        onClick={markConsumed}
-        className="mt-2 text-xs text-green-800 hover:underline"
-      >
+      <Button variant="link" size="sm" className="mt-2 h-auto p-0 text-xs text-green-800" onClick={markConsumed}>
         Oznacz jako zjedzone
-      </button>
+      </Button>
     )
   }
 
   return (
     <div className="mt-2 rounded border border-gray-200 bg-gray-50 p-2 text-xs">
       <div className="flex items-center justify-between">
-        <p className="font-medium text-gray-700">
+        <p className="font-medium text-muted-foreground">
           Zjedzone {finding.consumedAt ? new Date(finding.consumedAt).toLocaleString('pl-PL') : ''}
         </p>
-        <button onClick={unmarkConsumed} className="text-gray-500 hover:underline">
+        <Button variant="link" size="sm" className="h-auto p-0 text-muted-foreground" onClick={unmarkConsumed}>
           Cofnij
-        </button>
+        </Button>
       </div>
-      <div className="mt-1 flex gap-1">
+      <ToggleGroup
+        variant="outline"
+        value={finding.reactionSeverity ? [finding.reactionSeverity] : []}
+        onValueChange={(values) => {
+          const [v] = values
+          if (v != null) setSeverity(v as ReactionSeverity)
+        }}
+        className="mt-1"
+      >
         {SEVERITIES.map((severity) => (
-          <button
+          <ToggleGroupItem
             key={severity}
-            onClick={() => setSeverity(severity)}
-            className={`rounded-full border px-2 py-0.5 ${
-              finding.reactionSeverity === severity
-                ? severity === 'ciężka'
-                  ? 'border-red-600 bg-red-600 text-white'
-                  : 'border-green-800 bg-green-800 text-white'
-                : 'border-gray-300 text-gray-600'
-            }`}
+            value={severity}
+            className={
+              severity === 'ciężka'
+                ? 'rounded-full data-pressed:border-red-600 data-pressed:bg-red-600 data-pressed:text-white'
+                : 'rounded-full'
+            }
           >
             {severityLabel(severity)}
-          </button>
+          </ToggleGroupItem>
         ))}
-      </div>
-      <textarea
+      </ToggleGroup>
+      <Textarea
         value={reactionNotes}
         onChange={(e) => setReactionNotes(e.target.value)}
         onBlur={saveNotes}
         placeholder="Objawy, godzina wystąpienia..."
-        className="mt-1 w-full rounded border border-gray-300 p-1"
+        className="mt-1 min-h-0 text-xs"
         rows={2}
       />
     </div>

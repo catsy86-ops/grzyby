@@ -4,6 +4,14 @@ import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { createThumbnail } from '../../utils/imageUtils'
+import { Alert, AlertDescription } from '../../components/ui/alert'
+import { Button } from '../../components/ui/button'
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
+import { Input } from '../../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import { Textarea } from '../../components/ui/textarea'
+
+const NONE_SPECIES = '__none__'
 
 interface AddFindingFormProps {
   initialPosition: [number, number] | null
@@ -42,76 +50,76 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   }
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-end justify-center bg-black/40 sm:items-center">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-lg sm:rounded-2xl"
-      >
-        <h2 className="mb-1 text-lg font-semibold">Nowe znalezisko</h2>
-        {activeTrip && (
-          <p className="mb-3 text-xs text-green-700">🥾 Zostanie dodane do wyprawy: {activeTrip.name}</p>
-        )}
+    <Drawer
+      open
+      showSwipeHandle
+      onOpenChange={(open) => {
+        if (!open) onClose(false)
+      }}
+    >
+      <DrawerContent className="mx-auto max-w-md">
+        <DrawerHeader>
+          <DrawerTitle>Nowe znalezisko</DrawerTitle>
+          {activeTrip && (
+            <p className="text-xs text-green-700">🥾 Zostanie dodane do wyprawy: {activeTrip.name}</p>
+          )}
+        </DrawerHeader>
 
-        <label className="mb-3 block text-sm">
-          Gatunek (opcjonalnie)
-          <select
-            value={speciesId}
-            onChange={(e) => setSpeciesId(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-300 p-2"
-          >
-            <option value="">-- nieokreślony --</option>
-            {(speciesData as Species[]).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.nameCommon} ({s.nameLatin})
-              </option>
-            ))}
-          </select>
-        </label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 pt-2">
+          <label className="block text-sm">
+            Gatunek (opcjonalnie)
+            <Select
+              value={speciesId || NONE_SPECIES}
+              onValueChange={(value) => setSpeciesId(value == null || value === NONE_SPECIES ? '' : value)}
+            >
+              <SelectTrigger className="mt-1 w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE_SPECIES}>-- nieokreślony --</SelectItem>
+                {(speciesData as Species[]).map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.nameCommon} ({s.nameLatin})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
 
-        <label className="mb-3 block text-sm">
-          Zdjęcie
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
-            className="mt-1 w-full text-sm"
-          />
-        </label>
+          <label className="block text-sm">
+            Zdjęcie
+            <Input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+              className="mt-1 h-auto"
+            />
+          </label>
 
-        <label className="mb-4 block text-sm">
-          Notatki
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-300 p-2"
-            rows={3}
-          />
-        </label>
+          <label className="block text-sm">
+            Notatki
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="mt-1" rows={3} />
+          </label>
 
-        {!initialPosition && (
-          <p className="mb-3 text-xs text-amber-700">
-            Brak ustalonej lokalizacji — znalezisko zostanie zapisane bez współrzędnych.
-          </p>
-        )}
+          {!initialPosition && (
+            <Alert variant="warning">
+              <AlertDescription className="text-current">
+                Brak ustalonej lokalizacji — znalezisko zostanie zapisane bez współrzędnych.
+              </AlertDescription>
+            </Alert>
+          )}
 
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => onClose(false)}
-            className="rounded px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-          >
-            Anuluj
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded bg-green-800 px-4 py-2 text-sm font-medium text-white hover:bg-green-900 disabled:opacity-50"
-          >
-            {saving ? 'Zapisywanie...' : 'Zapisz'}
-          </button>
-        </div>
-      </form>
-    </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="ghost" onClick={() => onClose(false)}>
+              Anuluj
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Zapisywanie...' : 'Zapisz'}
+            </Button>
+          </div>
+        </form>
+      </DrawerContent>
+    </Drawer>
   )
 }

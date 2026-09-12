@@ -6,6 +6,9 @@ import { db } from '../../db/db'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { AddFindingForm } from './AddFindingForm'
+import { Alert, AlertDescription } from '../../components/ui/alert'
+import { Badge } from '../../components/ui/badge'
+import { Button } from '../../components/ui/button'
 
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
@@ -119,32 +122,28 @@ export function MapView() {
       </MapContainer>
 
       {activeTrip && (
-        <div className="absolute left-4 top-4 z-[1000] rounded-full bg-green-800/90 px-3 py-1.5 text-xs font-medium text-white shadow">
+        <Badge className="absolute left-4 top-4 z-[1000] px-3 py-1.5 text-xs shadow">
           🥾 Aktywna wyprawa: {activeTrip.name}
-        </div>
+        </Badge>
       )}
 
       <div className="absolute bottom-4 right-4 z-[1000] flex flex-col items-end gap-2">
         {locateError && (
-          <p className="max-w-56 rounded bg-red-100 p-2 text-xs text-red-800 shadow">{locateError}</p>
+          <Alert variant="destructive-soft" className="max-w-56 shadow">
+            <AlertDescription className="text-current">{locateError}</AlertDescription>
+          </Alert>
         )}
         {!pinPosition && (
           <p className="max-w-56 rounded bg-white/90 p-2 text-xs text-gray-600 shadow">
             Stuknij na mapie, aby wybrać dokładne miejsce znaleziska (domyślnie Twoja pozycja)
           </p>
         )}
-        <button
-          onClick={handleLocate}
-          className="rounded-full bg-white px-4 py-2 text-sm font-medium shadow hover:bg-gray-50"
-        >
+        <Button variant="secondary" className="rounded-full shadow" onClick={handleLocate}>
           Zlokalizuj mnie
-        </button>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="rounded-full bg-green-800 px-4 py-2 text-sm font-medium text-white shadow hover:bg-green-900"
-        >
+        </Button>
+        <Button className="rounded-full shadow" onClick={() => setShowAddForm(true)}>
           + Dodaj znalezisko
-        </button>
+        </Button>
       </div>
 
       {showAddForm && (

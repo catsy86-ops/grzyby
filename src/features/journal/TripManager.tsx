@@ -3,7 +3,13 @@ import { useEffect, useState } from 'react'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import { useActiveTrip } from '../../stores/useActiveTrip'
-import { countSpeciesDiversity, formatDuration } from '../../utils/tripStats'
+import { countSpeciesDiversity, formatDuration, isLongTrip } from '../../utils/tripStats'
+import { showLocalNotification } from '../../utils/notifications'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent } from '../../components/ui/card'
+import { Input } from '../../components/ui/input'
+
+const LONG_TRIP_NOTIFIED_KEY = 'lysy-long-trip-notified-id'
 
 export function TripManager() {
   const { activeTripId, activeTrip } = useActiveTrip()
@@ -19,10 +25,25 @@ export function TripManager() {
   )
 
   useEffect(() => {
-    if (activeTripId == null) return
-    const interval = setInterval(() => forceTick((n) => n + 1), 60_000)
+    if (activeTripId == null || !activeTrip) return
+
+    function checkLongTrip() {
+      if (!activeTrip || !isLongTrip(activeTrip.startedAt)) return
+      if (localStorage.getItem(LONG_TRIP_NOTIFIED_KEY) === String(activeTripId)) return
+      localStorage.setItem(LONG_TRIP_NOTIFIED_KEY, String(activeTripId))
+      showLocalNotification('Długa wyprawa w toku', {
+        body: `Wyprawa "${activeTrip.name}" trwa już ${formatDuration(activeTrip.startedAt, null)}. Nie zapomnij jej zakończyć.`,
+        tag: 'lysy-long-trip',
+      })
+    }
+
+    checkLongTrip()
+    const interval = setInterval(() => {
+      forceTick((n) => n + 1)
+      checkLongTrip()
+    }, 60_000)
     return () => clearInterval(interval)
-  }, [activeTripId])
+  }, [activeTripId, activeTrip])
 
   async function handleStartTrip() {
     const name = newTripName.trim() || `Wyprawa ${new Date().toLocaleDateString('pl-PL')}`
@@ -45,60 +66,55 @@ export function TripManager() {
 
   if (activeTripId != null && activeTrip) {
     return (
-      <div className="flex items-center justify-between rounded border border-green-300 bg-green-50 p-3">
-        <div>
-          <p className="text-sm font-semibold text-green-900">🥾 Aktywna wyprawa: {activeTrip.name}</p>
-          <p className="text-xs text-green-700">
-            Rozpoczęta {new Date(activeTrip.startedAt).toLocaleString('pl-PL')} ·{' '}
-            {formatDuration(activeTrip.startedAt, null)} · {activeTripFindings?.length ?? 0} znalezisk
-            {activeTripFindings && activeTripFindings.length > 0 && (
-              <> · {countSpeciesDiversity(activeTripFindings)} gatunków</>
-            )}
-          </p>
-        </div>
-        <button
-          onClick={handleEndTrip}
-          className="rounded border border-green-800 px-3 py-1.5 text-xs font-medium text-green-800 hover:bg-green-100"
-        >
-          Zakończ wyprawę
-        </button>
-      </div>
+      <Card size="sm" className="border-green-300 bg-green-50 ring-0">
+        <CardContent className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-green-900">🥾 Aktywna wyprawa: {activeTrip.name}</p>
+            <p className="text-xs text-green-700">
+              Rozpoczęta {new Date(activeTrip.startedAt).toLocaleString('pl-PL')} ·{' '}
+              {formatDuration(activeTrip.startedAt, null)} · {activeTripFindings?.length ?? 0} znalezisk
+              {activeTripFindings && activeTripFindings.length > 0 && (
+                <> · {countSpeciesDiversity(activeTripFindings)} gatunków</>
+              )}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-green-800 text-green-800 hover:bg-green-100"
+            onClick={handleEndTrip}
+          >
+            Zakończ wyprawę
+          </Button>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="rounded border border-gray-200 p-3">
-      {showNewTripInput ? (
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newTripName}
-            onChange={(e) => setNewTripName(e.target.value)}
-            placeholder="Nazwa wyprawy (opcjonalnie)"
-            className="flex-1 rounded border border-gray-300 p-2 text-sm"
-            autoFocus
-          />
-          <button
-            onClick={handleStartTrip}
-            className="rounded bg-green-800 px-3 py-2 text-sm font-medium text-white hover:bg-green-900"
-          >
-            Start
-          </button>
-          <button
-            onClick={() => setShowNewTripInput(false)}
-            className="rounded px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
-          >
-            Anuluj
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => setShowNewTripInput(true)}
-          className="w-full rounded bg-green-800 px-3 py-2 text-sm font-medium text-white hover:bg-green-900"
-        >
-          🥾 Rozpocznij wyprawę
-        </button>
-      )}
-    </div>
+    <Card size="sm">
+      <CardContent>
+        {showNewTripInput ? (
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              value={newTripName}
+              onChange={(e) => setNewTripName(e.target.value)}
+              placeholder="Nazwa wyprawy (opcjonalnie)"
+              className="flex-1"
+              autoFocus
+            />
+            <Button onClick={handleStartTrip}>Start</Button>
+            <Button variant="ghost" onClick={() => setShowNewTripInput(false)}>
+              Anuluj
+            </Button>
+          </div>
+        ) : (
+          <Button className="w-full" onClick={() => setShowNewTripInput(true)}>
+            🥾 Rozpocznij wyprawę
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   )
 }
