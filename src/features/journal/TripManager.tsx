@@ -1,19 +1,28 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import { useActiveTrip } from '../../stores/useActiveTrip'
+import { countSpeciesDiversity, formatDuration } from '../../utils/tripStats'
 
 export function TripManager() {
   const { activeTripId, activeTrip } = useActiveTrip()
   const setActiveTripId = useAppStore((s) => s.setActiveTripId)
   const [newTripName, setNewTripName] = useState('')
   const [showNewTripInput, setShowNewTripInput] = useState(false)
+  // Odświeża licznik czasu trwania aktywnej wyprawy co minutę, bez zapytań do bazy.
+  const [, forceTick] = useState(0)
 
-  const activeTripFindingCount = useLiveQuery(
-    () => (activeTripId != null ? db.findings.where('tripId').equals(activeTripId).count() : 0),
+  const activeTripFindings = useLiveQuery(
+    () => (activeTripId != null ? db.findings.where('tripId').equals(activeTripId).toArray() : []),
     [activeTripId],
   )
+
+  useEffect(() => {
+    if (activeTripId == null) return
+    const interval = setInterval(() => forceTick((n) => n + 1), 60_000)
+    return () => clearInterval(interval)
+  }, [activeTripId])
 
   async function handleStartTrip() {
     const name = newTripName.trim() || `Wyprawa ${new Date().toLocaleDateString('pl-PL')}`
@@ -41,7 +50,10 @@ export function TripManager() {
           <p className="text-sm font-semibold text-green-900">🥾 Aktywna wyprawa: {activeTrip.name}</p>
           <p className="text-xs text-green-700">
             Rozpoczęta {new Date(activeTrip.startedAt).toLocaleString('pl-PL')} ·{' '}
-            {activeTripFindingCount ?? 0} znalezisk
+            {formatDuration(activeTrip.startedAt, null)} · {activeTripFindings?.length ?? 0} znalezisk
+            {activeTripFindings && activeTripFindings.length > 0 && (
+              <> · {countSpeciesDiversity(activeTripFindings)} gatunków</>
+            )}
           </p>
         </div>
         <button

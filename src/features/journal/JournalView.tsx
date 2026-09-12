@@ -3,9 +3,10 @@ import { useMemo, useRef, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
-import type { Species } from '../../db/schema'
+import type { Finding, Species } from '../../db/schema'
 import { downloadBlob, exportData, importData } from '../../utils/exportImport'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
+import { countSpeciesDiversity, formatDuration } from '../../utils/tripStats'
 import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
 import { TripManager } from './TripManager'
@@ -18,7 +19,16 @@ export function JournalView() {
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [tripFilter, setTripFilter] = useState<TripFilter>('wszystkie')
   const [searchQuery, setSearchQuery] = useState('')
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editSpeciesId, setEditSpeciesId] = useState('')
+  const [editNotes, setEditNotes] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const selectedTrip = useLiveQuery(
+    () => (typeof tripFilter === 'number' ? db.trips.get(tripFilter) : undefined),
+    [tripFilter],
+  )
 
   const filteredFindings = useMemo(() => {
     if (!findings) return findings
@@ -80,6 +90,23 @@ export function JournalView() {
       await db.photos.where('findingId').equals(id).delete()
       await db.findings.delete(id)
     })
+    setConfirmDeleteId(null)
+  }
+
+  function handleStartEdit(finding: Finding) {
+    setEditingId(finding.id ?? null)
+    setEditSpeciesId(finding.speciesId ?? '')
+    setEditNotes(finding.notes)
+  }
+
+  async function handleSaveEdit(id: number) {
+    const species = (speciesData as Species[]).find((s) => s.id === editSpeciesId) ?? null
+    await db.findings.update(id, {
+      speciesId: species?.id ?? null,
+      speciesNameGuess: species?.nameCommon ?? null,
+      notes: editNotes,
+    })
+    setEditingId(null)
   }
 
   return (
@@ -145,6 +172,19 @@ export function JournalView() {
       <TripManager />
       <TripsHistory selectedTripId={tripFilter} onSelectTrip={setTripFilter} />
 
+      {selectedTrip && filteredFindings && (
+        <div className="rounded border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+          <p className="font-medium">{selectedTrip.name}</p>
+          <p className="mt-1 text-xs text-gray-500">
+            {new Date(selectedTrip.startedAt).toLocaleString('pl-PL')}
+            {selectedTrip.endedAt != null && ` – ${new Date(selectedTrip.endedAt).toLocaleString('pl-PL')}`}
+            {' · '}
+            {formatDuration(selectedTrip.startedAt, selectedTrip.endedAt)} ·{' '}
+            {filteredFindings.length} znalezisk · {countSpeciesDiversity(filteredFindings)} gatunków
+          </p>
+        </div>
+      )}
+
       {chartData.length > 0 && (
         <div className="h-56 rounded border border-gray-200 p-2">
           <ResponsiveContainer width="100%" height="100%">
@@ -159,33 +199,103 @@ export function JournalView() {
       )}
 
       <div className="flex flex-col gap-3">
-        {filteredFindings?.map((finding) => (
-          <div key={finding.id} className="flex items-start gap-3 rounded border border-gray-200 p-3">
-            {finding.id != null && <FindingThumbnail findingId={finding.id} />}
-            <div className="flex flex-1 items-start justify-between">
-              <div>
-                <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
-                <p className="text-xs text-gray-500">
-                  {new Date(finding.createdAt).toLocaleString('pl-PL')}
-                  {finding.latitude != null && finding.longitude != null && (
-                    <>
-                      {' '}
-                      · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
-                    </>
-                  )}
-                </p>
-                {finding.notes && <p className="mt-1 text-sm text-gray-700">{finding.notes}</p>}
-                <ConsumptionTracker finding={finding} />
+        {filteredFindings?.map((finding) => {
+          if (finding.id != null && editingId === finding.id) {
+            return (
+              <div key={finding.id} className="flex flex-col gap-2 rounded border border-green-300 p-3">
+                <label className="text-sm">
+                  Gatunek
+                  <select
+                    value={editSpeciesId}
+                    onChange={(e) => setEditSpeciesId(e.target.value)}
+                    className="mt-1 w-full rounded border border-gray-300 p-2"
+                  >
+                    <option value="">-- nieokreślony --</option>
+                    {(speciesData as Species[]).map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nameCommon} ({s.nameLatin})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm">
+                  Notatki
+                  <textarea
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    className="mt-1 w-full rounded border border-gray-300 p-2"
+                    rows={2}
+                  />
+                </label>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100"
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    onClick={() => handleSaveEdit(finding.id!)}
+                    className="rounded bg-green-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-900"
+                  >
+                    Zapisz
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => finding.id != null && handleDelete(finding.id)}
-                className="text-xs text-red-600 hover:underline"
-              >
-                Usuń
-              </button>
+            )
+          }
+
+          return (
+            <div key={finding.id} className="flex items-start gap-3 rounded border border-gray-200 p-3">
+              {finding.id != null && <FindingThumbnail findingId={finding.id} />}
+              <div className="flex flex-1 items-start justify-between">
+                <div>
+                  <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(finding.createdAt).toLocaleString('pl-PL')}
+                    {finding.latitude != null && finding.longitude != null && (
+                      <>
+                        {' '}
+                        · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
+                      </>
+                    )}
+                  </p>
+                  {finding.notes && <p className="mt-1 text-sm text-gray-700">{finding.notes}</p>}
+                  <ConsumptionTracker finding={finding} />
+                </div>
+                {confirmDeleteId === finding.id ? (
+                  <div className="flex shrink-0 items-center gap-2 text-xs">
+                    <span className="text-gray-600">Na pewno?</span>
+                    <button
+                      onClick={() => finding.id != null && handleDelete(finding.id)}
+                      className="font-medium text-red-600 hover:underline"
+                    >
+                      Tak, usuń
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="text-gray-500 hover:underline"
+                    >
+                      Anuluj
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex shrink-0 gap-2 text-xs">
+                    <button onClick={() => handleStartEdit(finding)} className="text-gray-600 hover:underline">
+                      Edytuj
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(finding.id ?? null)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Usuń
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         {filteredFindings?.length === 0 && (
           <p className="text-sm text-gray-500">Brak zapisanych znalezisk dla wybranego filtru.</p>
         )}

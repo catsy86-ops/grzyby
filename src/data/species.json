@@ -64,5 +64,38 @@
     "season": "Czerwiec - listopad",
     "lookalikes": ["lisowka-pomaranczowa"],
     "imageUrls": []
+  },
+  {
+    "id": "borowik-szatanski",
+    "nameCommon": "Borowik szatański",
+    "nameLatin": "Boletus satanas",
+    "edibility": "trujący",
+    "description": "Trujący (surowy silnie żołądkowo-jelitowo, gotowanie nie usuwa ryzyka u wrażliwych osób). Kapelusz jasnoszary do oliwkowego, rurki i pory czerwone do pomarańczowych, miąższ intensywnie niebieszczeje po przecięciu. Trzon gruby, beczułkowaty, z czerwonym siateczkowaniem. Nieprzyjemny, mdły zapach u starszych owocników - to najważniejsza różnica od borowika szlachetnego.",
+    "habitat": "Ciepłe lasy liściaste na wapiennym podłożu, zwłaszcza pod dębami i grabami",
+    "season": "Czerwiec - wrzesień",
+    "lookalikes": ["borowik-szlachetny"],
+    "imageUrls": []
+  },
+  {
+    "id": "gaska-zielonka",
+    "nameCommon": "Gąska zielonka",
+    "nameLatin": "Tricholoma equestre",
+    "edibility": "trujący",
+    "description": "Dawniej uznawana za jadalną, dziś odradzana - udokumentowano przypadki ciężkiego, czasem śmiertelnego zatrucia (rabdomioliza) po wielokrotnym spożyciu w krótkim czasie, nawet u osób, które wcześniej nie miały objawów. Kapelusz oliwkowo-żółty do zielonkawego, blaszki i trzon żółte, miąższ biały.",
+    "habitat": "Lasy sosnowe na piaszczystym podłożu",
+    "season": "Wrzesień - listopad",
+    "lookalikes": ["muchomor-sromotnikowy"],
+    "imageUrls": []
+  },
+  {
+    "id": "lisowka-pomaranczowa",
+    "nameCommon": "Lisówka pomarańczowa",
+    "nameLatin": "Hygrophoropsis aurantiaca",
+    "edibility": "niejadalny",
+    "description": "Niejadalna, u niektórych osób powoduje łagodne dolegliwości żołądkowe. Zwana też 'fałszywą kurką' - pomarańczowa, lejkowata, ale w odróżnieniu od pieprznika ma prawdziwe, gęste i łatwo dające się oddzielić blaszki (nie fałdy) oraz ciemniejszy, bardziej pomarańczowy odcień.",
+    "habitat": "Lasy iglaste, na próchniejącym drewnie i ściółce",
+    "season": "Lipiec - listopad",
+    "lookalikes": ["pieprznik-jadalny"],
+    "imageUrls": []
   }
 ]

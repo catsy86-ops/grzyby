@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/db'
+import { useAppStore } from '../../stores/appStore'
 
 interface TripsHistoryProps {
   selectedTripId: number | 'wszystkie' | 'bez-wyprawy'
@@ -7,6 +8,8 @@ interface TripsHistoryProps {
 }
 
 export function TripsHistory({ selectedTripId, onSelectTrip }: TripsHistoryProps) {
+  const activeTripId = useAppStore((s) => s.activeTripId)
+  const setActiveTripId = useAppStore((s) => s.setActiveTripId)
   const trips = useLiveQuery(() => db.trips.orderBy('startedAt').reverse().toArray(), [])
   const findingCounts = useLiveQuery(async () => {
     const all = await db.findings.toArray()
@@ -18,6 +21,10 @@ export function TripsHistory({ selectedTripId, onSelectTrip }: TripsHistoryProps
   }, [])
 
   if (!trips || trips.length === 0) return null
+
+  async function handleEndOrphanedTrip(tripId: number) {
+    await db.trips.update(tripId, { endedAt: Date.now() })
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -43,20 +50,44 @@ export function TripsHistory({ selectedTripId, onSelectTrip }: TripsHistoryProps
         >
           Bez wyprawy
         </button>
-        {trips.map((trip) => (
-          <button
-            key={trip.id}
-            onClick={() => trip.id != null && onSelectTrip(trip.id)}
-            className={`rounded-full border px-3 py-1 text-xs font-medium ${
-              selectedTripId === trip.id
-                ? 'border-green-800 bg-green-800 text-white'
-                : 'border-gray-300 text-gray-700'
-            }`}
-          >
-            {trip.name} ({findingCounts?.get(trip.id!) ?? 0})
-            {trip.endedAt == null && ' 🥾'}
-          </button>
-        ))}
+        {trips.map((trip) => {
+          // Wyprawa bez daty zakończenia, która nie jest aktywną wyprawą w tej sesji -
+          // najczęściej po utracie stanu (zamknięcie appki w lesie) lub imporcie danych.
+          const isOrphanedOpen = trip.endedAt == null && trip.id !== activeTripId
+          return (
+            <div key={trip.id} className="flex items-center gap-1">
+              <button
+                onClick={() => trip.id != null && onSelectTrip(trip.id)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                  selectedTripId === trip.id
+                    ? 'border-green-800 bg-green-800 text-white'
+                    : 'border-gray-300 text-gray-700'
+                }`}
+              >
+                {trip.name} ({findingCounts?.get(trip.id!) ?? 0})
+                {trip.endedAt == null && ' 🥾'}
+              </button>
+              {isOrphanedOpen && (
+                <>
+                  <button
+                    onClick={() => setActiveTripId(trip.id!)}
+                    className="rounded-full border border-green-800 px-2 py-1 text-xs font-medium text-green-800 hover:bg-green-50"
+                    title="Ustaw jako aktywną wyprawę i kontynuuj dodawanie do niej znalezisk"
+                  >
+                    Wznów
+                  </button>
+                  <button
+                    onClick={() => handleEndOrphanedTrip(trip.id!)}
+                    className="rounded-full border border-gray-300 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    title="Oznacz tę wyprawę jako zakończoną"
+                  >
+                    Zakończ
+                  </button>
+                </>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
