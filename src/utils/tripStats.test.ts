@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Finding } from '../db/schema'
-import { countSpeciesDiversity, formatDuration } from './tripStats'
+import { countSpeciesDiversity, formatDuration, isLongTrip, LONG_TRIP_THRESHOLD_MS } from './tripStats'
 
 function makeFinding(overrides: Partial<Finding> = {}): Finding {
   return {
@@ -54,5 +54,18 @@ describe('formatDuration', () => {
     const started = 0
     const ended = 90 * 60_000
     expect(formatDuration(started, ended)).toBe('1 godz. 30 min')
+  })
+})
+
+describe('isLongTrip', () => {
+  it('zwraca false, gdy wyprawa trwa krócej niż próg', () => {
+    const now = 1_000_000
+    expect(isLongTrip(now - (LONG_TRIP_THRESHOLD_MS - 1), now)).toBe(false)
+  })
+
+  it('zwraca true, gdy wyprawa trwa dokładnie tyle co próg lub dłużej', () => {
+    const now = 1_000_000
+    expect(isLongTrip(now - LONG_TRIP_THRESHOLD_MS, now)).toBe(true)
+    expect(isLongTrip(now - LONG_TRIP_THRESHOLD_MS - 1, now)).toBe(true)
   })
 })

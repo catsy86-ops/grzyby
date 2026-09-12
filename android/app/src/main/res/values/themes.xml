@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Lysy" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/lysy_green_900</item>
+        <item name="android:windowBackground">@color/lysy_white</item>
+    </style>
+</resources>

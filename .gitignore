@@ -29,3 +29,14 @@ playwright-report/
 
 # Claude Code local config
 .claude/
+
+# Android (android/README.md)
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+android/app/src/main/assets/*
+!android/app/src/main/assets/.gitkeep
+*.jks
+*.keystore
+

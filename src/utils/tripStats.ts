@@ -1,5 +1,11 @@
 import type { Finding } from '../db/schema'
 
+export const LONG_TRIP_THRESHOLD_MS = 4 * 60 * 60 * 1000
+
+export function isLongTrip(startedAt: number, now: number = Date.now()): boolean {
+  return now - startedAt >= LONG_TRIP_THRESHOLD_MS
+}
+
 export function countSpeciesDiversity(findings: Finding[]): number {
   const speciesIds = new Set(findings.map((f) => f.speciesId).filter((id): id is string => id != null))
   return speciesIds.size

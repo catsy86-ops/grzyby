@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Zsynchronizowane z tokenem "primary" / theme_color w src/index.css i vite.config.ts (Tailwind green-800/900) -->
+    <color name="lysy_green_900">#14532D</color>
+    <color name="lysy_green_800">#166534</color>
+    <color name="lysy_green_50">#F0FDF4</color>
+    <color name="lysy_white">#FFFFFF</color>
+    <color name="lysy_text_muted">#4B5563</color>
+</resources>

@@ -18,6 +18,14 @@ npm run preview   # podgląd builda z aktywnym Service Workerem/PWA
 - **Dziennik** — historia znalezisk, statystyki, eksport/import danych jako JSON (backup / przenoszenie między urządzeniami)
 - **Baza wiedzy** — wyszukiwarka gatunków z filtrowaniem po jadalności
 
+## Powiadomienia i widget na Androida
+
+- **Powiadomienia offline** — apka może przypomnieć o bardzo długiej (4h+) aktywnej wyprawie
+  (`src/utils/notifications.ts`, `src/features/journal/TripManager.tsx`). Działają lokalnie przez
+  Service Workera, bez backendu/push.
+- **Widget na ekran główny Androida** — osobny natywny projekt w `android/` (WebView + mostek JS),
+  patrz `android/README.md`. Wymaga zbudowania w Android Studio — nie jest częścią `npm run build`.
+
 ## Model rozpoznawania AI
 
 Moduł rozpoznawania (`src/utils/mushroomModel.ts`) oczekuje wytrenowanego modelu TensorFlow.js w `public/models/model.json` (+ pliki wag). **Model nie jest jeszcze dołączony** — to osobny etap wymagający zbioru danych treningowych i treningu (np. transfer learning na MobileNet, lub szybka ścieżka: Google Teachable Machine z eksportem do TFJS). Do czasu dodania modelu zakładka "Rozpoznaj" wyświetla stosowny komunikat zamiast wyniku.
