@@ -1,5 +1,8 @@
 import type { Prediction } from '../../utils/mushroomModel'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
+import { LookalikesWarning } from '../../components/LookalikesWarning'
+import speciesData from '../../data/species.json'
+import type { Species } from '../../db/schema'
 
 const LOW_CONFIDENCE_THRESHOLD = 0.4
 
@@ -40,6 +43,7 @@ export function PredictionCard({ prediction, rank }: { prediction: Prediction; r
             <EdibilityBadge edibility={species.edibility} />
           </div>
           <p className="mt-2 text-sm text-gray-700">{species.description}</p>
+          <LookalikesWarning species={species} allSpecies={speciesData as Species[]} />
         </>
       )}
     </div>

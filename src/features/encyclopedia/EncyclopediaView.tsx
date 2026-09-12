@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
+import { LookalikesWarning } from '../../components/LookalikesWarning'
 
 const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
   { label: 'Wszystkie', value: 'wszystkie' },
@@ -69,14 +70,7 @@ export function EncyclopediaView() {
             <p className="mt-1 text-xs text-gray-500">
               Siedlisko: {s.habitat} · Sezon: {s.season}
             </p>
-            {s.lookalikes.length > 0 && (
-              <p className="mt-1 text-xs text-amber-700">
-                Uwaga na podobne gatunki:{' '}
-                {s.lookalikes
-                  .map((id) => species.find((x) => x.id === id)?.nameCommon ?? id)
-                  .join(', ')}
-              </p>
-            )}
+            <LookalikesWarning species={s} allSpecies={species} />
           </div>
         ))}
         {filtered.length === 0 && (

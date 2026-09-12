@@ -5,6 +5,8 @@ import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { downloadBlob, exportData, importData } from '../../utils/exportImport'
+import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
+import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
 import { TripManager } from './TripManager'
 import { TripsHistory } from './TripsHistory'
@@ -15,14 +17,32 @@ export function JournalView() {
   const findings = useLiveQuery(() => db.findings.orderBy('createdAt').reverse().toArray(), [])
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [tripFilter, setTripFilter] = useState<TripFilter>('wszystkie')
+  const [searchQuery, setSearchQuery] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const filteredFindings = useMemo(() => {
     if (!findings) return findings
-    if (tripFilter === 'wszystkie') return findings
-    if (tripFilter === 'bez-wyprawy') return findings.filter((f) => f.tripId == null)
-    return findings.filter((f) => f.tripId === tripFilter)
-  }, [findings, tripFilter])
+    let result = findings
+    if (tripFilter === 'bez-wyprawy') result = result.filter((f) => f.tripId == null)
+    else if (tripFilter !== 'wszystkie') result = result.filter((f) => f.tripId === tripFilter)
+    const query = searchQuery.trim().toLowerCase()
+    if (query) {
+      result = result.filter(
+        (f) =>
+          (f.speciesNameGuess?.toLowerCase().includes(query) ?? false) ||
+          f.notes.toLowerCase().includes(query),
+      )
+    }
+    return result
+  }, [findings, tripFilter, searchQuery])
+
+  // Ostrzeżenie, gdy jakiekolwiek spożyte znalezisko zgłosiło ciężką reakcję - pomaga
+  // szybko znaleźć powiązane znaleziska zjedzone w tym samym oknie czasowym (zatrucia
+  // grzybami z opóźnionym działaniem toksyn ujawniają się nawet po ~24h).
+  const severeReactionFindings = useMemo(
+    () => (findings ?? []).filter((f) => f.consumed && f.reactionSeverity === 'ciężka'),
+    [findings],
+  )
 
   const chartData = useMemo(() => {
     if (!filteredFindings) return []
@@ -91,6 +111,37 @@ export function JournalView() {
 
       {importMessage && <p className="rounded bg-blue-50 p-2 text-xs text-blue-800">{importMessage}</p>}
 
+      {severeReactionFindings.length > 0 && (
+        <div className="rounded border border-red-400 bg-red-50 p-3 text-sm text-red-900">
+          <p className="font-semibold">⚠️ Zgłoszono ciężką reakcję po spożyciu</p>
+          <p className="mt-1 text-xs">
+            Jeśli objawy są poważne (wymioty, biegunka, zaburzenia widzenia, żółtaczka), niezwłocznie
+            skontaktuj się z Centrum Ostrych Zatruć lub zadzwoń pod 112. Zabierz ze sobą resztki grzybów
+            i to znalezisko z dziennika jako informację dla lekarza.
+          </p>
+          <ul className="mt-1 list-inside list-disc text-xs">
+            {severeReactionFindings.map((f) => {
+              const overlapping = findOverlappingConsumedFindings(f, findings ?? [])
+              return (
+                <li key={f.id}>
+                  {f.speciesNameGuess ?? 'Nieokreślony gatunek'} —{' '}
+                  {f.consumedAt ? new Date(f.consumedAt).toLocaleString('pl-PL') : ''}
+                  {overlapping.length > 0 && ` (inne zjedzone w tym czasie: ${overlapping.length})`}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
+      <input
+        type="search"
+        placeholder="Szukaj po gatunku lub notatkach..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="rounded border border-gray-300 p-2 text-sm"
+      />
+
       <TripManager />
       <TripsHistory selectedTripId={tripFilter} onSelectTrip={setTripFilter} />
 
@@ -124,6 +175,7 @@ export function JournalView() {
                   )}
                 </p>
                 {finding.notes && <p className="mt-1 text-sm text-gray-700">{finding.notes}</p>}
+                <ConsumptionTracker finding={finding} />
               </div>
               <button
                 onClick={() => finding.id != null && handleDelete(finding.id)}

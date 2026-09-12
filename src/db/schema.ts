@@ -12,6 +12,8 @@ export interface Species {
   imageUrls: string[]
 }
 
+export type ReactionSeverity = 'brak' | 'lekka' | 'ciężka'
+
 export interface Finding {
   id?: number
   speciesId: string | null
@@ -21,6 +23,13 @@ export interface Finding {
   notes: string
   createdAt: number
   tripId?: number
+  // Śledzenie spożycia i ewentualnej reakcji - pomaga powiązać objawy zatrucia
+  // z konkretnym znaleziskiem, zwłaszcza że toksyny niektórych gatunków działają
+  // z opóźnieniem (nawet 6-24h).
+  consumed?: boolean
+  consumedAt?: number | null
+  reactionSeverity?: ReactionSeverity | null
+  reactionNotes?: string
 }
 
 // Zdjęcia trzymane w osobnej tabeli, żeby listy/mapa (findings.toArray()) nie musiały
