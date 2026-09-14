@@ -13,6 +13,38 @@ zakres i priorytet.
 
 ---
 
+## Faza 16 - Dalsze upiększanie UI/grafiki (2026-09-14)
+
+Kontynuacja po Fazie 15, na wprost postawione pytanie użytkownika "jak jeszcze upiększyć UI i
+grafikę" - 5 propozycji, zrealizowanych po kolei, każda zweryfikowana osobno (`tsc -b`,
+`vitest run` 261/261, `npm run build`).
+
+- [x] **1/5 - winieta zdjęcia gatunku** - `EncyclopediaView.tsx`: delikatny gradient u dołu
+      zdjęcia, tonowany kolorem jadalności (`edibilityChartColor`, `color-mix` w oklab) - łączy
+      fotografię z systemem kolorów bezpieczeństwa (Faza 14, Plan B) zamiast być oderwaną
+      dekoracją, daje zdjęciu głębi zamiast płaskiego `object-cover`.
+- [x] **2/5 - skeleton "shimmer" tonowany zielenią marki** - `.skeleton-shimmer` w `index.css`
+      (przesuwający się pasek światła, `color-mix` z `--color-primary`, respektujący
+      `prefers-reduced-motion` osobną media query) zamiast płaskiego `animate-pulse bg-muted` -
+      jedna zmiana w `ui/skeleton.tsx` obejmuje automatycznie każde użycie (mapa, dziennik,
+      miniatury zdjęć).
+- [x] **3/5 - branding eksportu PDF** - `pdfExport.ts`: pasek nagłówka w kolorze `--primary` +
+      mała odznaka grzyba w `--brand-accent` + nazwa "Grzybobranie", linia-separator w kolorze
+      bursztynowym zamiast neutralnego szarego. Dotąd eksport był czysto tekstowym dokumentem
+      nieodróżnialnym od dowolnego innego PDF-a.
+- [x] **4/5 - scrollbar dostosowany do palety** - `index.css`: cienki, stonowany suwak w
+      `--color-border`, ciemniejący do `--color-primary` przy najechaniu (Firefox
+      `scrollbar-color` + webkit `::-webkit-scrollbar*`) - dotyczy głównie desktopu/web.
+- [x] **5/5 - elewacja kart przy hover (desktop)** - `JournalView.tsx`/`EncyclopediaView.tsx`:
+      `hover:shadow-md hover:shadow-primary/15` na kartach list, celowo BEZ transform/translate
+      (Card jest dzieckiem `useAutoAnimate`, który pozycjonuje elementy przez transform - osobny
+      transform z hover kolidowałby z tym mechanizmem, ten sam powód co whileTap na wewnętrznym
+      `motion.div` zamiast na `Card` z Fazy 12).
+- Live-test w przeglądarce niedostępny przez całą sesję (brak połączonego rozszerzenia Chrome) -
+  jak w Fazach 14-15, wszystkie kroki zweryfikowane typecheckiem/testami/buildem, nie wizualnie.
+
+---
+
 ## Faza 15 - Plan designu po drugim audycie `frontend-expert` (2026-09-14)
 
 Po Fazie 14 użytkownik zlecił kolejny audyt (agent `frontend-expert`, bez zmian w kodzie) -
