@@ -14,6 +14,7 @@ import { TickCareGuide } from './components/TickCareGuide'
 import { CookingTimer } from './components/CookingTimer'
 import { ToolsMenu, type ToolKey } from './components/ToolsMenu'
 import { Logo } from './components/Logo'
+import { AppSplash } from './components/AppSplash'
 import { useTickReminders } from './hooks/useTickReminders'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -82,6 +83,7 @@ function App() {
 
   return (
     <div className="flex h-full flex-col bg-background">
+      <AppSplash />
       <header className="safe-area-top flex items-center gap-2 bg-gradient-to-b from-primary to-primary/90 px-4 pb-3 pt-4 text-primary-foreground shadow-sm shadow-brand-accent/20">
         <ThemeToggle />
         <div className="flex flex-1 items-center justify-center gap-1.5">
