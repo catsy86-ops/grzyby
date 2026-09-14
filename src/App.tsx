@@ -84,7 +84,11 @@ function App() {
   return (
     <div className="flex h-full flex-col bg-background">
       <AppSplash />
-      <header className="safe-area-top flex items-center gap-2 bg-gradient-to-b from-primary to-primary/90 px-4 pb-3 pt-4 text-primary-foreground shadow-sm shadow-brand-accent/20">
+      {/* Gradient primary -> brand-accent (bursztyn) zamiast prawie niewidocznego primary ->
+          primary/90 - nagłówek jako realna przestrzeń marki, wykorzystująca drugi akcent, który
+          wcześniej żył tylko w logo/cieniach kart. Diagonalny kierunek + oba kolory tak samo
+          ciemne w obu motywach (patrz index.css) utrzymują kontrast tekstu primary-foreground. */}
+      <header className="safe-area-top flex items-center gap-2 bg-gradient-to-br from-primary via-primary to-brand-accent/70 px-4 pb-3 pt-4 text-primary-foreground shadow-sm shadow-brand-accent/20">
         <ThemeToggle />
         <div className="flex flex-1 items-center justify-center gap-1.5">
           <Logo className="size-5" />
