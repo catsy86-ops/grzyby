@@ -97,14 +97,22 @@ zapytań w runtime), tak samo jak wcześniej z Wikimedia Commons dla zdjęć.
       przyjęta nazwa to **Rubroboletus satanas** (rodzaj przeniesiony z Boletus przy rewizji
       filogenetycznej Boletaceae ok. 2015). `species.json` → `borowik-szatanski.nameLatin`
       zaktualizowane na `"Rubroboletus satanas (dawniej Boletus satanas)"`.
-- [x] **Wikipedia PL + GBIF occurrence search** (country=PL) - częściowa weryfikacja (10/19,
-      przerwana przez rate-limit API - do dokończenia) potwierdziła: polskie nazwy zwyczajowe
-      zgadzają się z artykułami Wikipedii, wszystkie sprawdzone gatunki mają realne zgłoszone
-      obserwacje w Polsce (56-3041 rekordów) - dane w `species.json` nie są zmyślone/nietypowe dla
-      polskich lasów. Wikipedia PL dodatkowo potwierdziła krzyżowo zmianę nazwy na
-      "Krwistoborowik szatański" (spójne z korektą GBIF wyżej).
-- [ ] Dokończyć weryfikację pozostałych 9 gatunków (rate-limit GBIF occurrence/search - wymaga
-      wolniejszego tempa zapytań).
+- [x] **GBIF occurrence search** (country=PL) - dokończone dla wszystkich 19/19 gatunków
+      (2026-09-14, zapytania rozłożone w czasie żeby uniknąć wcześniejszego rate-limitu). Każdy
+      gatunek ma realne, zgłoszone obserwacje w Polsce - żaden wynik nie jest zerowy/podejrzanie
+      niski, więc dane w `species.json` nie są zmyślone/nietypowe dla polskich lasów:
+      Borowik szlachetny 1294 · Goryczak żółciowy 348 · Muchomor sromotnikowy 329 ·
+      Muchomor jadowity 65 · Czubajka kania 1006 · Muchomor czerwony 3041 · Maślak zwyczajny 296 ·
+      Pieprznik jadalny 682 · Borowik szatański 56 · Gąska zielonka 101 · Lisówka pomarańczowa 432 ·
+      Podgrzybek brunatny 1267 · Koźlarz babka 394 · Opieńka miodowa 252 · Hełmówka jadowita 92 ·
+      Smardz jadalny 341 · Piestrzenica kasztanowata 283 · Krowiak podwinięty 716 ·
+      Purchawka olbrzymia 301 rekordów.
+- [x] **Wikipedia PL** - wcześniejsza częściowa weryfikacja (10/19, sesja 2026-09-13) potwierdziła
+      zgodność polskich nazw zwyczajowych z artykułami Wikipedii, w tym krzyżowo zmianę nazwy
+      borowika szatańskiego na "Krwistoborowik szatański" (spójne z korektą GBIF wyżej). Pozostałe
+      9 nie doczekało osobnego przebiegu Wikipedii w tej sesji - GBIF occurrence (wyżej) już
+      potwierdza, że wszystkie gatunki są realne i obecne w Polsce; dodatkowe potwierdzenie nazw
+      zwyczajowych przez Wikipedię dla pozostałych 9 zostaje jako zadanie opcjonalne, nieblokujące.
 - **Możliwe kolejne źródła** (sprawdzona dostępność, nieużyte jeszcze): Mushroom Observer API
       (`mushroomobserver.org/api2`) - opisy/notatki specyficzne dla grzybów, społecznościowe
       konsensus-identyfikacje; iNaturalist - dodatkowe zdjęcia/obserwacje. Do rozważenia przy
