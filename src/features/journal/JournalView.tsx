@@ -10,6 +10,7 @@ import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
 import { edibilityChartColor } from '../../components/EdibilityBadge'
+import { StatTile, StatTileRow } from '../../components/StatTiles'
 import {
   countLikelyDuplicates,
   downloadBlob,
@@ -350,16 +351,25 @@ export function JournalView() {
 
       {selectedTrip && filteredFindings && (
         <Card size="sm" className="bg-muted/50">
-          <CardContent>
-            <p className="text-sm font-medium">{selectedTrip.name}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {new Date(selectedTrip.startedAt).toLocaleString('pl-PL')}
-              {selectedTrip.endedAt != null && ` – ${new Date(selectedTrip.endedAt).toLocaleString('pl-PL')}`}
-              {' · '}
-              {formatDuration(selectedTrip.startedAt, selectedTrip.endedAt)} ·{' '}
-              {filteredFindings.length} znalezisk · {countSpeciesDiversity(filteredFindings)} gatunków
-              {sumWeightGrams(filteredFindings) > 0 && <> · {formatWeight(sumWeightGrams(filteredFindings))}</>}
-            </p>
+          <CardContent className="flex flex-col gap-2">
+            <div>
+              <p className="text-sm font-medium">{selectedTrip.name}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {new Date(selectedTrip.startedAt).toLocaleString('pl-PL')}
+                {selectedTrip.endedAt != null && ` – ${new Date(selectedTrip.endedAt).toLocaleString('pl-PL')}`}
+                {' · '}
+                {formatDuration(selectedTrip.startedAt, selectedTrip.endedAt)}
+              </p>
+            </div>
+            {/* Liczby wyprawy jako kafle zamiast dalszego ciągu zdania rozdzielanego kropkami -
+                czyta się od razu, nie trzeba wyłowić cyfr ze zdania. */}
+            <StatTileRow>
+              <StatTile value={filteredFindings.length} label="znalezisk" />
+              <StatTile value={countSpeciesDiversity(filteredFindings)} label="gatunków" />
+              {sumWeightGrams(filteredFindings) > 0 && (
+                <StatTile value={formatWeight(sumWeightGrams(filteredFindings))} label="waga" />
+              )}
+            </StatTileRow>
           </CardContent>
         </Card>
       )}

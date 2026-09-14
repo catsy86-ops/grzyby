@@ -5,6 +5,7 @@ import { useAppStore } from '../../stores/appStore'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { countSpeciesDiversity, formatDuration, formatWeight, isLongTrip, sumWeightGrams } from '../../utils/tripStats'
 import { showLocalNotification } from '../../utils/notifications'
+import { StatTile, StatTileRow } from '../../components/StatTiles'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
@@ -67,28 +68,33 @@ export function TripManager() {
   if (activeTripId != null && activeTrip) {
     return (
       <Card size="sm" className="border-primary/30 bg-primary/5 ring-0">
-        <CardContent className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-primary">🥾 Aktywna wyprawa: {activeTrip.name}</p>
-            <p className="text-xs text-primary/80">
-              Rozpoczęta {new Date(activeTrip.startedAt).toLocaleString('pl-PL')} ·{' '}
-              {formatDuration(activeTrip.startedAt, null)} · {activeTripFindings?.length ?? 0} znalezisk
-              {activeTripFindings && activeTripFindings.length > 0 && (
-                <> · {countSpeciesDiversity(activeTripFindings)} gatunków</>
-              )}
-              {activeTripFindings && sumWeightGrams(activeTripFindings) > 0 && (
-                <> · {formatWeight(sumWeightGrams(activeTripFindings))}</>
-              )}
-            </p>
+        <CardContent className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold text-primary">🥾 Aktywna wyprawa: {activeTrip.name}</p>
+              <p className="text-xs text-primary/80">
+                Rozpoczęta {new Date(activeTrip.startedAt).toLocaleString('pl-PL')} ·{' '}
+                {formatDuration(activeTrip.startedAt, null)}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-primary text-primary hover:bg-primary/10"
+              onClick={handleEndTrip}
+            >
+              Zakończ wyprawę
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-primary text-primary hover:bg-primary/10"
-            onClick={handleEndTrip}
-          >
-            Zakończ wyprawę
-          </Button>
+          <StatTileRow>
+            <StatTile value={activeTripFindings?.length ?? 0} label="znalezisk" />
+            {activeTripFindings && activeTripFindings.length > 0 && (
+              <StatTile value={countSpeciesDiversity(activeTripFindings)} label="gatunków" />
+            )}
+            {activeTripFindings && sumWeightGrams(activeTripFindings) > 0 && (
+              <StatTile value={formatWeight(sumWeightGrams(activeTripFindings))} label="waga" />
+            )}
+          </StatTileRow>
         </CardContent>
       </Card>
     )
