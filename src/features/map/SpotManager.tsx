@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { MapPinIcon, TrashIcon } from 'lucide-react'
 import { db } from '../../db/db'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { computeSpotStats } from '../../utils/spotStats'
 import {
@@ -88,6 +89,11 @@ export function SpotManager({ open, onOpenChange, pinPosition }: SpotManagerProp
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const spots = useLiveQuery(() => db.spots.orderBy('createdAt').reverse().toArray(), [])
+  // Na szerokim ekranie (lg:+) szuflada wysuwa się z prawej jako stały panel boczny zamiast
+  // arkusza z dołu - na desktopie jest dość miejsca, żeby nie zasłaniać mapy pod spodem, a
+  // panel z boku czyta się bardziej jak "narzędzie obok mapy" niż modal najeżdżający na widok.
+  const isWidePanel = useMediaQuery('(min-width: 1024px)')
+  const swipeDirection = isWidePanel ? 'right' : 'down'
 
   async function handleSave() {
     const trimmedName = name.trim()
@@ -119,8 +125,8 @@ export function SpotManager({ open, onOpenChange, pinPosition }: SpotManagerProp
   }
 
   return (
-    <Drawer open={open} showSwipeHandle onOpenChange={onOpenChange}>
-      <DrawerContent className="mx-auto max-w-md">
+    <Drawer open={open} showSwipeHandle swipeDirection={swipeDirection} onOpenChange={onOpenChange}>
+      <DrawerContent className={swipeDirection === 'down' ? 'mx-auto max-w-md' : undefined}>
         <DrawerHeader>
           <DrawerTitle>Grzybowiska</DrawerTitle>
           <DrawerDescription>
