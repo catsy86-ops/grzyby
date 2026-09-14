@@ -13,10 +13,10 @@ describe('ToolsMenu', () => {
   it('pokazuje wszystkie narzędzia, gdy otwarty', () => {
     render(<ToolsMenu open onOpenChange={vi.fn()} onSelect={vi.fn()} forestMode={false} onToggleForestMode={vi.fn()} />)
     expect(screen.getByText('Timer kuchenny')).toBeInTheDocument()
-    expect(screen.getByText('Checklista sprzętu przed wyjściem')).toBeInTheDocument()
-    expect(screen.getByText('Ochrona przed kleszczami')).toBeInTheDocument()
+    expect(screen.getByText('Checklista sprzętu')).toBeInTheDocument()
+    expect(screen.getByText('Kleszcze')).toBeInTheDocument()
     expect(screen.getByText('Pamięć i dane')).toBeInTheDocument()
-    expect(screen.getByText('Pierwsza pomoc przy podejrzeniu zatrucia')).toBeInTheDocument()
+    expect(screen.getByText('Pierwsza pomoc')).toBeInTheDocument()
     expect(screen.getByText(/Tryb "W lesie"/)).toBeInTheDocument()
   })
 

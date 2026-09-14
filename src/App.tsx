@@ -94,13 +94,17 @@ function App() {
           <Logo className="size-5" />
           <span className="text-sm font-bold tracking-wide">Grzybobranie</span>
         </div>
+        {/* Przycisk "Narzędzia" celowo WYRAŹNIEJSZY niż ThemeToggle obok (stała, nie tylko
+            hover, obwódka/tło + pełna nieprzezroczystość ikony) - to wejście do pierwszej
+            pomocy/kleszczy/checklisty sprzętu, nie kosmetyczne ustawienie, więc nie powinno mieć
+            tej samej, łatwej do przeoczenia wagi wizualnej co przełącznik motywu. */}
         <button
           type="button"
           onClick={() => setShowToolsMenu(true)}
           aria-label="Narzędzia"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground outline-none ring-1 ring-primary-foreground/25 transition-colors hover:bg-primary-foreground/25 focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
         >
-          <WrenchIcon className="size-4" />
+          <WrenchIcon className="size-4.5" />
         </button>
       </header>
       <AnimatePresence>
