@@ -152,9 +152,11 @@ zanim ktokolwiek to zaimplementuje.
       znalezisk/różnorodność gatunków/data ostatniej wizyty), usuwanie (znaleziska zostają,
       tracą tylko powiązanie). Marker 📍 na mapie. `AddFindingForm.tsx` pozwala opcjonalnie
       przypisać nowe znalezisko do istniejącego grzybowiska.
-- [ ] Dedykowany ekran "Porównywarka" (Jadalny vs Trujący side-by-side) - dziś sobowtóry są inline
-      w karcie gatunku, osobny widok "X kontra Y" z dwoma zdjęciami obok siebie i listą różnic
-      byłby czytelniejszy do szybkiej weryfikacji w terenie
+- [x] Dedykowany ekran "Porównywarka" (2026-09-14) - `SpeciesComparator.tsx` (Dialog), przycisk
+      "Porównaj" przy każdym sobowtórze w `LookalikesWarning.tsx`. Dwie kolumny side-by-side:
+      zdjęcie, nazwa, plakietka jadalności, siedlisko, sezon, pełny opis rozpoznawania - zamiast
+      nowej, ręcznie kuratorowanej treści "różnic" (ryzyko błędu przy treści bezpieczeństwa),
+      wykorzystuje już zweryfikowane dane z `species.json` w czytelnym układzie porównawczym.
 - [ ] Waga/ilość w statystykach zbiorów - wymaga nowego pola w schemacie (`Finding.weightGrams`),
       dziś `tripStats.ts` liczy tylko liczbę/różnorodność gatunków
 - [ ] Przepisy kulinarne i porady dot. czyszczenia/suszenia - nowy statyczny dataset (jak
