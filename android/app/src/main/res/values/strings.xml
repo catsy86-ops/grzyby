@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ŁYSY</string>
-    <string name="widget_description">Statystyki aktywnej wyprawy ŁYSY</string>
-    <string name="widget_idle_title">🍄 ŁYSY</string>
+    <string name="app_name">Grzybobranie</string>
+    <string name="widget_description">Statystyki aktywnej wyprawy Grzybobranie</string>
+    <string name="widget_idle_title">🍄 Grzybobranie</string>
     <string name="widget_idle_subtitle">Brak aktywnej wyprawy</string>
     <string name="widget_open_app">Otwórz aplikację</string>
 </resources>

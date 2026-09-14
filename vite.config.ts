@@ -18,8 +18,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png'],
       manifest: {
-        name: 'ŁYSY - dziennik grzybiarza',
-        short_name: 'ŁYSY',
+        name: 'Grzybobranie - dziennik grzybiarza',
+        short_name: 'Grzybobranie',
         description: 'Mapa, rozpoznawanie i dziennik zbiorów grzybów - działa offline',
         theme_color: '#166534',
         background_color: '#ffffff',

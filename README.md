@@ -1,4 +1,4 @@
-# ŁYSY — dziennik grzybiarza
+# Grzybobranie — dziennik grzybiarza
 
 PWA (Progressive Web App) do zbierania grzybów: mapa znalezisk, rozpoznawanie gatunków ze zdjęcia (on-device AI), dziennik zbiorów i baza wiedzy o gatunkach. Działa w pełni offline — dane zapisywane są lokalnie w przeglądarce (IndexedDB), bez konta i bez backendu.
 
