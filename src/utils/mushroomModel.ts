@@ -96,7 +96,10 @@ export function rankPredictions(
     .slice(0, topN)
 }
 
-export async function identifyMushroom(imageElement: HTMLImageElement): Promise<Prediction[]> {
+// Przyjmuje ImageBitmap (do wywołania z Web Workera - patrz workers/mushroomWorker.ts, transferable
+// bez kopiowania) albo HTMLImageElement (wywołanie bezpośrednio z głównego wątku) - `tf.browser.
+// fromPixels` obsługuje oba typy natywnie.
+export async function identifyMushroom(imageElement: HTMLImageElement | ImageBitmap): Promise<Prediction[]> {
   const tf = await import('@tensorflow/tfjs')
   const [model, labels] = await Promise.all([loadModel(), loadClassLabels()])
 

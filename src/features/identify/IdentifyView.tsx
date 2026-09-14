@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { CameraIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
-import { identifyMushroom, isModelAvailable, type Prediction } from '../../utils/mushroomModel'
+import { isModelAvailable, type Prediction } from '../../utils/mushroomModel'
+import { identifyMushroomInWorker } from '../../utils/mushroomWorkerClient'
 import { PredictionCard } from './PredictionCard'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
@@ -43,7 +44,10 @@ export function IdentifyView() {
     setLoading(true)
     setError(null)
     try {
-      const results = await identifyMushroom(imageRef.current)
+      // Kompresja/pomiar - createImageBitmap jest tani (główny wątek), sama inferencja TF.js
+      // liczy się w Web Workerze (patrz utils/mushroomWorkerClient.ts), żeby nie przycinać UI.
+      const bitmap = await createImageBitmap(imageRef.current)
+      const results = await identifyMushroomInWorker(bitmap)
       setPredictions(results)
     } catch (err) {
       setError(

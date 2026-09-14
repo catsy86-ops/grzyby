@@ -220,12 +220,29 @@ Next.js):**
 
 Realne, zgodne z obecnym stosem, warte dodania:
 - [ ] **Wirtualizacja list** (TanStack Virtual) w `JournalView.tsx`/`EncyclopediaView.tsx` -
-      pokrywa się z luką już znalezioną przez agenta w Fazie 9 (`useLiveQuery(() =>
-      db.findings.toArray())` bez limitu). Realny problem przy dużej historii, dobra, konkretna
-      biblioteka do tego.
-- [ ] **Web Worker dla inferencji TF.js** - dziś `identifyMushroom()` w
-      `src/utils/mushroomModel.ts` liczy na głównym wątku; dla większych modeli może to
-      przycinać UI. Przeniesienie do Web Workera to legalna, niezależna od frameworka technika.
+      rozważone i **świadomie odłożone** (2026-09-14): pierwotny problem, który ten punkt miał
+      rozwiązać (`useLiveQuery(() => db.findings.toArray())` bez limitu, Faza 9), jest już
+      naprawiony - lista w `JournalView.tsx` jest paginowana (`PAGE_SIZE = 100`, "Załaduj
+      więcej"), więc nieograniczone renderowanie DOM przestało być realnym ryzykiem.
+      Doinstalowanie `@tanstack/react-virtual` wymagałoby: (1) przepięcia listy z
+      window-scrollowanej strony na `useWindowVirtualizer` z dynamicznym pomiarem wysokości
+      (wiersze mają zmienną wysokość - tryb edycji), (2) usunięcia `useAutoAnimate` z tej listy
+      (koliduje z pozycjonowaniem przez transform wirtualizera), (3) w środowisku testowym jsdom
+      wirtualizowane listy zwykle nie renderują elementów spoza "okna" bez ręcznego mockowania
+      `getBoundingClientRect`/`ResizeObserver`/wymiarów okna - realne ryzyko przepisania większości
+      z 14 testów `JournalView.test.tsx` bez odpowiadającej korzyści przy 19 gatunkach
+      (`EncyclopediaView`) i stronach po 100 wpisów (`JournalView`). Do rozważenia ponownie, gdyby
+      w praktyce pojawiły się realne skargi na wydajność przy bardzo długiej historii.
+- [x] **Web Worker dla inferencji TF.js** (2026-09-14) - `workers/mushroomWorker.ts` (Vite
+      module worker) + `utils/mushroomWorkerClient.ts` (korelacja żądań po `requestId`, żeby
+      równoległe wywołania się nie pomieszały). `identifyMushroom()` w `mushroomModel.ts`
+      przyjmuje teraz `ImageBitmap` (transferable, zero kopiowania) obok `HTMLImageElement`.
+      `IdentifyView.tsx` konwertuje wybrane zdjęcie na `ImageBitmap` (`createImageBitmap`,
+      główny wątek, tanie) i wysyła do workera - inferencja TF.js (i cały bundle @tensorflow/tfjs)
+      liczy się poza głównym wątkiem, UI zostaje płynne podczas analizy. Zweryfikowane buildem
+      (worker poprawnie zbundlowany przez Vite i podjęty przez precache PWA) i live w przeglądarce
+      (zakładka "Rozpoznaj" renderuje się bez błędów w konsoli) - pełny test inferencji wymaga
+      dostarczonego modelu (Faza 5, nadal do Ciebie).
 - [ ] **Eksport PDF z podsumowaniem wyprawy/sezonu** (`react-pdf` lub `jsPDF`, generowane w
       100% po stronie klienta, bez serwera) - naturalne rozszerzenie istniejącego
       eksportu/dziennika.
