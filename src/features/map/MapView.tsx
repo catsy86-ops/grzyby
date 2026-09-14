@@ -3,13 +3,14 @@ import { Circle, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } f
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
 import L from 'leaflet'
-import { CarIcon, MapPinnedIcon, SunsetIcon, XIcon } from 'lucide-react'
+import { CarIcon, MapPinnedIcon, MessageCircleIcon, SunsetIcon, XIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import type { Finding, Spot } from '../../db/schema'
 import { useAppStore } from '../../stores/appStore'
 import { clusterFindings } from '../../utils/clusterFindings'
 import { formatDistance, getBearingDegrees, getCardinalDirection, getDistanceMeters } from '../../utils/bearing'
 import { getCurrentPosition, watchPosition } from '../../utils/geolocation'
+import { buildLocationSmsUrl } from '../../utils/locationSms'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
 import { AddFindingForm } from './AddFindingForm'
@@ -426,6 +427,18 @@ export function MapView() {
         <Button variant="secondary" className="rounded-full shadow" onClick={handleLocate}>
           Zlokalizuj mnie
         </Button>
+        {userPosition && (
+          <Button
+            variant="secondary"
+            className="rounded-full shadow"
+            onClick={() => {
+              window.location.href = buildLocationSmsUrl(userPosition[0], userPosition[1])
+            }}
+          >
+            <MessageCircleIcon className="size-4" />
+            Wyślij SMS z lokalizacją
+          </Button>
+        )}
         <Button className="rounded-full shadow" onClick={() => setShowAddForm(true)}>
           + Dodaj znalezisko
         </Button>

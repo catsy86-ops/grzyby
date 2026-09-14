@@ -194,9 +194,11 @@ błędów w konsoli.
       NIEchronione: purchawka olbrzymia (wykreślona z listy w 2014), gąska zielonka (tylko
       Czerwona Lista, dopuszczona do obrotu), piestrzenica kasztanowata, muchomor jadowity.
       Odznaka "Chroniony" przy nazwie + ostrzeżenie (`Alert`) w `EncyclopediaView.tsx`.
-- [ ] Przycisk "Wyślij SMS z lokalizacją" - **da się zrobić bez własnego backendu**: natywny URI
-      `sms:?body=...` z współrzędnymi GPS otwiera domyślną aplikację SMS telefonu, użytkownik sam
-      wybiera odbiorcę i wysyła - żadnych danych nie przechodzi przez serwer tej apki
+- [x] Przycisk "Wyślij SMS z lokalizacją" (2026-09-14) - `utils/locationSms.ts`
+      (`buildLocationSmsUrl`), natywny URI `sms:?body=...` (`sms:&body=...` na iOS - różnica
+      w zachowaniu Safari) z współrzędnymi i linkiem Google Maps. Przycisk w `MapView.tsx`, widoczny
+      gdy znana jest pozycja użytkownika. Zero backendu, zero danych opuszczających urządzenie
+      poza samym SMS-em, który użytkownik świadomie wysyła.
 
 **Wymaga backendu/serwera - SPRZECZNE z dotychczasową architekturą, decyzja do Ciebie:**
 - Weryfikacja społecznościowa (pytanie innych użytkowników o potwierdzenie gatunku)
