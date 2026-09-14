@@ -55,6 +55,10 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
         const [photoBlob, thumbnailBlob] = await Promise.all([compressPhoto(photo), createThumbnail(photo)])
         await db.photos.add({ findingId, blob: photoBlob, thumbnailBlob })
       }
+      // Potwierdzenie zapisu - dotąd formularz po prostu cicho się zamykał, bez żadnego
+      // sygnału "udało się". Ten sam moment co w Dzienniku (pusty koszyk -> pierwszy wpis),
+      // tylko odwrotnie - to jest "nagroda" za dodanie znaleziska w terenie.
+      toast.success(species ? `Dodano do dziennika: ${species.nameCommon}` : 'Dodano znalezisko do dziennika')
       onClose(true)
     } catch (err) {
       // Natywny DOMException (rzucany przez IndexedDB przy przekroczeniu limitu) NIE dziedziczy
