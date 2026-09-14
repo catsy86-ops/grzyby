@@ -69,7 +69,7 @@ export function ConsumptionTracker({ finding }: { finding: Finding }) {
             value={severity}
             className={
               severity === 'ciężka'
-                ? 'rounded-full data-pressed:border-red-600 data-pressed:bg-red-600 data-pressed:text-white'
+                ? 'rounded-full data-pressed:border-destructive data-pressed:bg-destructive data-pressed:text-white'
                 : 'rounded-full'
             }
           >

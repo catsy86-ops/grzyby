@@ -58,7 +58,7 @@ function SpotRow({ spotId, name, notes }: { spotId: number; name: string; notes:
           type="button"
           aria-label={`Usuń grzybowisko: ${name}`}
           onClick={() => setConfirmDelete(true)}
-          className="shrink-0 rounded p-1 text-muted-foreground outline-none hover:text-red-600 focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="shrink-0 rounded p-1 text-muted-foreground outline-none hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           <TrashIcon className="size-4" />
         </button>
@@ -73,7 +73,7 @@ function SpotRow({ spotId, name, notes }: { spotId: number; name: string; notes:
           </AlertDialogDescription>
           <AlertDialogFooter>
             <AlertDialogCancel>Anuluj</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-600 text-white hover:bg-red-700" onClick={handleDelete}>
+            <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90" onClick={handleDelete}>
               Usuń
             </AlertDialogAction>
           </AlertDialogFooter>

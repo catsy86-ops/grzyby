@@ -301,7 +301,7 @@ export function JournalView() {
       <NotificationPermissionBanner />
 
       {severeReactionFindings.length > 0 && (
-        <Alert variant="destructive-soft" className="border-red-400">
+        <Alert variant="destructive-soft">
           <AlertTitle>⚠️ Zgłoszono ciężką reakcję po spożyciu</AlertTitle>
           <AlertDescription className="text-current">
             <p>
@@ -325,7 +325,7 @@ export function JournalView() {
               type="button"
               variant="outline"
               size="sm"
-              className="mt-2 border-red-600 text-red-700 hover:bg-red-100"
+              className="mt-2 border-destructive/60 text-destructive hover:bg-destructive/10"
               onClick={() => setShowFirstAid(true)}
             >
               Zobacz przewodnik pierwszej pomocy
@@ -401,7 +401,7 @@ export function JournalView() {
         {filteredFindings?.map((finding) => {
           if (finding.id != null && editingId === finding.id) {
             return (
-              <Card key={finding.id} size="sm" className="ring-green-300">
+              <Card key={finding.id} size="sm" className="ring-primary/40">
                 <CardContent className="flex flex-col gap-2">
                   <label className="text-sm">
                     Gatunek
@@ -496,7 +496,7 @@ export function JournalView() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="w-fit text-red-600"
+                      className="w-fit text-destructive"
                       onClick={() => setEditRemovePhoto(true)}
                     >
                       Usuń obecne zdjęcie
@@ -556,7 +556,7 @@ export function JournalView() {
                       <button
                         type="button"
                         onClick={() => setConfirmDeleteId(finding.id ?? null)}
-                        className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-red-600 hover:underline"
+                        className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-destructive hover:underline"
                       >
                         Usuń
                       </button>
@@ -601,7 +601,7 @@ export function JournalView() {
           <AlertDialogFooter>
             <AlertDialogCancel>Anuluj</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-destructive text-white hover:bg-destructive/90"
               onClick={() => confirmDeleteId != null && handleDelete(confirmDeleteId)}
             >
               Tak, usuń

@@ -105,7 +105,10 @@ export function EncyclopediaView() {
                 <p className="font-medium">{s.nameCommon}</p>
                 <div className="flex shrink-0 gap-1.5">
                   {s.legalProtection && (
-                    <Badge variant="secondary" className="gap-1 border-amber-400 bg-amber-50 text-amber-900">
+                    <Badge
+                      variant="secondary"
+                      className="gap-1 border-brand-accent/40 bg-brand-accent/10 text-brand-accent"
+                    >
                       <ScaleIcon className="size-3" />
                       Chroniony
                     </Badge>

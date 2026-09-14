@@ -8,14 +8,14 @@ export function FirstAidGuide({ open, onOpenChange }: { open: boolean; onOpenCha
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-md">
         <DialogTitle className="flex items-center gap-2">
-          <PhoneCallIcon className="size-5 text-red-600" />
+          <PhoneCallIcon className="size-5 text-destructive" />
           Pierwsza pomoc przy podejrzeniu zatrucia
         </DialogTitle>
 
         <ol className="flex flex-col gap-3 text-sm">
           {FIRST_AID_STEPS.map((step, index) => (
             <li key={step.title} className="flex gap-2.5">
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-destructive text-xs font-bold text-white">
                 {index + 1}
               </span>
               <div>
