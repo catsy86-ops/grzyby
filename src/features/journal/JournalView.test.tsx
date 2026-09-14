@@ -279,6 +279,38 @@ describe('JournalView - ostrzeżenie o duplikatach przy imporcie', () => {
   })
 })
 
+describe('JournalView - eksport PDF', () => {
+  beforeEach(async () => {
+    await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
+      await db.findings.clear()
+      await db.trips.clear()
+      await db.photos.clear()
+    })
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.restoreAllMocks()
+  })
+
+  it('generuje i pobiera PDF po kliknięciu przycisku "PDF"', async () => {
+    await addFinding({ notes: 'Do PDF' })
+    const createObjectURLSpy = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockReturnValue('blob:mock-pdf')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+
+    render(<JournalView />)
+    await screen.findByText('Do PDF')
+
+    fireEvent.click(screen.getByRole('button', { name: 'PDF' }))
+
+    await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled())
+    const blobArg = createObjectURLSpy.mock.calls[0][0] as Blob
+    expect(blobArg.type).toBe('application/pdf')
+  })
+})
+
 describe('JournalView - ostrzeżenie o ciężkiej reakcji', () => {
   beforeEach(async () => {
     await db.transaction('rw', db.findings, db.trips, db.photos, async () => {

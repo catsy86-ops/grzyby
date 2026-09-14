@@ -18,6 +18,7 @@ import {
 } from '../../utils/exportImport'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
+import { exportFindingsToPdf } from '../../utils/pdfExport'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
 import { countSpeciesDiversity, formatDuration, formatWeight, sumWeightGrams } from '../../utils/tripStats'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
@@ -140,6 +141,16 @@ export function JournalView() {
     downloadBlob(blob, `lysy-dziennik-${new Date().toISOString().slice(0, 10)}.json`)
   }
 
+  async function handleExportPdf() {
+    if (!filteredFindings) return
+    const blob = await exportFindingsToPdf(filteredFindings, {
+      title: selectedTrip ? selectedTrip.name : 'Dziennik zbiorów',
+      subtitle: searchQuery.trim() ? `Filtr: "${searchQuery.trim()}"` : undefined,
+      tripInfo: selectedTrip ? { startedAt: selectedTrip.startedAt, endedAt: selectedTrip.endedAt } : undefined,
+    })
+    downloadBlob(blob, `lysy-${selectedTrip ? selectedTrip.name.replace(/\s+/g, '-').toLowerCase() : 'dziennik'}-${new Date().toISOString().slice(0, 10)}.pdf`)
+  }
+
   async function finishImport(payload: ExportPayload) {
     try {
       const result = await importPayload(payload)
@@ -258,6 +269,9 @@ export function JournalView() {
           </Button>
           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
             Importuj
+          </Button>
+          <Button variant="outline" size="sm" disabled={!filteredFindings} onClick={handleExportPdf}>
+            PDF
           </Button>
           <input
             ref={fileInputRef}

@@ -243,9 +243,11 @@ Realne, zgodne z obecnym stosem, warte dodania:
       (worker poprawnie zbundlowany przez Vite i podjęty przez precache PWA) i live w przeglądarce
       (zakładka "Rozpoznaj" renderuje się bez błędów w konsoli) - pełny test inferencji wymaga
       dostarczonego modelu (Faza 5, nadal do Ciebie).
-- [ ] **Eksport PDF z podsumowaniem wyprawy/sezonu** (`react-pdf` lub `jsPDF`, generowane w
-      100% po stronie klienta, bez serwera) - naturalne rozszerzenie istniejącego
-      eksportu/dziennika.
+- [x] **Eksport PDF z podsumowaniem wyprawy/sezonu** (2026-09-14) - `utils/pdfExport.ts`
+      (jsPDF, ładowany leniwie dynamicznym importem - nie obciąża głównego bundla), 100% po
+      stronie klienta. Przycisk "PDF" w `JournalView.tsx` obok istniejącego eksportu JSON -
+      eksportuje aktualnie widoczny (przefiltrowany/wyprawę) zestaw znalezisk: nagłówek, daty i
+      czas trwania wyprawy, suma znalezisk/gatunków/wagi, lista znalezisk z paginacją stron PDF.
 
 Nie dotyczy / nie da się zastosować wprost (framework mismatch):
 - `@ducanh2912/next-pwa`, RSC/Server Actions, `generateStaticParams`, `@vercel/og` - to
