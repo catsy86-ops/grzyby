@@ -31,6 +31,20 @@ export function parseSeasonRange(season: string): SeasonRange | null {
   return { startMonth, endMonth }
 }
 
+// Kolor kropki sezonu na karcie gatunku - meteorologiczna pora roku wyznaczona z miesiąca
+// startowego zakresu (np. "Czerwiec - Październik" -> lato). To uproszczenie (realny sezon
+// grzyba zwykle obejmuje 2 pory roku), ale wystarcza jako subtelny sygnał wizualny, nie
+// precyzyjna klasyfikacja - pełny tekstowy zakres zostaje widoczny obok kropki.
+const SEASON_DOT_CLASS = ['bg-sky-400', 'bg-lime-500', 'bg-yellow-500', 'bg-orange-500'] as const
+
+export function getSeasonDotClass(season: string): string {
+  const range = parseSeasonRange(season)
+  if (!range) return 'bg-muted-foreground'
+  // 0=zima(gru-lut), 1=wiosna(mar-maj), 2=lato(cze-sie), 3=jesień(wrz-lis)
+  const meteorologicalSeason = Math.floor(((range.startMonth + 1) % 12) / 3) as 0 | 1 | 2 | 3
+  return SEASON_DOT_CLASS[meteorologicalSeason]
+}
+
 // Fail-open: nieparsowalny/nietypowy format sezonu nigdy nie ukrywa gatunku (bezpieczniej pokazać
 // za dużo niż przypadkiem odfiltrować coś, co akurat rośnie).
 export function isInSeason(season: string, date: Date = new Date()): boolean {

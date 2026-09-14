@@ -14,7 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../compo
 import { Input } from '../../components/ui/input'
 import { Toggle } from '../../components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
-import { isInSeason } from '../../utils/seasonFilter'
+import { getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'
 
 const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
   { label: 'Wszystkie', value: 'wszystkie' },
@@ -117,6 +117,14 @@ export function EncyclopediaView() {
                 </div>
               </div>
               <p className="text-sm italic text-muted-foreground">{s.nameLatin}</p>
+              {/* Sezon zawsze widoczny (nie dopiero po rozwinięciu "Szczegóły") - to jedna z
+                  rzeczy, które grzybiarz chce wiedzieć od razu, skanując listę, nie po otwarciu
+                  karty. Kolor kropki to pora roku (uproszczona), tekst to dokładny zakres. */}
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={`size-1.5 shrink-0 rounded-full ${getSeasonDotClass(s.season)}`} aria-hidden="true" />
+                {s.season}
+                {isInSeason(s.season) && <span className="font-medium text-primary">· w sezonie teraz</span>}
+              </p>
               {/* Ostrzeżenie o ochronie prawnej zostaje zawsze widoczne (obok jadalności) - to,
                   razem z LookalikesWarning w widoku Rozpoznaj, jest bezpieczeństwo/legalność, nie
                   ciekawostka do zwinięcia. */}
@@ -139,9 +147,7 @@ export function EncyclopediaView() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <p className="mt-2 text-sm text-foreground/80">{s.description}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Siedlisko: {s.habitat} · Sezon: {s.season}
-                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Siedlisko: {s.habitat}</p>
                   <LookalikesWarning species={s} allSpecies={species} />
                   {s.preparationTips && (
                     <div
