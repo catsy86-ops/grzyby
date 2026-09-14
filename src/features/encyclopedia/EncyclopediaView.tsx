@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
-import { SearchXIcon, LeafIcon } from 'lucide-react'
+import { SearchXIcon, LeafIcon, ChefHatIcon } from 'lucide-react'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
@@ -103,6 +103,15 @@ export function EncyclopediaView() {
                 Siedlisko: {s.habitat} · Sezon: {s.season}
               </p>
               <LookalikesWarning species={s} allSpecies={species} />
+              {s.preparationTips && (
+                <div
+                  data-testid="preparation-tip"
+                  className="mt-2 flex items-start gap-1.5 rounded-lg bg-muted/60 p-2 text-xs text-foreground/80"
+                >
+                  <ChefHatIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                  <p>{s.preparationTips}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

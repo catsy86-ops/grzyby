@@ -161,8 +161,12 @@ zanim ktokolwiek to zaimplementuje.
       migracji indeksu - niequerowane pole). Pole wagi w `AddFindingForm.tsx` i edycji w
       `JournalView.tsx`, `sumWeightGrams()`/`formatWeight()` w `tripStats.ts`, suma widoczna w
       podsumowaniu aktywnej wyprawy (`TripManager.tsx`) i filtrowanej wyprawy (`JournalView.tsx`).
-- [ ] Przepisy kulinarne i porady dot. czyszczenia/suszenia - nowy statyczny dataset (jak
-      `species.json`), osobna zakładka/sekcja per gatunek
+- [x] Przepisy kulinarne i porady dot. czyszczenia/suszenia (2026-09-14) - nowe pole
+      `Species.preparationTips` (schema.ts, opcjonalne, tylko gatunki jadalne/warunkowo-jadalne -
+      9/19), wypełnione dla wszystkich odpowiednich gatunków: czyszczenie, suszenie/mrożenie,
+      sugestia przyrządzenia (zwięzłe porady, nie pełne przepisy z miarami - to atlas, nie
+      książka kucharska). Sekcja w karcie gatunku w `EncyclopediaView.tsx`. Łączy się z pokrewnym
+      punktem "info o suszeniu/mrożeniu/gotowaniu" z trzeciej listy niżej - zrobione razem.
 - [ ] Krótki przewodnik pierwszej pomocy przy podejrzeniu zatrucia - statyczna treść
       bezpieczeństwa, wysoka wartość/niski koszt, spójna z istniejącymi ostrzeżeniami
 - [ ] Oznaczenie gatunków chronionych prawem - wymaga nowego pola (dziś `edibility` nie rozróżnia
@@ -248,8 +252,8 @@ Realne, zgodne z architekturą, warte dodania:
       przypomnienie o kontroli po 14 dniach) - da się zrealizować na już istniejącej
       infrastrukturze lokalnych powiadomień (`src/utils/notifications.ts`, ten sam mechanizm co
       przypomnienie o długiej wyprawie z P2).
-- [ ] Info o suszeniu/mrożeniu/gotowaniu per gatunek - nowe pole treści w `species.json` (jak
-      `habitat`/`season`), zero nowej infrastruktury.
+- [x] Info o suszeniu/mrożeniu/gotowaniu per gatunek (2026-09-14) - zrobione razem z punktem
+      "Przepisy kulinarne i porady..." wyżej (`Species.preparationTips`).
 - [ ] Timer do blanszowania/gotowania - prosty stoper w UI, opcjonalnie z czasami sugerowanymi per
       gatunek z punktu wyżej.
 - [ ] Tryb "W lesie" (duże przyciski, wysoki kontrast) - czysto UI/CSS, realna wartość (mokre

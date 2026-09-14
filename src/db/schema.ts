@@ -10,6 +10,10 @@ export interface Species {
   season: string
   lookalikes: string[]
   imageUrls: string[]
+  // Porady dot. czyszczenia, suszenia/mrożenia i przyrządzania - tylko dla gatunków jadalnych/
+  // warunkowo-jadalnych (edibility). Zwięzłe wskazówki, nie pełne przepisy z odmierzonymi
+  // składnikami - to atlas grzybów, nie książka kucharska.
+  preparationTips?: string
 }
 
 export type ReactionSeverity = 'brak' | 'lekka' | 'ciężka'

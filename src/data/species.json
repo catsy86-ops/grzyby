@@ -13,7 +13,8 @@
     ],
     "imageUrls": [
       "/species-images/borowik-szlachetny.jpg"
-    ]
+    ],
+    "preparationTips": "Czyszczenie: oczyść szczoteczką z ziemi i igieł, nie mocz w wodzie (miąższ ją chłonie) - przetrzyj wilgotną szmatką. Suszenie: pokrój w plastry ok. 5 mm i susz w przewiewnym miejscu lub suszarce (40-50°C) - jeden z najlepszych grzybów do suszenia, po wysuszeniu bardzo aromatyczny. Mrożenie: krótko podsmaż na suchej patelni, żeby odparować wodę, przed zamrożeniem. Gotowanie: świetny duszony z cebulą, w sosach i zupach."
   },
   {
     "id": "goryczak-zolciowy",
@@ -78,7 +79,8 @@
     ],
     "imageUrls": [
       "/species-images/czubajka-kania.jpg"
-    ]
+    ],
+    "preparationTips": "Czyszczenie: usuń twardy, włóknisty trzon (zwykle się go nie je), oczyść kapelusz z ziemi. Suszenie/mrożenie: niepolecane - traci strukturę, najlepsza na świeżo. Gotowanie: klasycznie panierowany i smażony sam kapelusz ('kotlet z czubajki') - popularny, prosty przysmak."
   },
   {
     "id": "muchomor-czerwony",
@@ -104,7 +106,8 @@
     "lookalikes": [],
     "imageUrls": [
       "/species-images/maslak-zwyczajny.jpg"
-    ]
+    ],
+    "preparationTips": "Czyszczenie: koniecznie zdejmij śluzowatą skórkę z kapelusza (gorzknieje, ciężko strawna), u starszych okazów usuń też warstwę rurek. Suszenie: możliwe po zdjęciu skórki, ale jakość gorsza niż borowika. Mrożenie: po krótkim podgotowaniu. Gotowanie: dobry do zup i duszenia, smak łagodniejszy niż borowik."
   },
   {
     "id": "pieprznik-jadalny",
@@ -119,7 +122,8 @@
     ],
     "imageUrls": [
       "/species-images/pieprznik-jadalny.jpg"
-    ]
+    ],
+    "preparationTips": "Czyszczenie: delikatnie oczyść pędzelkiem/szmatką, rzadko bywa robaczywa. Suszenie: możliwe, ale twardnieje i traci część aromatu - lepiej sprawdza się marynowanie lub mrożenie. Mrożenie: krótko podsmaż na suchej patelni przed zamrożeniem. Gotowanie: świetna smażona na maśle z jajkami, w sosach śmietanowych."
   },
   {
     "id": "borowik-szatanski",
@@ -177,7 +181,8 @@
     "lookalikes": [],
     "imageUrls": [
       "/species-images/podgrzybek-brunatny.jpg"
-    ]
+    ],
+    "preparationTips": "Czyszczenie: jak przy borowiku - przetrzyj wilgotną szmatką, nie mocz w wodzie. Suszenie: bardzo dobrze się suszy, zachowuje intensywny aromat. Mrożenie: krótko podsmaż przed zamrożeniem, jak borowika. Gotowanie: uniwersalny zamiennik borowika w zupach, sosach i duszeniu."
   },
   {
     "id": "kozlarz-babka",
@@ -190,7 +195,8 @@
     "lookalikes": [],
     "imageUrls": [
       "/species-images/kozlarz-babka.jpg"
-    ]
+    ],
+    "preparationTips": "Czyszczenie: usuń twarde łuski z trzonu jeśli przeszkadzają, wytnij robaczywe fragmenty. Suszenie: miąższ ciemnieje po wysuszeniu, ale smak zostaje. Mrożenie: po krótkim podgotowaniu - na surowo miąższ szybko ciemnieje i mięknie. Gotowanie: dobry duszony i do zup."
   },
   {
     "id": "opienka-miodowa",
@@ -205,7 +211,8 @@
     ],
     "imageUrls": [
       "/species-images/opienka-miodowa.jpg"
-    ]
+    ],
+    "preparationTips": "Czyszczenie: odetnij twarde, włókniste trzony - zwykle je się same kapelusze. Suszenie/mrożenie: WYŁĄCZNIE po wcześniejszym ugotowaniu (min. 15-20 min) - na surowo jest lekko trująca. Gotowanie: zawsze dokładnie ugotuj przed dalszą obróbką (np. smażeniem), nigdy nie spożywaj surowej ani niedogotowanej."
   },
   {
     "id": "helmowka-jadowita",
@@ -235,7 +242,8 @@
     ],
     "imageUrls": [
       "/species-images/smardz-jadalny.jpg"
-    ]
+    ],
+    "preparationTips": "Czyszczenie: przekrój wzdłuż i dokładnie wypłucz z piasku/owadów - komorowa budowa gąbczastego kapelusza łatwo je zbiera. Suszenie: bardzo dobrze się suszy, to popularny i sprawdzony sposób konserwacji. Gotowanie: WYŁĄCZNIE dokładnie ugotowany lub podsmażony, nigdy na surowo - surowy jest lekko trujący."
   },
   {
     "id": "piestrzenica-kasztanowata",
@@ -279,6 +287,7 @@
     ],
     "imageUrls": [
       "/species-images/purchawka-olbrzymia.jpg"
-    ]
+    ],
+    "preparationTips": "Czyszczenie: obierz cienką zewnętrzną skórkę, pokrój w plastry. Suszenie: niepolecane - zmienia strukturę miąższu i traci walory smakowe. Mrożenie: pokrojoną w plastry można zamrozić po krótkim podsmażeniu. Gotowanie: plastry panierowane i smażone jak kotlety - popularny sposób podania."
   }
 ]
