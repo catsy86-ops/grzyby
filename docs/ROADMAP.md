@@ -128,6 +128,19 @@ i jest sprzeczna z dotychczasową, świadomą decyzją architektoniczną tego pr
 zero kont, zero własnej infrastruktury serwerowej) - oznaczone wyraźnie, wymaga Twojej decyzji
 zanim ktokolwiek to zaimplementuje.
 
+**Poprawka infrastruktury GPS (2026-09-14, na wyraźną prośbę użytkownika):** `getCurrentPosition()`
+(pojedynczy odczyt, wciąż używany do edycji lokalizacji/zapisu grzybowiska) zastąpiony w
+`MapView.tsx` przez nowy `watchPosition()` z `utils/geolocation.ts` - ciągłe śledzenie pozycji
+(natywne `navigator.geolocation.watchPosition`, nie ma lepszej "biblioteki" niż ta - to jedyny
+realny silnik GPS w przeglądarce). Pierwszy odczyt z odbiornika bywa niedokładny (zimny start),
+kolejne z tego samego strumienia szybko się poprawiają - użytkownik w ruchu (np. wracając przez
+las) widzi aktualizującą się pozycję bez ręcznego odświeżania. Dodano: koło dokładności GPS na
+mapie (promień = `accuracy` z przeglądarki), wyśrodkowanie mapy tylko przy pierwszym odczycie
+(kolejne aktualizacje nie szarpią widokiem, gdy użytkownik przegląda mapę), sprzątanie
+(`clearWatch`) przy odmontowaniu. 9 nowych testów jednostkowych (`geolocation.test.ts`).
+Zweryfikowane live w przeglądarce: poprawny komunikat przy braku zgody na lokalizację, brak
+błędów w konsoli.
+
 **Już zrobione (pokrywają się z listami):**
 - Skaner AI ze zdjęcia - kod gotowy, model do dostarczenia (Faza 5)
 - Tryb offline (mapa + baza wiedzy + fundament modelu AI) - Faza 4

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from 'react-leaflet'
+import { Circle, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
 import L from 'leaflet'
@@ -9,7 +9,7 @@ import type { Finding, Spot } from '../../db/schema'
 import { useAppStore } from '../../stores/appStore'
 import { clusterFindings } from '../../utils/clusterFindings'
 import { formatDistance, getBearingDegrees, getCardinalDirection, getDistanceMeters } from '../../utils/bearing'
-import { getCurrentPosition } from '../../utils/geolocation'
+import { getCurrentPosition, watchPosition } from '../../utils/geolocation'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
 import { AddFindingForm } from './AddFindingForm'
@@ -162,6 +162,11 @@ function MapInstanceCapture({ onReady }: { onReady: (map: L.Map) => void }) {
 
 export function MapView() {
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null)
+  const [userAccuracyMeters, setUserAccuracyMeters] = useState<number | null>(null)
+  // Cel ponownego wyśrodkowania mapy - celowo OSOBNY stan od `userPosition`: ten drugi aktualizuje
+  // się kilka razy na sekundę z ciągłego GPS (watchPosition) i przenoszenie widoku mapy przy
+  // każdym mikro-skoku współrzędnych byłoby irytujące, gdy użytkownik w tym czasie przegląda mapę.
+  const [recenterTarget, setRecenterTarget] = useState<[number, number] | null>(null)
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [showOfflineDownload, setShowOfflineDownload] = useState(false)
@@ -177,14 +182,32 @@ export function MapView() {
   const returnPoint = useAppStore((s) => s.returnPoint)
   const setReturnPoint = useAppStore((s) => s.setReturnPoint)
 
-  async function handleLocate() {
+  // Ciągłe śledzenie GPS (watchPosition) zamiast jednorazowego odpytania - pierwszy odczyt z
+  // odbiornika bywa niedokładny, kolejne z tego samego strumienia szybko się poprawiają, a
+  // użytkownik w ruchu (np. wracając przez las) widzi aktualizującą się pozycję bez ręcznego
+  // odświeżania. Mapa centruje się automatycznie tylko przy pierwszym odczycie po wejściu na
+  // zakładkę - kolejne aktualizacje przesuwają tylko marker/koło dokładności.
+  useEffect(() => {
+    let hasCenteredOnFirstFix = false
+    const stopWatching = watchPosition(
+      (position) => {
+        const next: [number, number] = [position.latitude, position.longitude]
+        setUserPosition(next)
+        setUserAccuracyMeters(position.accuracyMeters)
+        setLocateError(null)
+        if (!hasCenteredOnFirstFix) {
+          hasCenteredOnFirstFix = true
+          setRecenterTarget(next)
+        }
+      },
+      (message) => setLocateError(message),
+    )
+    return stopWatching
+  }, [])
+
+  function handleLocate() {
     setLocateError(null)
-    try {
-      const coords = await getCurrentPosition()
-      setUserPosition([coords.latitude, coords.longitude])
-    } catch (error) {
-      setLocateError(error instanceof Error ? error.message : 'Nie udało się ustalić lokalizacji')
-    }
+    if (userPosition) setRecenterTarget([userPosition[0], userPosition[1]])
   }
 
   async function handleSaveReturnPoint() {
@@ -210,10 +233,6 @@ export function MapView() {
     }
   }, [returnPoint, userPosition])
 
-  useEffect(() => {
-    handleLocate()
-  }, [])
-
   const findingPosition = pinPosition ?? userPosition
 
   return (
@@ -231,13 +250,25 @@ export function MapView() {
             },
           }}
         />
-        <RecenterOnLocate position={userPosition} />
+        <RecenterOnLocate position={recenterTarget} />
         <MapClickHandler enabled={!showAddForm} onPick={setPinPosition} />
         <MapInstanceCapture onReady={(map) => { mapRef.current = map }} />
         {userPosition && (
-          <Marker position={userPosition} icon={defaultIcon}>
-            <Popup>Twoja pozycja</Popup>
-          </Marker>
+          <>
+            {userAccuracyMeters != null && (
+              <Circle
+                center={userPosition}
+                radius={userAccuracyMeters}
+                pathOptions={{ color: 'var(--color-primary)', weight: 1, fillOpacity: 0.1 }}
+              />
+            )}
+            <Marker position={userPosition} icon={defaultIcon}>
+              <Popup>
+                Twoja pozycja
+                {userAccuracyMeters != null && ` (dokładność ±${Math.round(userAccuracyMeters)} m)`}
+              </Popup>
+            </Marker>
+          </>
         )}
         {pinPosition && (
           <Marker position={pinPosition} icon={pinIcon}>

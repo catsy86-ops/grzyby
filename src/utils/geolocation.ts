@@ -34,3 +34,34 @@ export function getCurrentPosition(): Promise<Coordinates> {
     )
   })
 }
+
+export interface WatchedPosition extends Coordinates {
+  accuracyMeters: number
+}
+
+// Ciągłe śledzenie pozycji (watchPosition) zamiast pojedynczego odpytania - standardowa technika
+// nawigacji GPS w aplikacjach webowych: pierwszy odczyt z GPS bywa niedokładny (zimny start
+// odbiornika), kolejne odczyty z tego samego strumienia szybko się poprawiają, a użytkownik w
+// ruchu (np. wracając przez las) potrzebuje aktualizowanej pozycji bez ręcznego odświeżania.
+// Zwraca funkcję czyszczącą (clearWatch) - wywołać przy odmontowaniu komponentu.
+export function watchPosition(
+  onUpdate: (position: WatchedPosition) => void,
+  onError: (message: string) => void,
+): () => void {
+  if (!('geolocation' in navigator)) {
+    onError('Geolokalizacja nie jest wspierana przez to urządzenie')
+    return () => {}
+  }
+  const watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      onUpdate({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracyMeters: position.coords.accuracy,
+      })
+    },
+    (error) => onError(describeGeolocationError(error)),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+  )
+  return () => navigator.geolocation.clearWatch(watchId)
+}
