@@ -264,7 +264,9 @@ export function JournalView() {
   }
 
   return (
-    <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4">
+    // max-w rośnie na szerszych ekranach - patrz ten sam zabieg i uzasadnienie w
+    // EncyclopediaView.tsx. Lista znalezisk niżej dostaje odpowiadającą siatkę 2/3 kolumn.
+    <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Dziennik zbiorów</h1>
         {/* Trzy osobne przyciski (Eksportuj/Importuj/PDF) skonsolidowane w jedno menu - to akcje
@@ -406,11 +408,14 @@ export function JournalView() {
         </div>
       )}
 
-      <div ref={listRef} className="flex flex-col gap-3">
+      <div ref={listRef} className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 lg:grid-cols-3">
         {filteredFindings?.map((finding) => {
           if (finding.id != null && editingId === finding.id) {
+            // Karta w trybie edycji (formularz z kilkoma polami) rozpięta na całą szerokość
+            // siatki, niezależnie od tego w której kolumnie by wypadła - ścieśniony formularz w
+            // jednej kolumnie 1/3 szerokości byłby niewygodny w użyciu.
             return (
-              <Card key={finding.id} size="sm" className="ring-primary/40">
+              <Card key={finding.id} size="sm" className="ring-primary/40 md:col-span-2 lg:col-span-3">
                 <CardContent className="flex flex-col gap-2">
                   <label className="text-sm">
                     Gatunek
@@ -584,7 +589,7 @@ export function JournalView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
-            className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground"
+            className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground md:col-span-2 lg:col-span-3"
           >
             <EmptyBasketIllustration className="size-14 text-muted-foreground" />
             <p className="text-sm">Brak zapisanych znalezisk dla wybranego filtru.</p>

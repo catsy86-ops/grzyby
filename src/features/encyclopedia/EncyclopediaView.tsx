@@ -48,7 +48,10 @@ export function EncyclopediaView() {
   }, [species, query, filter, seasonOnly])
 
   return (
-    <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4">
+    // max-w rośnie na szerszych ekranach (md/lg) - dotąd apka była wszędzie ograniczona do
+    // szerokości telefonu nawet na desktopie, więc treść pływała wąską kolumną w pustej
+    // przestrzeni. Lista kart niżej dostaje odpowiadającą siatkę 2/3 kolumn.
+    <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
       <h1 className="text-xl font-semibold">Baza wiedzy o gatunkach</h1>
 
       <div className="flex gap-2">
@@ -87,7 +90,7 @@ export function EncyclopediaView() {
         ))}
       </ToggleGroup>
 
-      <div ref={listRef} className="flex flex-col gap-3">
+      <div ref={listRef} className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((s) => (
           // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (filtrowanie/wyszukiwanie
           // animuje pozycję/usunięcie) - mikrointerakcja `whileTap` idzie na wewnętrzny `motion.div`,
@@ -194,7 +197,7 @@ export function EncyclopediaView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
-            className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground"
+            className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground md:col-span-2 lg:col-span-3"
           >
             <EmptySearchIllustration className="size-14 text-muted-foreground" />
             <p className="text-sm">Brak wyników dla podanych kryteriów.</p>
