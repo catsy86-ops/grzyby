@@ -13,6 +13,60 @@ zakres i priorytet.
 
 ---
 
+## Faza 14 - Plan designu po audycie `frontend-expert` (2026-09-14)
+
+Po Fazie 13 użytkownik zlecił świeży audyt UI (agent `frontend-expert`, bez zmian w kodzie) pod
+kątem miejsc, które nadal czują się generyczne/szablonowe mimo dotychczasowego polerowania, i
+niewykorzystanych motywów specyficznych dla grzybobrania. Audyt + skill `frontend-design`
+złożyły się na plan (A-F), zrealizowany krok po kroku w tej sesji, każdy krok zweryfikowany
+osobno (`tsc -b`, pełny `vitest run` 261/261, `npm run build`).
+
+- [x] **Plan A - własny system ikon** zamiast emoji w divIcon i domyślnej niebieskiej pinezki
+      Leaflet - `src/components/icons/mapMarkerIcons.tsx` (markery mapy w stylu `Logo.tsx`: auto,
+      grzybowisko, znalezisko z własnym mini-glifem kapelusza, wybrane-nowe-miejsce z przerywaną
+      obwódką "do potwierdzenia", pozycja użytkownika jako pulsująca kropka - celowo NIE pin, bo
+      to nie miejsce tylko "Ty teraz") i `src/components/icons/illustrations.tsx` (ilustracje
+      pustych stanów/dropzone: pusty koszyk w Dzienniku, lupa nad gasnącym grzybem w Bazie
+      wiedzy, aparat z grzybem w "Rozpoznaj" - zamiast gołych ikon lucide).
+- [x] **Plan F - twarde kolory -> tokeny, globalna blokada ruchu** - fundament pod B/C. Rdzeń
+      problemu: `ui/alert.tsx` (warianty `destructive-soft`/`warning`, dzielony komponent shadcn)
+      miał twardo wpisane `red-300/50/900`/`amber-300/50/900` zamiast `--destructive`/
+      `--brand-accent` - nie adaptowały się w dark mode. Naprawione tam + we wszystkich lokalnych
+      nadpisaniach tego błędu (`EncyclopediaView`, `JournalView`, `ConsumptionTracker`,
+      `SpotManager`, `FirstAidGuide`). Świadomie NIE ruszone: `badge.tsx`
+      success/warning/caution/destructive-solid (celowa, ustalona skala jadalności, nie
+      przypadkowy dług) i `var(--color-amber-700)` w Logo/illustrations (stały kolor ilustracji
+      płaskiej, nie token UI). `src/main.tsx`: `MotionConfig reducedMotion="user"` (`motion/react`)
+      obejmujący całą apkę - wszystkie animacje respektują systemowe "ogranicz ruch" z jednego
+      miejsca.
+- [x] **Plan B - jadalność jako struktura, nie tylko plakietka** - `EdibilityBadge.tsx`:
+      `edibilityCardAccentClass()`/`edibilityChartColor()` (ta sama 4-stopniowa skala co
+      dotychczasowa plakietka). Karty w `EncyclopediaView.tsx` dostają kolorowy lewy pasek +
+      odcień tła wg jadalności - bezpieczeństwo widoczne przy skanowaniu listy, nie dopiero po
+      przeczytaniu małej plakietki. Wykres w `JournalView.tsx`: słupki kolorowane per gatunek wg
+      jadalności (`Cell` z recharts) zamiast płaskiego zielonego - pokazuje od razu strukturę
+      bezpieczeństwa sezonu, nie tylko liczbę zbiorów.
+- [x] **Plan C - sezon zawsze widoczny** - `seasonFilter.ts`: `getSeasonDotClass()`
+      (meteorologiczna pora roku, uproszczona z miesiąca startowego zakresu, kolor kropki).
+      Realna luka UX, nie tylko dekoracja: filtr "W sezonie" w nagłówku Bazy wiedzy już
+      istniał, ale sprawdzenie czy KONKRETNY gatunek jest w sezonie wymagało rozwinięcia każdej
+      karty osobno - sezon przeniesiony na stałe, widoczne miejsce karty (kropka + tekst zakresu +
+      "w sezonie teraz" gdy aktualne), zduplikowany tekst usunięty z wnętrza `Collapsible`.
+- [x] **Plan E - nagłówek wykorzystuje bursztynowy akcent** - `App.tsx`: gradient
+      `from-primary via-primary to-brand-accent/70` (diagonalny) zamiast prawie niewidocznego
+      `from-primary to-primary/90` - drugi akcent marki (dotąd głównie w Logo/cieniach kart)
+      trafia do nagłówka. Opacity/70 na końcu (nie pełny amber) - konserwatywny dobór kontrastu
+      tekstu w dark mode bez live-testu, wart potwierdzenia wizualnego przy najbliższej okazji.
+- **Świadomie NIE w tym planie:** stylowanie/tintowanie kafelków mapy OSM (kruche, zależne od
+  zewnętrznego dostawcy, niska korzyść względem reszty), zmiana fontu Geist (dobrze działa jako
+  czytelna czcionka UI w gęstych widokach, ryzyko regresji większe niż korzyść z "charakteru").
+- Live-test w przeglądarce niedostępny przez całą sesję (brak połączonego rozszerzenia Chrome) -
+  wszystkie kroki zweryfikowane typecheckiem/testami/buildem, nie wizualnie. Wart potwierdzenia
+  na żywo przy najbliższej okazji, zwłaszcza kontrast nagłówka (Plan E) i wygląd markerów mapy
+  (Plan A) w obu motywach.
+
+---
+
 ## Faza 13 - Ciągłe dopracowywanie UI (2026-09-14)
 
 Po domknięciu Fazy 12 - dalsze przejście po ekranach na wyraźną prośbę użytkownika ("użyj
