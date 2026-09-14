@@ -13,6 +13,46 @@ zakres i priorytet.
 
 ---
 
+## Faza 15 - Plan designu po drugim audycie `frontend-expert` (2026-09-14)
+
+Po Fazie 14 użytkownik zlecił kolejny audyt (agent `frontend-expert`, bez zmian w kodzie) -
+sanity-check tego, co właśnie zrobiono (bo bez podłączonej przeglądarki nic nie było
+zweryfikowane wizualnie) plus propozycja nowego gruntu do dopracowania. Audyt złapał jeden
+realny problem i zaproponował 5 kolejnych kroków, zrealizowanych po kolei w tej sesji, każdy
+zweryfikowany osobno (`tsc -b`, `vitest run` 261/261, `npm run build`).
+
+- [x] **1/5 - kolizja koloru sezonu i jadalności** - audyt złapał, że paleta kropki sezonu z
+      Fazy 14 (`sky/lime/yellow/orange`) dzieliła `yellow-500`/`orange-500` dokładnie z
+      `warunkowo-jadalny`/`trujący` w `CARD_ACCENT` (`EdibilityBadge.tsx`) - na karcie trującego
+      gatunku jesienią oba sygnały zlewały się w jedno "pomarańczowe". `seasonFilter.ts`:
+      nowa paleta `sky/teal/cyan/violet`, jednoznacznie odrębna od zielono-żółto-pomarańczowo-
+      -czerwonej skali bezpieczeństwa.
+- [x] **2/5 - ikona grupy morfologicznej przy nazwie gatunku** - `src/utils/speciesShape.ts`
+      (statyczna mapa id -> kształt: rurkowy/blaszkowy/lejkowaty/siodłowy/kulisty, 19/19
+      gatunków wg realnej morfologii) + `src/components/icons/speciesShapeIcons.tsx` (sylwetki w
+      stylu Logo, celowo MONOCHROMATYCZNE - trzeci sygnał na karcie obok koloru jadalności i
+      sezonu, więc bez własnej barwy). Realny sygnał identyfikacji (kształt/spód kapelusza),
+      nie dekoracja - choć, w odróżnieniu od pierwotnej sugestii audytu, wszystkie 19 gatunków
+      ma już zdjęcie, więc to dodatkowy stały sygnał obok zdjęcia, nie fallback przy jego braku.
+- [x] **3/5 - marka w focus ringach i wyskakujących oknach** - `--ring` w `index.css` zmieniony
+      z neutralnego szarego na zieleń marki (jedna zmiana tokenu obejmuje każdy focus-visible
+      ring w apce). Tekstura papieru (`body`, dotąd tylko tło strony) wydzielona do zmiennej
+      `--paper-grain` + klasa `.paper-grain-surface`, nałożona też na `DialogContent`/
+      `DrawerContent` - dialogi/drawery przestają być "gołym" shadcn bez śladu reszty apki.
+- [x] **4/5 - mikrointerakcje na momentach "nagrody"** - `AddFindingForm.tsx`: `toast.success()`
+      po zapisie znaleziska (dotąd cichy). `PredictionCard.tsx`: najlepsze dopasowanie (#1)
+      dostaje jednorazowy spring "pop" wejścia + obwódkę `ring-primary/40`, odróżniającą
+      odpowiedź od reszty listy kandydatów.
+- [x] **5/5 - czytelność treści bezpieczeństwa** - `FirstAidGuide.tsx` (kroki pierwszej pomocy)
+      i `EncyclopediaView.tsx` (opis gatunku, `preparationTips` - np. ostrzeżenia o gotowaniu
+      smardza/piestrzenicy) z `text-xs`/`text-muted-foreground` na większy, czytelniejszy tekst
+      (`text-sm`/`text-base`, wyższy kontrast, `leading-relaxed`) - to instrukcje czytane w
+      stresie/słabym świetle lasu, czytelność jest tu funkcją bezpieczeństwa, nie estetyki.
+- Live-test w przeglądarce niedostępny przez całą sesję (brak połączonego rozszerzenia Chrome) -
+  jak w Fazie 14, wszystkie kroki zweryfikowane typecheckiem/testami/buildem, nie wizualnie.
+
+---
+
 ## Faza 14 - Plan designu po audycie `frontend-expert` (2026-09-14)
 
 Po Fazie 13 użytkownik zlecił świeży audyt UI (agent `frontend-expert`, bez zmian w kodzie) pod
