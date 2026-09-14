@@ -14,6 +14,10 @@ export interface Species {
   // warunkowo-jadalnych (edibility). Zwięzłe wskazówki, nie pełne przepisy z odmierzonymi
   // składnikami - to atlas grzybów, nie książka kucharska.
   preparationTips?: string
+  // Status ochrony prawnej w Polsce (Rozporządzenie Ministra Środowiska ws. ochrony gatunkowej
+  // grzybów) - niezależny od `edibility` (gatunek trujący też może być chroniony, jak borowik
+  // szatański). Brak pola = niechroniony wg stanu zweryfikowanego 2026-09-14 (Wikipedia PL).
+  legalProtection?: string
 }
 
 export type ReactionSeverity = 'brak' | 'lekka' | 'ciężka'

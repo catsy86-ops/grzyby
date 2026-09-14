@@ -19,4 +19,24 @@ describe('EncyclopediaView', () => {
     expect(expectedCount).toBeGreaterThan(0)
     expect(screen.getAllByTestId('preparation-tip')).toHaveLength(expectedCount)
   })
+
+  it('pokazuje ostrzeżenie o ochronie prawnej i odznakę "Chroniony" dla gatunków chronionych', () => {
+    render(<EncyclopediaView />)
+    const protectedSpecies = (speciesData as Species[]).filter((s) => s.legalProtection)
+    expect(protectedSpecies.length).toBeGreaterThan(0)
+
+    expect(screen.getAllByText('Gatunek chroniony prawem')).toHaveLength(protectedSpecies.length)
+    expect(screen.getAllByText('Chroniony')).toHaveLength(protectedSpecies.length)
+    for (const s of protectedSpecies) {
+      expect(screen.getByText(s.legalProtection!)).toBeInTheDocument()
+    }
+  })
+
+  it('nie pokazuje ostrzeżenia o ochronie dla gatunków niechronionych', () => {
+    render(<EncyclopediaView />)
+    const unprotectedCount = (speciesData as Species[]).filter((s) => !s.legalProtection).length
+    const total = (speciesData as Species[]).length
+    expect(unprotectedCount).toBeLessThan(total)
+    expect(screen.getAllByText('Chroniony')).toHaveLength(total - unprotectedCount)
+  })
 })

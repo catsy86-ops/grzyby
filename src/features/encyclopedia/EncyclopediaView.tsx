@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
-import { SearchXIcon, LeafIcon, ChefHatIcon } from 'lucide-react'
+import { SearchXIcon, LeafIcon, ChefHatIcon, ScaleIcon } from 'lucide-react'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
+import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
+import { Badge } from '../../components/ui/badge'
 import { Card, CardContent } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
 import { Toggle } from '../../components/ui/toggle'
@@ -93,15 +95,30 @@ export function EncyclopediaView() {
                   className="mb-3 h-40 w-full rounded-lg object-cover"
                 />
               )}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <p className="font-medium">{s.nameCommon}</p>
-                <EdibilityBadge edibility={s.edibility} />
+                <div className="flex shrink-0 gap-1.5">
+                  {s.legalProtection && (
+                    <Badge variant="secondary" className="gap-1 border-amber-400 bg-amber-50 text-amber-900">
+                      <ScaleIcon className="size-3" />
+                      Chroniony
+                    </Badge>
+                  )}
+                  <EdibilityBadge edibility={s.edibility} />
+                </div>
               </div>
               <p className="text-sm italic text-muted-foreground">{s.nameLatin}</p>
               <p className="mt-2 text-sm text-foreground/80">{s.description}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Siedlisko: {s.habitat} · Sezon: {s.season}
               </p>
+              {s.legalProtection && (
+                <Alert variant="warning" className="mt-2 text-xs">
+                  <ScaleIcon />
+                  <AlertTitle>Gatunek chroniony prawem</AlertTitle>
+                  <AlertDescription className="text-current">{s.legalProtection}</AlertDescription>
+                </Alert>
+              )}
               <LookalikesWarning species={s} allSpecies={species} />
               {s.preparationTips && (
                 <div

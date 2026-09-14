@@ -138,7 +138,8 @@
     ],
     "imageUrls": [
       "/species-images/borowik-szatanski.jpg"
-    ]
+    ],
+    "legalProtection": "Gatunek pod ścisłą ochroną prawną w Polsce (na Czerwonej Liście ze statusem krytycznie zagrożony) - zakaz zrywania, niszczenia i płoszenia. Poza tym trujący - nie zrywaj nawet w celu identyfikacji, obserwuj i fotografuj bez dotykania."
   },
   {
     "id": "gaska-zielonka",
@@ -243,7 +244,8 @@
     "imageUrls": [
       "/species-images/smardz-jadalny.jpg"
     ],
-    "preparationTips": "Czyszczenie: przekrój wzdłuż i dokładnie wypłucz z piasku/owadów - komorowa budowa gąbczastego kapelusza łatwo je zbiera. Suszenie: bardzo dobrze się suszy, to popularny i sprawdzony sposób konserwacji. Gotowanie: WYŁĄCZNIE dokładnie ugotowany lub podsmażony, nigdy na surowo - surowy jest lekko trujący."
+    "preparationTips": "Czyszczenie: przekrój wzdłuż i dokładnie wypłucz z piasku/owadów - komorowa budowa gąbczastego kapelusza łatwo je zbiera. Suszenie: bardzo dobrze się suszy, to popularny i sprawdzony sposób konserwacji. Gotowanie: WYŁĄCZNIE dokładnie ugotowany lub podsmażony, nigdy na surowo - surowy jest lekko trujący.",
+    "legalProtection": "Od 2014 r. gatunek pod częściową ochroną prawną w Polsce - zbiór w stanie dzikim (lasy, łąki) jest zabroniony bez zezwolenia. Dozwolony wyłącznie zbiór z upraw/ogrodów."
   },
   {
     "id": "piestrzenica-kasztanowata",

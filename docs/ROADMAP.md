@@ -186,8 +186,14 @@ błędów w konsoli.
       "fałszywa poprawa" przy zatruciu amatoksynami). `FirstAidGuide.tsx` (Dialog) dostępny z
       ikony w nagłówku apki (każdy ekran) oraz jako link w istniejącym alercie o ciężkiej
       reakcji w Dzienniku.
-- [ ] Oznaczenie gatunków chronionych prawem - wymaga nowego pola (dziś `edibility` nie rozróżnia
-      "chroniony" od jadalności)
+- [x] Oznaczenie gatunków chronionych prawem (2026-09-14) - `Species.legalProtection` (opcjonalne,
+      niezależne od `edibility`). Zweryfikowane źródłowo (Wikipedia PL) dla wszystkich 19 gatunków:
+      **borowik szatański** - ochrona ścisła (krytycznie zagrożony, zakaz zrywania nawet w celu
+      identyfikacji - i tak trujący); **smardz jadalny** - ochrona częściowa od 2014 r. (zbiór w
+      stanie dzikim zabroniony, dozwolony tylko z upraw/ogrodów). Sprawdzone i potwierdzone jako
+      NIEchronione: purchawka olbrzymia (wykreślona z listy w 2014), gąska zielonka (tylko
+      Czerwona Lista, dopuszczona do obrotu), piestrzenica kasztanowata, muchomor jadowity.
+      Odznaka "Chroniony" przy nazwie + ostrzeżenie (`Alert`) w `EncyclopediaView.tsx`.
 - [ ] Przycisk "Wyślij SMS z lokalizacją" - **da się zrobić bez własnego backendu**: natywny URI
       `sms:?body=...` z współrzędnymi GPS otwiera domyślną aplikację SMS telefonu, użytkownik sam
       wybiera odbiorcę i wysyła - żadnych danych nie przechodzi przez serwer tej apki
