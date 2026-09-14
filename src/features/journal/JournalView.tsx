@@ -4,7 +4,7 @@ import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
-import { NotebookTextIcon } from 'lucide-react'
+import { DownloadIcon, FileTextIcon, MoreVerticalIcon, NotebookTextIcon, UploadIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
@@ -33,6 +33,12 @@ import {
 } from '../../components/ui/alert-dialog'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu'
 import { Input } from '../../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { Skeleton } from '../../components/ui/skeleton'
@@ -258,29 +264,37 @@ export function JournalView() {
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Dziennik zbiorów</h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-primary text-primary hover:bg-primary/10"
-            onClick={handleExport}
+        {/* Trzy osobne przyciski (Eksportuj/Importuj/PDF) skonsolidowane w jedno menu - to akcje
+            okazjonalne (backup, udostępnianie), nie codzienne, więc nie muszą zajmować stałego
+            miejsca w nagłówku obok tytułu widoku. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={<Button variant="outline" size="icon" aria-label="Eksport i import danych" />}
           >
-            Eksportuj
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-            Importuj
-          </Button>
-          <Button variant="outline" size="sm" disabled={!filteredFindings} onClick={handleExportPdf}>
-            PDF
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json"
-            onChange={handleImportFile}
-            className="hidden"
-          />
-        </div>
+            <MoreVerticalIcon className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleExport}>
+              <DownloadIcon />
+              Eksportuj (JSON)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+              <UploadIcon />
+              Importuj
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportPdf}>
+              <FileTextIcon />
+              Eksportuj (PDF)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json"
+          onChange={handleImportFile}
+          className="hidden"
+        />
       </div>
 
       <NotificationPermissionBanner />
@@ -349,9 +363,25 @@ export function JournalView() {
         <div className="h-56 rounded border border-border p-2">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} textAnchor="end" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }}
+                interval={0}
+                angle={-20}
+                textAnchor="end"
+              />
+              <YAxis allowDecimals={false} tick={{ fill: 'var(--color-muted-foreground)' }} />
+              <Tooltip
+                cursor={{ fill: 'var(--color-muted)' }}
+                contentStyle={{
+                  background: 'var(--color-popover)',
+                  color: 'var(--color-popover-foreground)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                labelStyle={{ color: 'var(--color-popover-foreground)' }}
+              />
               <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
