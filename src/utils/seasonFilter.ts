@@ -35,7 +35,13 @@ export function parseSeasonRange(season: string): SeasonRange | null {
 // startowego zakresu (np. "Czerwiec - Październik" -> lato). To uproszczenie (realny sezon
 // grzyba zwykle obejmuje 2 pory roku), ale wystarcza jako subtelny sygnał wizualny, nie
 // precyzyjna klasyfikacja - pełny tekstowy zakres zostaje widoczny obok kropki.
-const SEASON_DOT_CLASS = ['bg-sky-400', 'bg-lime-500', 'bg-yellow-500', 'bg-orange-500'] as const
+// Paleta celowo NIE dotyka zielonego/żółtego/pomarańczowego/czerwonego - to skala jadalności
+// (zobacz CARD_ACCENT w EdibilityBadge.tsx), zarezerwowana dla bezpieczeństwa. Wcześniejsza
+// wersja tej palety używała yellow-500/orange-500 (lato/jesień) - dokładnie tych samych
+// odcieni co warunkowo-jadalny/trujący, więc na karcie trującego gatunku jesienią kropka
+// sezonu i pasek jadalności zlewały się w jeden sygnał "to jest pomarańczowe". Niebiesko-
+// -fioletowa gama sezonu jest wizualnie jednoznacznie odrębna od skali bezpieczeństwa.
+const SEASON_DOT_CLASS = ['bg-sky-500', 'bg-teal-500', 'bg-cyan-600', 'bg-violet-500'] as const
 
 export function getSeasonDotClass(season: string): string {
   const range = parseSeasonRange(season)
