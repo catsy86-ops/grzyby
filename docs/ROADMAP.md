@@ -373,9 +373,26 @@ stylów (Tailwind v4 + shadcn/ui na Base UI, `motion/react`).
       odliczaniu/odznaczaniu.
 - Zweryfikowane: 261 testów zielonych, build produkcyjny przechodzi, live-test w przeglądarce
   (nagłówek, `ToolsMenu`, `CookingTimer`) - zero błędów w konsoli.
-- **Nieujęte, do rozważenia osobno:** nowa grafika ikon PWA/favicon (wymaga narzędzia
-  graficznego, nie samego kodu), animowany splash screen przy starcie PWA, tekstura/ziarno tła,
-  hover/tap mikrointerakcje na kartach list (`JournalView`/`EncyclopediaView`).
+- [x] **Nowa grafika ikon PWA/favicon** (2026-09-14) - `scripts/generate-icons.mjs` renderuje SVG
+      grzyba z `Logo.tsx` przez Playwright (Chromium, już zależność dev) do PNG - `icon-192.png`,
+      `icon-512.png`, `icon-512-maskable.png` (bezpieczna strefa ~40% marginesu) w `public/icons/`
+      oraz `public/favicon.png`. `public/favicon.svg` podmieniony z domyślnej fioletowej grafiki
+      scaffoldu na tego samego grzyba. `index.html` dostał `apple-touch-icon` i PNG-fallback.
+- [x] **Animowany splash screen przy starcie PWA** (2026-09-14) - `src/components/AppSplash.tsx`:
+      natywny splash (biały/kolorowy ekran z ikoną przy zimnym starcie) generuje system z
+      manifestu (`display: standalone`, `theme_color`, `icons` - już skonfigurowane), poza
+      kontrolą JS; ten komponent dodaje krótki (900ms), animowany ekran z `Logo` NAD appką zaraz
+      po montowaniu, żeby przejście z natywnego splasha nie było nagłe. Tylko w trybie standalone
+      (`matchMedia('(display-mode: standalone)')` + fallback iOS `navigator.standalone`) i tylko
+      raz na sesję (`sessionStorage`) - zwykłe otwarcie w karcie przeglądarki nie potrzebuje tego
+      teatru.
+- [x] **Tekstura/ziarno tła** - zrobione wcześniej przy okazji trybu "W lesie" (`index.css`):
+      SVG `feTurbulence` jako `background-image` na `body`, bardzo niska nieprzezroczystość, brak
+      wpływu na kontrast/czytelność.
+- [x] **Hover/tap mikrointerakcje na kartach list** - zrobione wcześniej przy okazji integracji
+      `ToolsMenu`/trybu "W lesie" w widokach: `JournalView.tsx`/`EncyclopediaView.tsx`, karty listy
+      mają `motion.div` z `whileTap={{ scale: 0.98 }}` na wewnętrznym wrapperze (nie na `Card`
+      samej, żeby nie kolidować z transformacjami `useAutoAnimate`).
 
 ---
 
