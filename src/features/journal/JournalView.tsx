@@ -2,13 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
 import { DownloadIcon, FileTextIcon, MoreVerticalIcon, UploadIcon } from 'lucide-react'
 import { EmptyBasketIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
+import { edibilityChartColor } from '../../components/EdibilityBadge'
 import {
   countLikelyDuplicates,
   downloadBlob,
@@ -134,13 +135,14 @@ export function JournalView() {
 
   const chartData = useMemo(() => {
     if (!filteredFindings) return []
-    const counts = new Map<string, number>()
+    const counts = new Map<string, { count: number; edibility: Species['edibility'] | undefined }>()
     for (const finding of filteredFindings) {
       const species = (speciesData as Species[]).find((s) => s.id === finding.speciesId)
       const label = species?.nameCommon ?? 'Nieokreślony'
-      counts.set(label, (counts.get(label) ?? 0) + 1)
+      const existing = counts.get(label)
+      counts.set(label, { count: (existing?.count ?? 0) + 1, edibility: species?.edibility })
     }
-    return Array.from(counts.entries()).map(([name, count]) => ({ name, count }))
+    return Array.from(counts.entries()).map(([name, { count, edibility }]) => ({ name, count, edibility }))
   }, [filteredFindings])
 
   async function handleExport() {
@@ -383,7 +385,14 @@ export function JournalView() {
                 }}
                 labelStyle={{ color: 'var(--color-popover-foreground)' }}
               />
-              <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
+              {/* Kolor słupka wg jadalności gatunku (skala z EdibilityBadge) zamiast płaskiego
+                  zielonego - wykres pokazuje na pierwszy rzut oka nie tylko liczbę zbiorów, ale
+                  i to, czy sezon był "bezpieczny" (przewaga zielonych słupków) czy nie. */}
+              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                {chartData.map((entry) => (
+                  <Cell key={entry.name} fill={edibilityChartColor(entry.edibility)} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

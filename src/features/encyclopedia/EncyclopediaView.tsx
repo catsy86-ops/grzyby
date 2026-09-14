@@ -5,7 +5,7 @@ import { LeafIcon, ChefHatIcon, ChevronDownIcon, ScaleIcon } from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
-import { EdibilityBadge } from '../../components/EdibilityBadge'
+import { EdibilityBadge, edibilityCardAccentClass } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
 import { Badge } from '../../components/ui/badge'
@@ -90,7 +90,7 @@ export function EncyclopediaView() {
           // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (filtrowanie/wyszukiwanie
           // animuje pozycję/usunięcie) - mikrointerakcja `whileTap` idzie na wewnętrzny `motion.div`,
           // nie na `Card`, żeby nie kolidować z transformacjami auto-animate.
-          <Card key={s.id} size="sm">
+          <Card key={s.id} size="sm" className={`border-l-4 ${edibilityCardAccentClass(s.edibility)}`}>
             <CardContent>
             <motion.div whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
               {s.imageUrls[0] && (
