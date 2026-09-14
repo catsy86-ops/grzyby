@@ -14,6 +14,7 @@ export function IdentifyView() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [modelReady, setModelReady] = useState<boolean | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
   const imageRef = useRef<HTMLImageElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [resultsListRef] = useAutoAnimate()
@@ -29,14 +30,26 @@ export function IdentifyView() {
     }
   }, [imageUrl])
 
-  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
-
+  function selectFile(file: File) {
     setError(null)
     setPredictions(null)
     const url = URL.createObjectURL(file)
     setImageUrl(url)
+  }
+
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    selectFile(file)
+  }
+
+  // Przerywana ramka wygląda jak strefa "przeciągnij i upuść" - dotąd nią nie była (tylko klik),
+  // co na desktopie/tablecie z myszą było mylące (afordancja obiecywała coś, czego UI nie robiło).
+  function handleDrop(event: React.DragEvent<HTMLDivElement>) {
+    event.preventDefault()
+    setIsDragOver(false)
+    const file = event.dataTransfer.files?.[0]
+    if (file?.type.startsWith('image/')) selectFile(file)
   }
 
   async function handleIdentify() {
@@ -75,7 +88,17 @@ export function IdentifyView() {
         </Alert>
       )}
 
-      <div className="rounded-lg border-2 border-dashed border-border p-4 text-center">
+      <div
+        onDragOver={(e) => {
+          e.preventDefault()
+          setIsDragOver(true)
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={handleDrop}
+        className={`rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
+          isDragOver ? 'border-primary bg-primary/5' : 'border-border'
+        }`}
+      >
         <input
           ref={fileInputRef}
           type="file"
@@ -88,6 +111,7 @@ export function IdentifyView() {
           <CameraIcon />
           {imageUrl ? 'Zmień zdjęcie' : 'Wybierz lub zrób zdjęcie'}
         </Button>
+        <p className="mt-2 text-xs text-muted-foreground">lub przeciągnij zdjęcie tutaj</p>
       </div>
 
       <AnimatePresence>
