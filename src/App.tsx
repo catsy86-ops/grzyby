@@ -8,6 +8,7 @@ import { JournalView } from './features/journal/JournalView'
 import { EncyclopediaView } from './features/encyclopedia/EncyclopediaView'
 import { Toaster } from './components/ui/sonner'
 import { StorageInfoDrawer } from './components/StorageInfoDrawer'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 
@@ -81,7 +82,9 @@ function App() {
             transition={{ duration: 0.18, ease: 'easeOut' }}
             className="h-full"
           >
-            <ActiveView tab={activeTab} />
+            <ErrorBoundary resetKey={activeTab}>
+              <ActiveView tab={activeTab} />
+            </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </main>

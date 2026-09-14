@@ -56,13 +56,23 @@ async function loadModel(): Promise<TF.LayersModel> {
   return modelPromise
 }
 
+let modelAvailablePromise: Promise<boolean> | null = null
+
+// Wynik cache'owany na czas życia strony - model.json nie zmienia się bez przeładowania apki
+// (nowa wersja PWA = nowy service worker = nowy load strony), więc nie ma sensu odpytywać
+// sieć/cache HTTP przy każdym wejściu na zakładkę "Rozpoznaj".
 export async function isModelAvailable(): Promise<boolean> {
-  try {
-    const response = await fetch(MODEL_URL, { method: 'HEAD' })
-    return response.ok
-  } catch {
-    return false
+  if (!modelAvailablePromise) {
+    modelAvailablePromise = (async () => {
+      try {
+        const response = await fetch(MODEL_URL, { method: 'HEAD' })
+        return response.ok
+      } catch {
+        return false
+      }
+    })()
   }
+  return modelAvailablePromise
 }
 
 // Czysta funkcja (bez zależności od TFJS/canvasu), żeby dało się ją przetestować w izolacji.

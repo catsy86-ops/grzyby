@@ -9,6 +9,8 @@ import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
 import { downloadBlob, exportData, importData } from '../../utils/exportImport'
+import { getCurrentPosition } from '../../utils/geolocation'
+import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
 import { countSpeciesDiversity, formatDuration } from '../../utils/tripStats'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
@@ -43,9 +45,20 @@ export function JournalView() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editSpeciesId, setEditSpeciesId] = useState('')
   const [editNotes, setEditNotes] = useState('')
+  const [editLatitude, setEditLatitude] = useState<number | null>(null)
+  const [editLongitude, setEditLongitude] = useState<number | null>(null)
+  const [editPhoto, setEditPhoto] = useState<File | null>(null)
+  const [editRemovePhoto, setEditRemovePhoto] = useState(false)
+  const [editLocating, setEditLocating] = useState(false)
+  const [editSaving, setEditSaving] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [listRef] = useAutoAnimate()
+
+  const editingPhoto = useLiveQuery(
+    async () => (editingId != null ? ((await db.photos.where('findingId').equals(editingId).first()) ?? null) : null),
+    [editingId],
+  )
 
   const selectedTrip = useLiveQuery(
     () => (typeof tripFilter === 'number' ? db.trips.get(tripFilter) : undefined),
@@ -122,16 +135,64 @@ export function JournalView() {
     setEditingId(finding.id ?? null)
     setEditSpeciesId(finding.speciesId ?? '')
     setEditNotes(finding.notes)
+    setEditLatitude(finding.latitude)
+    setEditLongitude(finding.longitude)
+    setEditPhoto(null)
+    setEditRemovePhoto(false)
+  }
+
+  async function handleUseCurrentLocation() {
+    setEditLocating(true)
+    try {
+      const coords = await getCurrentPosition()
+      setEditLatitude(coords.latitude)
+      setEditLongitude(coords.longitude)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Nie udało się ustalić lokalizacji')
+    } finally {
+      setEditLocating(false)
+    }
   }
 
   async function handleSaveEdit(id: number) {
-    const species = (speciesData as Species[]).find((s) => s.id === editSpeciesId) ?? null
-    await db.findings.update(id, {
-      speciesId: species?.id ?? null,
-      speciesNameGuess: species?.nameCommon ?? null,
-      notes: editNotes,
-    })
-    setEditingId(null)
+    setEditSaving(true)
+    try {
+      const species = (speciesData as Species[]).find((s) => s.id === editSpeciesId) ?? null
+      // Kompresja zdjęcia musi zajść PRZED transakcją Dexie - operacje asynchroniczne spoza API
+      // Dexie w środku transakcji przedwcześnie ją zamykają (patrz utils/exportImport.ts).
+      const newPhoto = editPhoto
+        ? await Promise.all([compressPhoto(editPhoto), createThumbnail(editPhoto)]).then(([blob, thumbnailBlob]) => ({
+            blob,
+            thumbnailBlob,
+          }))
+        : null
+
+      await db.transaction('rw', db.findings, db.photos, async () => {
+        await db.findings.update(id, {
+          speciesId: species?.id ?? null,
+          speciesNameGuess: species?.nameCommon ?? null,
+          notes: editNotes,
+          latitude: editLatitude,
+          longitude: editLongitude,
+        })
+        if (newPhoto) {
+          await db.photos.where('findingId').equals(id).delete()
+          await db.photos.add({ findingId: id, blob: newPhoto.blob, thumbnailBlob: newPhoto.thumbnailBlob })
+        } else if (editRemovePhoto) {
+          await db.photos.where('findingId').equals(id).delete()
+        }
+      })
+      setEditingId(null)
+    } catch (err) {
+      const errorName = err != null && typeof err === 'object' && 'name' in err ? (err as { name: unknown }).name : undefined
+      toast.error(
+        errorName === 'QuotaExceededError'
+          ? 'Brak miejsca na urządzeniu - zwolnij pamięć (np. w "Pamięć i dane") i spróbuj ponownie.'
+          : 'Nie udało się zapisać zmian. Spróbuj ponownie.',
+      )
+    } finally {
+      setEditSaving(false)
+    }
   }
 
   return (
@@ -267,12 +328,72 @@ export function JournalView() {
                       rows={2}
                     />
                   </label>
+
+                  <div className="text-sm">
+                    <span>Lokalizacja</span>
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="flex-1 text-xs text-muted-foreground">
+                        {editLatitude != null && editLongitude != null
+                          ? `${editLatitude.toFixed(5)}, ${editLongitude.toFixed(5)}`
+                          : 'Brak lokalizacji'}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={editLocating}
+                        onClick={handleUseCurrentLocation}
+                      >
+                        {editLocating ? 'Ustalanie...' : 'Użyj obecnej (GPS)'}
+                      </Button>
+                      {editLatitude != null && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditLatitude(null)
+                            setEditLongitude(null)
+                          }}
+                        >
+                          Usuń
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <label className="text-sm">
+                    Zdjęcie
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(e) => {
+                        setEditPhoto(e.target.files?.[0] ?? null)
+                        setEditRemovePhoto(false)
+                      }}
+                      className="mt-1 h-auto"
+                    />
+                  </label>
+                  {!editPhoto && editingPhoto && !editRemovePhoto && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="w-fit text-red-600"
+                      onClick={() => setEditRemovePhoto(true)}
+                    >
+                      Usuń obecne zdjęcie
+                    </Button>
+                  )}
+                  {editRemovePhoto && <p className="text-xs text-muted-foreground">Zdjęcie zostanie usunięte po zapisaniu.</p>}
+
                   <div className="flex justify-end gap-2">
                     <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
                       Anuluj
                     </Button>
-                    <Button size="sm" onClick={() => handleSaveEdit(finding.id!)}>
-                      Zapisz
+                    <Button size="sm" disabled={editSaving} onClick={() => handleSaveEdit(finding.id!)}>
+                      {editSaving ? 'Zapisywanie...' : 'Zapisz'}
                     </Button>
                   </div>
                 </CardContent>

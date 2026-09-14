@@ -116,6 +116,49 @@ describe('export/import', () => {
   })
 })
 
+describe('import - walidacja kształtu pliku', () => {
+  it('odrzuca plik, który nie jest obiektem JSON', async () => {
+    const file = new File(['[1, 2, 3]'], 'bad.json', { type: 'application/json' })
+    await expect(importData(file)).rejects.toThrow(/oczekiwano obiektu/)
+    expect(await db.findings.count()).toBe(0)
+  })
+
+  it('odrzuca plik bez tablicy findings', async () => {
+    const file = new File([JSON.stringify({ trips: [] })], 'bad.json', { type: 'application/json' })
+    await expect(importData(file)).rejects.toThrow(/listy znalezisk/)
+  })
+
+  it('odrzuca plik bez tablicy trips', async () => {
+    const file = new File([JSON.stringify({ findings: [] })], 'bad.json', { type: 'application/json' })
+    await expect(importData(file)).rejects.toThrow(/listy wypraw/)
+  })
+
+  it('odrzuca znalezisko z niepoprawnym typem pola', async () => {
+    const payload = JSON.stringify({
+      findings: [{ notes: 'ok', createdAt: 'nie-liczba', latitude: null, longitude: null }],
+      trips: [],
+    })
+    const file = new File([payload], 'bad.json', { type: 'application/json' })
+    await expect(importData(file)).rejects.toThrow(/Znalezisko #1/)
+    expect(await db.findings.count()).toBe(0)
+  })
+
+  it('odrzuca wyprawę z niepoprawnym typem pola', async () => {
+    const payload = JSON.stringify({
+      findings: [],
+      trips: [{ name: 'Wyprawa', startedAt: 'nie-liczba', endedAt: null, notes: '' }],
+    })
+    const file = new File([payload], 'bad.json', { type: 'application/json' })
+    await expect(importData(file)).rejects.toThrow(/Wyprawa #1/)
+  })
+
+  it('odrzuca niepoprawny format photosByFindingId', async () => {
+    const payload = JSON.stringify({ findings: [], trips: [], photosByFindingId: 'nie-obiekt' })
+    const file = new File([payload], 'bad.json', { type: 'application/json' })
+    await expect(importData(file)).rejects.toThrow(/format zdjęć/)
+  })
+})
+
 describe('export/import - generowanie miniatur (bez mocka createThumbnail)', () => {
   afterEach(() => {
     vi.unstubAllGlobals()

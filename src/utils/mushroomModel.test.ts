@@ -83,3 +83,36 @@ describe('loadClassLabels', () => {
     await expect(loadLabels()).resolves.toEqual(speciesData.map((s) => s.id))
   })
 })
+
+describe('isModelAvailable', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  it('zwraca true, gdy model.json odpowiada OK', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 200 })))
+    const { isModelAvailable: check } = await import('./mushroomModel')
+
+    await expect(check()).resolves.toBe(true)
+  })
+
+  it('zwraca false, gdy zapytanie się nie powiedzie', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline') }))
+    const { isModelAvailable: check } = await import('./mushroomModel')
+
+    await expect(check()).resolves.toBe(false)
+  })
+
+  it('odpytuje sieć tylko raz, kolejne wywołania używają cache', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const { isModelAvailable: check } = await import('./mushroomModel')
+
+    await check()
+    await check()
+    await check()
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+})

@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
 import L from 'leaflet'
 import { SunsetIcon } from 'lucide-react'
 import { db } from '../../db/db'
+import type { Finding } from '../../db/schema'
+import { clusterFindings } from '../../utils/clusterFindings'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
@@ -39,6 +41,75 @@ const pinIcon = L.icon({
 })
 
 const DEFAULT_CENTER: [number, number] = [52.0693, 19.4803] // środek Polski
+
+// Promień grupowania znalezisk w piksele ekranu - stały wizualny sens niezależnie od zoomu
+// (patrz utils/clusterFindings.ts). Przy dużej historii zbiorów bez tego mapa renderowałaby
+// setki nakładających się pinezek.
+const CLUSTER_DISTANCE_PX = 48
+
+function createClusterIcon(count: number) {
+  return L.divIcon({
+    html: `<div class="flex size-9 items-center justify-center rounded-full border-2 border-white bg-primary text-xs font-bold text-primary-foreground shadow">${count}</div>`,
+    className: '',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+  })
+}
+
+function FindingMarkers({ findings }: { findings: Finding[] }) {
+  const map = useMap()
+  const [zoom, setZoom] = useState(() => map.getZoom())
+  useMapEvent('zoomend', () => setZoom(map.getZoom()))
+
+  const points = useMemo(
+    () =>
+      findings
+        .filter((f) => f.id != null && f.latitude != null && f.longitude != null)
+        .map((f) => ({ id: f.id!, lat: f.latitude!, lng: f.longitude! })),
+    [findings],
+  )
+
+  const clusters = useMemo(
+    () => clusterFindings(points, (lat, lng) => map.project([lat, lng], zoom), CLUSTER_DISTANCE_PX),
+    [points, map, zoom],
+  )
+
+  return (
+    <>
+      {clusters.map((cluster) => {
+        if (cluster.points.length === 1) {
+          const finding = findings.find((f) => f.id === cluster.points[0].id)
+          if (!finding) return null
+          return (
+            <Marker key={finding.id} position={[cluster.lat, cluster.lng]} icon={defaultIcon}>
+              <Popup>
+                <div className="text-sm">
+                  <p className="font-semibold">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+                  <p>{new Date(finding.createdAt).toLocaleDateString('pl-PL')}</p>
+                  {finding.notes && <p className="mt-1">{finding.notes}</p>}
+                </div>
+              </Popup>
+            </Marker>
+          )
+        }
+        const clusterKey = cluster.points
+          .map((p) => p.id)
+          .sort((a, b) => a - b)
+          .join('-')
+        return (
+          <Marker
+            key={`cluster-${clusterKey}`}
+            position={[cluster.lat, cluster.lng]}
+            icon={createClusterIcon(cluster.points.length)}
+            eventHandlers={{
+              click: () => map.setView([cluster.lat, cluster.lng], Math.min(zoom + 2, map.getMaxZoom() || zoom + 2)),
+            }}
+          />
+        )
+      })}
+    </>
+  )
+}
 
 function RecenterOnLocate({ position }: { position: [number, number] | null }) {
   const map = useMap()
@@ -129,21 +200,7 @@ export function MapView() {
             <Popup>Wybrane miejsce znaleziska</Popup>
           </Marker>
         )}
-        {findings?.map(
-          (finding) =>
-            finding.latitude != null &&
-            finding.longitude != null && (
-              <Marker key={finding.id} position={[finding.latitude, finding.longitude]} icon={defaultIcon}>
-                <Popup>
-                  <div className="text-sm">
-                    <p className="font-semibold">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
-                    <p>{new Date(finding.createdAt).toLocaleDateString('pl-PL')}</p>
-                    {finding.notes && <p className="mt-1">{finding.notes}</p>}
-                  </div>
-                </Popup>
-              </Marker>
-            ),
-        )}
+        {findings && <FindingMarkers findings={findings} />}
       </MapContainer>
 
       {findings === undefined && (

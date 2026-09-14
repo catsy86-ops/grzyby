@@ -31,11 +31,19 @@ pominięte przy iteracyjnej pracy. Pełny raport w historii sesji - tu skrót z 
    użytkownika nie giną). 4 nowe testy w `AddFindingForm.test.tsx` pokrywają ten scenariusz -
    wcześniej ten plik w ogóle nie istniał (agent to zauważył jako brak testów błędów).
 
-**Wysoki priorytet:** brak edycji lokalizacji/zdjęcia istniejącego znaleziska (`JournalView.tsx`);
-brak walidacji kształtu importu (`exportImport.ts:53-91`); brak React Error Boundary wokół
-`<ActiveView>` w `App.tsx`; `isModelAvailable()` robi zbędny `fetch` HEAD przy każdym wejściu na
-"Rozpoznaj" zamiast cache'ować wynik; mapa renderuje wszystkie znaleziska bez klastrowania
-(problem skalowania przy dużej historii).
+**Wysoki priorytet — ✅ wszystkie 5 zrobione (2026-09-14):**
+1. ~~Brak React Error Boundary wokół `<ActiveView>`~~ - `src/components/ErrorBoundary.tsx`,
+   resetuje się automatycznie przy zmianie zakładki (`resetKey`) lub ręcznie przyciskiem.
+2. ~~`isModelAvailable()` robi zbędny `fetch` HEAD przy każdym wejściu na "Rozpoznaj"~~ - wynik
+   cache'owany w module (`mushroomModel.ts`), ten sam wzorzec co `loadModel()`/`loadClassLabels()`.
+3. ~~Brak walidacji kształtu importu~~ - `validateExportPayload()` w `exportImport.ts` sprawdza typy
+   pól findings/trips/photosByFindingId PRZED dotknięciem bazy, z czytelnymi komunikatami błędu.
+4. ~~Brak edycji lokalizacji/zdjęcia istniejącego znaleziska~~ - `JournalView.tsx`: w trybie edycji
+   można zaktualizować lokalizację przez GPS (`getCurrentPosition()`) lub usunąć ją, oraz
+   podmienić/usunąć zdjęcie znaleziska.
+5. ~~Mapa renderuje wszystkie znaleziska bez klastrowania~~ - `src/utils/clusterFindings.ts`
+   (grupowanie kubełkowe w przestrzeni pikseli mapy, niezależne od zoomu) + `FindingMarkers` w
+   `MapView.tsx`, klik w klaster przybliża mapę.
 
 **Średni:** martwy kod dark mode (`next-themes` bez `ThemeProvider`, klasa `.dark` nigdy nie
 nadawana - do decyzji: dokończyć czy usunąć); brak ostrzeżenia przed duplikatami przy
