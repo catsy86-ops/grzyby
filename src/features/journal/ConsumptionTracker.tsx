@@ -38,14 +38,14 @@ export function ConsumptionTracker({ finding }: { finding: Finding }) {
 
   if (!finding.consumed) {
     return (
-      <Button variant="link" size="sm" className="mt-2 h-auto p-0 text-xs text-green-800" onClick={markConsumed}>
+      <Button variant="link" size="sm" className="mt-2 h-auto p-0 text-xs text-primary" onClick={markConsumed}>
         Oznacz jako zjedzone
       </Button>
     )
   }
 
   return (
-    <div className="mt-2 rounded border border-gray-200 bg-gray-50 p-2 text-xs">
+    <div className="mt-2 rounded border border-border bg-muted/50 p-2 text-xs">
       <div className="flex items-center justify-between">
         <p className="font-medium text-muted-foreground">
           Zjedzone {finding.consumedAt ? new Date(finding.consumedAt).toLocaleString('pl-PL') : ''}

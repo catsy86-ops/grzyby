@@ -13,7 +13,8 @@ npm run preview   # podgląd builda z aktywnym Service Workerem/PWA
 
 ## Funkcje
 
-- **Mapa** — geolokalizacja, dodawanie znalezisk ze zdjęciem, notatkami i współrzędnymi
+- **Mapa** — geolokalizacja, dodawanie znalezisk ze zdjęciem, notatkami i współrzędnymi, oraz
+  pobieranie obszaru mapy do trybu offline przed wyprawą (przycisk "Pobierz obszar offline")
 - **Rozpoznaj** — identyfikacja gatunku ze zdjęcia modelem TensorFlow.js działającym lokalnie w przeglądarce
 - **Dziennik** — historia znalezisk, statystyki, eksport/import danych jako JSON (backup / przenoszenie między urządzeniami)
 - **Baza wiedzy** — wyszukiwarka gatunków z filtrowaniem po jadalności
@@ -28,9 +29,11 @@ npm run preview   # podgląd builda z aktywnym Service Workerem/PWA
 
 ## Model rozpoznawania AI
 
-Moduł rozpoznawania (`src/utils/mushroomModel.ts`) oczekuje wytrenowanego modelu TensorFlow.js w `public/models/model.json` (+ pliki wag). **Model nie jest jeszcze dołączony** — to osobny etap wymagający zbioru danych treningowych i treningu (np. transfer learning na MobileNet, lub szybka ścieżka: Google Teachable Machine z eksportem do TFJS). Do czasu dodania modelu zakładka "Rozpoznaj" wyświetla stosowny komunikat zamiast wyniku.
+Moduł rozpoznawania (`src/utils/mushroomModel.ts`) oczekuje wytrenowanego modelu TensorFlow.js w `public/models/model.json` (+ pliki wag). **Model nie jest jeszcze dołączony** — to osobny etap wymagający zbioru danych treningowych i treningu. Do czasu dodania modelu zakładka "Rozpoznaj" wyświetla stosowny komunikat zamiast wyniku.
 
-Kolejność klas w `CLASS_LABELS` (plik `mushroomModel.ts`) musi odpowiadać etykietom użytym podczas treningu — obecnie zmapowana na `id` gatunków z `src/data/species.json`.
+Pełna instrukcja dostarczenia modelu (dwie darmowe ścieżki, bez kluczy API, bez backendu) jest w [`docs/MODEL-TRAINING.md`](docs/MODEL-TRAINING.md). Kolejność klas wyjściowych modelu domyślnie odpowiada kolejności `id` gatunków z `src/data/species.json`, ale `mushroomModel.ts` odczyta też opcjonalny `public/models/metadata.json` (eksport Google Teachable Machine) i zmapuje klasy po nazwie zamiast pozycyjnie.
+
+Plan dalszej rozbudowy aplikacji (offline, UI/animacje) jest w [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## ⚠️ Ważne zastrzeżenie
 

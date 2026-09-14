@@ -3,6 +3,10 @@ import speciesData from '../data/species.json'
 import type { Species } from '../db/schema'
 
 const MODEL_URL = '/models/model.json'
+// Opcjonalny plik obok model.json z kolejnością etykiet wyjściowych modelu (np. eksport z Google
+// Teachable Machine, gdzie klasy trzeba nazwać dokładnie tak jak `id` w species.json). Gdy go brak,
+// zakładamy kolejność klas = kolejność gatunków w species.json (tak generuje ją scripts/train-model/train.py).
+const METADATA_URL = '/models/metadata.json'
 const INPUT_SIZE = 224
 
 export interface Prediction {
@@ -12,10 +16,35 @@ export interface Prediction {
 }
 
 let modelPromise: Promise<TF.LayersModel> | null = null
+let labelsPromise: Promise<string[]> | null = null
 
-// Kolejność klas musi odpowiadać etykietom, na których wytrenowano model (public/models/model.json).
-// Do uzupełnienia po treningu / eksporcie modelu.
-const CLASS_LABELS: string[] = speciesData.map((s) => s.id)
+const DEFAULT_CLASS_LABELS: string[] = speciesData.map((s) => s.id)
+
+interface ModelMetadata {
+  labels?: unknown
+}
+
+// Odczytuje rzeczywistą kolejność klas modelu z metadata.json, jeśli jest dostępny i poprawny -
+// w przeciwnym razie zakłada kolejność pozycyjną z species.json.
+export async function loadClassLabels(): Promise<string[]> {
+  if (!labelsPromise) {
+    labelsPromise = (async () => {
+      try {
+        const response = await fetch(METADATA_URL)
+        if (response.ok) {
+          const metadata = (await response.json()) as ModelMetadata
+          if (Array.isArray(metadata.labels) && metadata.labels.every((l) => typeof l === 'string')) {
+            return metadata.labels as string[]
+          }
+        }
+      } catch {
+        // brak lub niepoprawny metadata.json - to oczekiwane dla modelu z train.py
+      }
+      return DEFAULT_CLASS_LABELS
+    })()
+  }
+  return labelsPromise
+}
 
 // TensorFlow.js jest ładowany dynamicznie (biblioteka ~1.5MB), by nie obciążać głównego pakietu
 // aplikacji dla użytkowników, którzy nie korzystają z rozpoznawania zdjęć.
@@ -37,10 +66,15 @@ export async function isModelAvailable(): Promise<boolean> {
 }
 
 // Czysta funkcja (bez zależności od TFJS/canvasu), żeby dało się ją przetestować w izolacji.
-export function rankPredictions(scores: ArrayLike<number>, topN = 3): Prediction[] {
+// `labels[i]` musi być `id` gatunku z species.json odpowiadającym i-temu wyjściu modelu.
+export function rankPredictions(
+  scores: ArrayLike<number>,
+  topN = 3,
+  labels: string[] = DEFAULT_CLASS_LABELS,
+): Prediction[] {
   return Array.from(scores)
     .map((confidence, index) => {
-      const speciesId = CLASS_LABELS[index]
+      const speciesId = labels[index]
       const species = (speciesData as Species[]).find((s) => s.id === speciesId) ?? null
       return {
         species,
@@ -54,7 +88,7 @@ export function rankPredictions(scores: ArrayLike<number>, topN = 3): Prediction
 
 export async function identifyMushroom(imageElement: HTMLImageElement): Promise<Prediction[]> {
   const tf = await import('@tensorflow/tfjs')
-  const model = await loadModel()
+  const [model, labels] = await Promise.all([loadModel(), loadClassLabels()])
 
   const predictions = tf.tidy(() => {
     const tensor = tf.browser
@@ -69,5 +103,5 @@ export async function identifyMushroom(imageElement: HTMLImageElement): Promise<
   const scores = await predictions.data()
   predictions.dispose()
 
-  return rankPredictions(scores as Float32Array)
+  return rankPredictions(scores as Float32Array, 3, labels)
 }

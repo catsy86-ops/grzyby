@@ -7,8 +7,13 @@
     "description": "Jeden z najcenniejszych grzybów jadalnych. Kapelusz brązowy, lekko lśniący, rurki białe do żółtozielonych, trzon beczułkowaty z białym siateczkowaniem u góry.",
     "habitat": "Lasy liściaste i iglaste, zwłaszcza pod dębami, bukami i świerkami",
     "season": "Czerwiec - październik",
-    "lookalikes": ["borowik-szatanski", "goryczak-zolciowy"],
-    "imageUrls": []
+    "lookalikes": [
+      "borowik-szatanski",
+      "goryczak-zolciowy"
+    ],
+    "imageUrls": [
+      "/species-images/borowik-szlachetny.jpg"
+    ]
   },
   {
     "id": "goryczak-zolciowy",
@@ -18,8 +23,12 @@
     "description": "Niejadalny z powodu bardzo gorzkiego smaku (nie jest trujący, ale psuje potrawę). Podobny do borowika, ale rurki różowieją, a trzon ma ciemną siateczkę.",
     "habitat": "Lasy iglaste, zwłaszcza przy pniach sosen i świerków",
     "season": "Czerwiec - październik",
-    "lookalikes": ["borowik-szlachetny"],
-    "imageUrls": []
+    "lookalikes": [
+      "borowik-szlachetny"
+    ],
+    "imageUrls": [
+      "/species-images/goryczak-zolciowy.jpg"
+    ]
   },
   {
     "id": "muchomor-sromotnikowy",
@@ -29,8 +38,31 @@
     "description": "Odpowiada za większość śmiertelnych zatruć grzybami w Europie. Posiada pochwę u nasady trzonu (wolwę), pierścień na trzonie i białe blaszki. Objawy zatrucia pojawiają się dopiero po 6-24h, gdy toksyny już uszkodziły wątrobę.",
     "habitat": "Lasy liściaste, zwłaszcza pod dębami i bukami",
     "season": "Lipiec - październik",
-    "lookalikes": ["czubajka-kania", "gaska-zielonka"],
-    "imageUrls": []
+    "lookalikes": [
+      "czubajka-kania",
+      "gaska-zielonka",
+      "purchawka-olbrzymia"
+    ],
+    "imageUrls": [
+      "/species-images/muchomor-sromotnikowy.jpg"
+    ]
+  },
+  {
+    "id": "muchomor-jadowity",
+    "nameCommon": "Muchomor jadowity (Zniszczyciel)",
+    "nameLatin": "Amanita virosa",
+    "edibility": "śmiertelnie-trujący",
+    "description": "Cały owocnik czysto biały - kapelusz, blaszki, trzon i wolwa u nasady. Zawiera te same śmiertelne amatoksyny co muchomor sromotnikowy. Łatwo pomylić z młodymi, białymi czubajkami, pieczarkami lub purchawkami - zawsze przekrawaj młode, kuliste owocniki wzdłuż, by sprawdzić brak struktury grzyba w środku (u purchawek wnętrze jest jednolite, u muchomorów widać zarys kapelusza i blaszek).",
+    "habitat": "Lasy liściaste i mieszane, rzadziej niż muchomor sromotnikowy",
+    "season": "Lipiec - październik",
+    "lookalikes": [
+      "czubajka-kania",
+      "muchomor-sromotnikowy",
+      "purchawka-olbrzymia"
+    ],
+    "imageUrls": [
+      "/species-images/muchomor-jadowity.jpg"
+    ]
   },
   {
     "id": "czubajka-kania",
@@ -40,8 +72,26 @@
     "description": "Duży grzyb z wyraźną, ruchomą obrączką na trzonie i łuskowatym kapeluszem. WAŻNE: zawsze sprawdzać brak wolwy (pochwy) u nasady trzonu, by odróżnić od młodych muchomorów.",
     "habitat": "Skraje lasów, łąki, przydroża",
     "season": "Lipiec - październik",
-    "lookalikes": ["muchomor-sromotnikowy"],
-    "imageUrls": []
+    "lookalikes": [
+      "muchomor-sromotnikowy",
+      "muchomor-jadowity"
+    ],
+    "imageUrls": [
+      "/species-images/czubajka-kania.jpg"
+    ]
+  },
+  {
+    "id": "muchomor-czerwony",
+    "nameCommon": "Muchomor czerwony",
+    "nameLatin": "Amanita muscaria",
+    "edibility": "trujący",
+    "description": "Najbardziej rozpoznawalny grzyb w Polsce - czerwony kapelusz w białe, płatkowate łaty (zmywane deszczem), białe blaszki, pierścień i bulwiasta pochwa u nasady trzonu. Zawiera muskarynę i kwas ibotenowy - powoduje zatrucia neurotoksyczne (zaburzenia widzenia, majaczenie, wymioty), rzadko śmiertelne u dorosłych, ale niebezpieczne zwłaszcza dla dzieci.",
+    "habitat": "Lasy brzozowe i iglaste (mikoryza z brzozą, świerkiem, sosną)",
+    "season": "Sierpień - listopad",
+    "lookalikes": [],
+    "imageUrls": [
+      "/species-images/muchomor-czerwony.jpg"
+    ]
   },
   {
     "id": "maslak-zwyczajny",
@@ -52,7 +102,9 @@
     "habitat": "Lasy sosnowe, zwłaszcza młodniki",
     "season": "Maj - listopad",
     "lookalikes": [],
-    "imageUrls": []
+    "imageUrls": [
+      "/species-images/maslak-zwyczajny.jpg"
+    ]
   },
   {
     "id": "pieprznik-jadalny",
@@ -62,19 +114,27 @@
     "description": "Jaskrawożółty, lejkowaty, o fałdach zamiast blaszek biegnących daleko na trzon. Rzadko zaatakowany przez larwy owadów.",
     "habitat": "Lasy iglaste i mieszane, mchy",
     "season": "Czerwiec - listopad",
-    "lookalikes": ["lisowka-pomaranczowa"],
-    "imageUrls": []
+    "lookalikes": [
+      "lisowka-pomaranczowa"
+    ],
+    "imageUrls": [
+      "/species-images/pieprznik-jadalny.jpg"
+    ]
   },
   {
     "id": "borowik-szatanski",
     "nameCommon": "Borowik szatański",
-    "nameLatin": "Boletus satanas",
+    "nameLatin": "Rubroboletus satanas (dawniej Boletus satanas)",
     "edibility": "trujący",
     "description": "Trujący (surowy silnie żołądkowo-jelitowo, gotowanie nie usuwa ryzyka u wrażliwych osób). Kapelusz jasnoszary do oliwkowego, rurki i pory czerwone do pomarańczowych, miąższ intensywnie niebieszczeje po przecięciu. Trzon gruby, beczułkowaty, z czerwonym siateczkowaniem. Nieprzyjemny, mdły zapach u starszych owocników - to najważniejsza różnica od borowika szlachetnego.",
     "habitat": "Ciepłe lasy liściaste na wapiennym podłożu, zwłaszcza pod dębami i grabami",
     "season": "Czerwiec - wrzesień",
-    "lookalikes": ["borowik-szlachetny"],
-    "imageUrls": []
+    "lookalikes": [
+      "borowik-szlachetny"
+    ],
+    "imageUrls": [
+      "/species-images/borowik-szatanski.jpg"
+    ]
   },
   {
     "id": "gaska-zielonka",
@@ -84,8 +144,12 @@
     "description": "Dawniej uznawana za jadalną, dziś odradzana - udokumentowano przypadki ciężkiego, czasem śmiertelnego zatrucia (rabdomioliza) po wielokrotnym spożyciu w krótkim czasie, nawet u osób, które wcześniej nie miały objawów. Kapelusz oliwkowo-żółty do zielonkawego, blaszki i trzon żółte, miąższ biały.",
     "habitat": "Lasy sosnowe na piaszczystym podłożu",
     "season": "Wrzesień - listopad",
-    "lookalikes": ["muchomor-sromotnikowy"],
-    "imageUrls": []
+    "lookalikes": [
+      "muchomor-sromotnikowy"
+    ],
+    "imageUrls": [
+      "/species-images/gaska-zielonka.jpg"
+    ]
   },
   {
     "id": "lisowka-pomaranczowa",
@@ -95,7 +159,126 @@
     "description": "Niejadalna, u niektórych osób powoduje łagodne dolegliwości żołądkowe. Zwana też 'fałszywą kurką' - pomarańczowa, lejkowata, ale w odróżnieniu od pieprznika ma prawdziwe, gęste i łatwo dające się oddzielić blaszki (nie fałdy) oraz ciemniejszy, bardziej pomarańczowy odcień.",
     "habitat": "Lasy iglaste, na próchniejącym drewnie i ściółce",
     "season": "Lipiec - listopad",
-    "lookalikes": ["pieprznik-jadalny"],
-    "imageUrls": []
+    "lookalikes": [
+      "pieprznik-jadalny"
+    ],
+    "imageUrls": [
+      "/species-images/lisowka-pomaranczowa.jpg"
+    ]
+  },
+  {
+    "id": "podgrzybek-brunatny",
+    "nameCommon": "Podgrzybek brunatny",
+    "nameLatin": "Imleria badia",
+    "edibility": "jadalny",
+    "description": "Kapelusz kasztanowobrązowy, aksamitny w suchą pogodę. Rurki żółtawe do oliwkowych, miąższ pod skórką i w rurkach lekko niebieszczeje po przecięciu (znacznie słabiej niż u borowika szatańskiego). Smaczny, bardzo popularny grzyb jadalny.",
+    "habitat": "Lasy iglaste, zwłaszcza sosnowe i świerkowe, na kwaśnych glebach",
+    "season": "Czerwiec - listopad",
+    "lookalikes": [],
+    "imageUrls": [
+      "/species-images/podgrzybek-brunatny.jpg"
+    ]
+  },
+  {
+    "id": "kozlarz-babka",
+    "nameCommon": "Koźlarz babka (Koźlarz zwyczajny)",
+    "nameLatin": "Leccinum scabrum",
+    "edibility": "jadalny",
+    "description": "Trzon smukły, biało-szary, pokryty ciemnymi, szorstkimi łuseczkami (stąd nazwa). Kapelusz brązowy do szarobrązowego, rurki jasnoszare. Miąższ na przekroju lekko różowieje lub szarzeje, nie niebieszczeje gwałtownie. Bardzo popularny w Polsce, rośnie zwykle pod brzozami.",
+    "habitat": "Lasy brzozowe i mieszane z domieszką brzozy",
+    "season": "Czerwiec - listopad",
+    "lookalikes": [],
+    "imageUrls": [
+      "/species-images/kozlarz-babka.jpg"
+    ]
+  },
+  {
+    "id": "opienka-miodowa",
+    "nameCommon": "Opieńka miodowa",
+    "nameLatin": "Armillaria mellea",
+    "edibility": "warunkowo-jadalny",
+    "description": "Rośnie w dużych kępach na pniach i korzeniach drzew (żywych lub martwych). Kapelusz miodowożółty do brązowego, drobno łuskowaty pośrodku, blaszki i trzon jasne, błoniasty pierścień na trzonie. WAŻNE: surowa jest lekko trująca (toksyny rozkładają się w wysokiej temperaturze) - zawsze dokładnie gotować min. 15-20 minut przed spożyciem. Nigdy nie zbieraj bez pewnej identyfikacji pierścienia - śmiertelnie trująca hełmówka jadowita rośnie w podobnych kępach na drewnie, ale nie ma pierścienia.",
+    "habitat": "Pnie, karpy i korzenie drzew liściastych i iglastych",
+    "season": "Sierpień - listopad",
+    "lookalikes": [
+      "helmowka-jadowita"
+    ],
+    "imageUrls": [
+      "/species-images/opienka-miodowa.jpg"
+    ]
+  },
+  {
+    "id": "helmowka-jadowita",
+    "nameCommon": "Hełmówka jadowita (Otwiak)",
+    "nameLatin": "Galerina marginata",
+    "edibility": "śmiertelnie-trujący",
+    "description": "Mały, brązowy grzybek rosnący w kępach na martwym drewnie (podobnie jak opieńka miodowa) - zawiera te same śmiertelne amatoksyny co muchomor sromotnikowy. Kapelusz miodowo-brązowy, higrofaniczny (ciemnieje wilgotny, jaśnieje suchy), blaszki rdzawobrązowe od zarodników, cienki i kruchy trzon z nietrwałym, często znikającym pierścieniem. Brak charakterystycznej łuskowatości i grubości opieńki - w razie wątpliwości nie zbieraj małych, kępowych grzybów z drewna bez pewnej wiedzy.",
+    "habitat": "Martwe drewno drzew iglastych i liściastych, pniaki, gałęzie",
+    "season": "Wrzesień - listopad",
+    "lookalikes": [
+      "opienka-miodowa"
+    ],
+    "imageUrls": [
+      "/species-images/helmowka-jadowita.jpg"
+    ]
+  },
+  {
+    "id": "smardz-jadalny",
+    "nameCommon": "Smardz jadalny",
+    "nameLatin": "Morchella esculenta",
+    "edibility": "warunkowo-jadalny",
+    "description": "Wiosenny grzyb o charakterystycznym, plastrowatym, jasnobrązowym kapeluszu przypominającym gąbkę, osadzonym bezpośrednio na pustym w środku trzonie. WAŻNE: surowy jest lekko trujący - zawsze dokładnie gotować przed spożyciem. Zawsze przekrawaj wzdłuż przed zbiorem - wnętrze musi być całkowicie puste (komorowe), bez waty grzybniowej w środku, by odróżnić od trującej piestrzenicy.",
+    "habitat": "Skraje lasów liściastych, sady, tereny po pożarach, wiosną",
+    "season": "Kwiecień - maj",
+    "lookalikes": [
+      "piestrzenica-kasztanowata"
+    ],
+    "imageUrls": [
+      "/species-images/smardz-jadalny.jpg"
+    ]
+  },
+  {
+    "id": "piestrzenica-kasztanowata",
+    "nameCommon": "Piestrzenica kasztanowata",
+    "nameLatin": "Gyromitra esculenta",
+    "edibility": "trujący",
+    "description": "Wiosenny grzyb o nieregularnym, pomarszczonym, mózgokształtnym kapeluszu w kolorze kasztanowo-brązowym. Zawiera giromitrynę - toksynę częściowo lotną, ale nigdy w pełni bezpieczną do usunięcia w warunkach domowych; zatrucia (w tym śmiertelne) zdarzają się mimo tradycyjnego gotowania. Odradzana do spożycia niezależnie od tradycyjnych metod obróbki. Wnętrze kapelusza w przekroju jest komorowe i nieregularne, NIE puste jak u prawdziwego smardza.",
+    "habitat": "Lasy iglaste, zwłaszcza sosnowe, piaszczyste gleby, wiosną",
+    "season": "Marzec - maj",
+    "lookalikes": [
+      "smardz-jadalny"
+    ],
+    "imageUrls": [
+      "/species-images/piestrzenica-kasztanowata.jpg"
+    ]
+  },
+  {
+    "id": "krowiak-podwiniety",
+    "nameCommon": "Krowiak podwinięty",
+    "nameLatin": "Paxillus involutus",
+    "edibility": "trujący",
+    "description": "Dawniej powszechnie zbierany i uznawany za jadalny po ugotowaniu, dziś jednoznacznie odradzany - zawiera antygen wywołujący reakcję autoimmunologiczną, która przy powtarzanym spożyciu może prowadzić do nagłej, ciężkiej niewydolności nerek, nawet śmiertelnej, bez wcześniejszych objawów ostrzegawczych. Kapelusz lejkowaty, brązowy, o wyraźnie podwiniętym, kutnerowatym brzegu; blaszki zbiegające na trzon, łatwo dające się oddzielić od miąższu, brązowiejące po dotknięciu.",
+    "habitat": "Lasy liściaste i iglaste, na skrajach, pod brzozami",
+    "season": "Czerwiec - listopad",
+    "lookalikes": [],
+    "imageUrls": [
+      "/species-images/krowiak-podwiniety.jpg"
+    ]
+  },
+  {
+    "id": "purchawka-olbrzymia",
+    "nameCommon": "Purchawka olbrzymia",
+    "nameLatin": "Calvatia gigantea",
+    "edibility": "jadalny",
+    "description": "Duża, biała, kulista lub jajowata kula bez wyodrębnionego kapelusza i trzonu - może osiągać rozmiar piłki lub większy. Jadalna wyłącznie MŁODA, gdy miąższ w przekroju jest jednolicie biały, jędrny i bez żadnej struktury. Gdy miąższ zaczyna żółknąć, brązowieć lub mięknąć, grzyb jest przejrzały i niejadalny. Zawsze przekrawaj przed zbiorem, by wykluczyć młode, białe muchomory (u nich w przekroju widać zarys przyszłego kapelusza i blaszek, u purchawki wnętrze jest jednolite).",
+    "habitat": "Łąki, pastwiska, skraje lasów, przydroża",
+    "season": "Lipiec - październik",
+    "lookalikes": [
+      "muchomor-sromotnikowy",
+      "muchomor-jadowity"
+    ],
+    "imageUrls": [
+      "/species-images/purchawka-olbrzymia.jpg"
+    ]
   }
 ]

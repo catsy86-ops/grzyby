@@ -40,3 +40,11 @@ android/app/src/main/assets/*
 *.jks
 *.keystore
 
+# Model AI: dane treningowe i artefakty - patrz docs/MODEL-TRAINING.md.
+# Duże, niewolne od praw autorskich (dopóki nie zweryfikowane) - nie trafiają do repo.
+/dataset/
+/model-export/
+scripts/prepare-dataset/raw/
+public/models/*
+!public/models/.gitkeep
+

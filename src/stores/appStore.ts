@@ -4,11 +4,19 @@ import { db } from '../db/db'
 
 export type ActiveTab = 'mapa' | 'rozpoznaj' | 'dziennik' | 'baza-wiedzy'
 
+export interface ReturnPoint {
+  latitude: number
+  longitude: number
+  savedAt: number
+}
+
 interface AppState {
   activeTab: ActiveTab
   setActiveTab: (tab: ActiveTab) => void
   activeTripId: number | null
   setActiveTripId: (id: number | null) => void
+  returnPoint: ReturnPoint | null
+  setReturnPoint: (point: ReturnPoint | null) => void
 }
 
 // activeTripId jest utrwalany, żeby zamknięcie/zabicie aplikacji w trakcie wyprawy w lesie
@@ -20,10 +28,12 @@ export const useAppStore = create<AppState>()(
       setActiveTab: (tab) => set({ activeTab: tab }),
       activeTripId: null,
       setActiveTripId: (id) => set({ activeTripId: id }),
+      returnPoint: null,
+      setReturnPoint: (point) => set({ returnPoint: point }),
     }),
     {
       name: 'lysy-app-store',
-      partialize: (state) => ({ activeTripId: state.activeTripId }),
+      partialize: (state) => ({ activeTripId: state.activeTripId, returnPoint: state.returnPoint }),
       onRehydrateStorage: () => () => {
         // Odłożone do makrotaska: onRehydrateStorage jest wywoływane synchronicznie
         // wewnątrz create(), zanim `useAppStore` poniżej zdąży zostać przypisany.

@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
-import { createThumbnail } from '../../utils/imageUtils'
+import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
@@ -23,11 +24,13 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   const [notes, setNotes] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { activeTripId, activeTrip } = useActiveTrip()
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setSaving(true)
+    setError(null)
     const species = (speciesData as Species[]).find((s) => s.id === speciesId) ?? null
     try {
       const findingId = await db.findings.add({
@@ -40,10 +43,20 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
         tripId: activeTripId ?? undefined,
       })
       if (photo) {
-        const thumbnailBlob = await createThumbnail(photo)
-        await db.photos.add({ findingId, blob: photo, thumbnailBlob })
+        const [photoBlob, thumbnailBlob] = await Promise.all([compressPhoto(photo), createThumbnail(photo)])
+        await db.photos.add({ findingId, blob: photoBlob, thumbnailBlob })
       }
       onClose(true)
+    } catch (err) {
+      // Natywny DOMException (rzucany przez IndexedDB przy przekroczeniu limitu) NIE dziedziczy
+      // po Error, więc sprawdzamy `name` bezpośrednio zamiast polegać na `instanceof Error`.
+      const errorName = err != null && typeof err === 'object' && 'name' in err ? (err as { name: unknown }).name : undefined
+      const message =
+        errorName === 'QuotaExceededError'
+          ? 'Brak miejsca na urządzeniu - zwolnij pamięć (np. w "Pamięć i dane") i spróbuj ponownie.'
+          : 'Nie udało się zapisać znaleziska. Spróbuj ponownie.'
+      setError(message)
+      toast.error(message)
     } finally {
       setSaving(false)
     }
@@ -61,7 +74,7 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
         <DrawerHeader>
           <DrawerTitle>Nowe znalezisko</DrawerTitle>
           {activeTrip && (
-            <p className="text-xs text-green-700">🥾 Zostanie dodane do wyprawy: {activeTrip.name}</p>
+            <p className="text-xs text-primary">🥾 Zostanie dodane do wyprawy: {activeTrip.name}</p>
           )}
         </DrawerHeader>
 
@@ -107,6 +120,12 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
               <AlertDescription className="text-current">
                 Brak ustalonej lokalizacji — znalezisko zostanie zapisane bez współrzędnych.
               </AlertDescription>
+            </Alert>
+          )}
+
+          {error && (
+            <Alert variant="destructive-soft">
+              <AlertDescription className="text-current">{error}</AlertDescription>
             </Alert>
           )}
 

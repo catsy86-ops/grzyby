@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../db/db'
 import { FindingThumbnail } from './FindingThumbnail'
@@ -64,5 +64,19 @@ describe('FindingThumbnail', () => {
     unmount()
 
     expect(revokedUrls).toContain(url)
+  })
+
+  it('otwiera podgląd pełnego zdjęcia po kliknięciu miniatury', async () => {
+    const thumbnailBlob = new Blob(['thumb'], { type: 'image/jpeg' })
+    const fullBlob = new Blob(['full'], { type: 'image/jpeg' })
+    await db.photos.add({ findingId: 4, blob: fullBlob, thumbnailBlob })
+
+    render(<FindingThumbnail findingId={4} />)
+    const trigger = await screen.findByRole('button', { name: 'Powiększ zdjęcie znaleziska' })
+
+    fireEvent.click(trigger)
+
+    const fullImg = await screen.findByAltText('Zdjęcie znaleziska')
+    expect(fullImg).toHaveAttribute('src', createdUrls[1])
   })
 })

@@ -1,16 +1,21 @@
+import { useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, HardDriveIcon, WifiOffIcon } from 'lucide-react'
 import { useAppStore, type ActiveTab } from './stores/appStore'
 import { MapView } from './features/map/MapView'
 import { IdentifyView } from './features/identify/IdentifyView'
 import { JournalView } from './features/journal/JournalView'
 import { EncyclopediaView } from './features/encyclopedia/EncyclopediaView'
 import { Toaster } from './components/ui/sonner'
+import { StorageInfoDrawer } from './components/StorageInfoDrawer'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
+import { useOnlineStatus } from './hooks/useOnlineStatus'
 
-const TABS: { key: ActiveTab; label: string; icon: string }[] = [
-  { key: 'mapa', label: 'Mapa', icon: '🗺️' },
-  { key: 'rozpoznaj', label: 'Rozpoznaj', icon: '📷' },
-  { key: 'dziennik', label: 'Dziennik', icon: '📓' },
-  { key: 'baza-wiedzy', label: 'Baza wiedzy', icon: '📚' },
+const TABS: { key: ActiveTab; label: string; icon: typeof MapIcon }[] = [
+  { key: 'mapa', label: 'Mapa', icon: MapIcon },
+  { key: 'rozpoznaj', label: 'Rozpoznaj', icon: CameraIcon },
+  { key: 'dziennik', label: 'Dziennik', icon: NotebookTextIcon },
+  { key: 'baza-wiedzy', label: 'Baza wiedzy', icon: BookOpenIcon },
 ]
 
 function ActiveView({ tab }: { tab: ActiveTab }) {
@@ -29,20 +34,61 @@ function ActiveView({ tab }: { tab: ActiveTab }) {
 function App() {
   const activeTab = useAppStore((s) => s.activeTab)
   const setActiveTab = useAppStore((s) => s.setActiveTab)
+  const isOnline = useOnlineStatus()
+  const [showStorageInfo, setShowStorageInfo] = useState(false)
   useAndroidWidgetSync()
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <header className="safe-area-top flex items-center justify-center gap-2 bg-green-900 px-4 pb-3 pt-4 text-white shadow-sm">
-        <span className="text-lg leading-none">🍄</span>
-        <span className="text-sm font-bold tracking-[0.15em]">ŁYSY</span>
+      <header className="safe-area-top flex items-center gap-2 bg-primary px-4 pb-3 pt-4 text-primary-foreground shadow-sm">
+        <div className="size-8 shrink-0" aria-hidden="true" />
+        <div className="flex flex-1 items-center justify-center gap-2">
+          <span className="text-lg leading-none">🍄</span>
+          <span className="text-sm font-bold tracking-[0.15em]">ŁYSY</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowStorageInfo(true)}
+          aria-label="Pamięć i dane"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
+        >
+          <HardDriveIcon className="size-4" />
+        </button>
       </header>
-      <main className="min-h-0 flex-1 overflow-hidden">
-        <ActiveView tab={activeTab} />
+      <AnimatePresence>
+        {!isOnline && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="flex items-center justify-center gap-1.5 bg-muted px-4 py-1.5 text-xs text-muted-foreground">
+              <WifiOffIcon className="size-3.5" />
+              Offline - apka działa normalnie, dane zapisują się lokalnie
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <main className="relative z-0 min-h-0 flex-1 overflow-hidden">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="h-full"
+          >
+            <ActiveView tab={activeTab} />
+          </motion.div>
+        </AnimatePresence>
       </main>
-      <nav className="safe-area-bottom flex border-t border-border bg-white/95 px-1 pt-1 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <nav className="safe-area-bottom flex border-t border-border bg-card/95 px-1 pt-1 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key
+          const Icon = tab.icon
           return (
             <button
               key={tab.key}
@@ -50,12 +96,19 @@ function App() {
               aria-current={isActive ? 'page' : undefined}
               className="flex flex-1 flex-col items-center gap-0.5 py-1.5 transition-colors active:scale-95"
             >
-              <span
-                className={`flex h-8 w-14 items-center justify-center rounded-full text-lg transition-colors ${
-                  isActive ? 'bg-primary/10' : ''
-                }`}
-              >
-                {tab.icon}
+              <span className="relative flex h-8 w-14 items-center justify-center rounded-full">
+                {isActive && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-full bg-primary/10"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
+                  />
+                )}
+                <Icon
+                  className={`relative size-[18px] transition-colors ${
+                    isActive ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                />
               </span>
               <span
                 className={`text-[11px] leading-none transition-colors ${
@@ -69,6 +122,7 @@ function App() {
         })}
       </nav>
       <Toaster position="top-center" />
+      <StorageInfoDrawer open={showStorageInfo} onOpenChange={setShowStorageInfo} />
     </div>
   )
 }

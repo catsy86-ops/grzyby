@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import speciesData from '../data/species.json'
 import { rankPredictions } from './mushroomModel'
 
@@ -37,5 +37,49 @@ describe('rankPredictions', () => {
 
     expect(results[0].species).toBeNull()
     expect(results[0].labelRaw).toMatch(/^klasa-\d+$/)
+  })
+
+  it('przyjmuje niestandardową kolejność etykiet (np. z metadata.json)', () => {
+    const customOrder = [...speciesData.map((s) => s.id)].reverse()
+    const scores = new Array(customOrder.length).fill(0)
+    scores[0] = 1
+    const results = rankPredictions(scores, 1, customOrder)
+
+    expect(results[0].species?.id).toBe(customOrder[0])
+  })
+})
+
+describe('loadClassLabels', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  it('zwraca domyślną kolejność (species.json), gdy metadata.json nie istnieje', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('not found', { status: 404 })))
+    const { loadClassLabels: loadLabels } = await import('./mushroomModel')
+
+    await expect(loadLabels()).resolves.toEqual(speciesData.map((s) => s.id))
+  })
+
+  it('używa kolejności z metadata.json, gdy jest dostępny i poprawny', async () => {
+    const customOrder = [...speciesData.map((s) => s.id)].reverse()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ labels: customOrder }), { status: 200 })),
+    )
+    const { loadClassLabels: loadLabels } = await import('./mushroomModel')
+
+    await expect(loadLabels()).resolves.toEqual(customOrder)
+  })
+
+  it('ignoruje metadata.json z niepoprawnym kształtem i wraca do domyślnej kolejności', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ labels: 'nie-tablica' }), { status: 200 })),
+    )
+    const { loadClassLabels: loadLabels } = await import('./mushroomModel')
+
+    await expect(loadLabels()).resolves.toEqual(speciesData.map((s) => s.id))
   })
 })

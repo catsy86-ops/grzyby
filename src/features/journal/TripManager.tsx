@@ -66,11 +66,11 @@ export function TripManager() {
 
   if (activeTripId != null && activeTrip) {
     return (
-      <Card size="sm" className="border-green-300 bg-green-50 ring-0">
+      <Card size="sm" className="border-primary/30 bg-primary/5 ring-0">
         <CardContent className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-green-900">🥾 Aktywna wyprawa: {activeTrip.name}</p>
-            <p className="text-xs text-green-700">
+            <p className="text-sm font-semibold text-primary">🥾 Aktywna wyprawa: {activeTrip.name}</p>
+            <p className="text-xs text-primary/80">
               Rozpoczęta {new Date(activeTrip.startedAt).toLocaleString('pl-PL')} ·{' '}
               {formatDuration(activeTrip.startedAt, null)} · {activeTripFindings?.length ?? 0} znalezisk
               {activeTripFindings && activeTripFindings.length > 0 && (
@@ -81,7 +81,7 @@ export function TripManager() {
           <Button
             variant="outline"
             size="sm"
-            className="border-green-800 text-green-800 hover:bg-green-100"
+            className="border-primary text-primary hover:bg-primary/10"
             onClick={handleEndTrip}
           >
             Zakończ wyprawę

@@ -1,7 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useRef, useState } from 'react'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
+import { motion } from 'motion/react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
+import { NotebookTextIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
@@ -22,6 +25,7 @@ import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import { Skeleton } from '../../components/ui/skeleton'
 import { Textarea } from '../../components/ui/textarea'
 import { NotificationPermissionBanner } from '../../components/NotificationPermissionBanner'
 import { ConsumptionTracker } from './ConsumptionTracker'
@@ -41,6 +45,7 @@ export function JournalView() {
   const [editNotes, setEditNotes] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [listRef] = useAutoAnimate()
 
   const selectedTrip = useLiveQuery(
     () => (typeof tripFilter === 'number' ? db.trips.get(tripFilter) : undefined),
@@ -137,7 +142,7 @@ export function JournalView() {
           <Button
             variant="outline"
             size="sm"
-            className="border-green-800 text-green-800 hover:bg-green-50"
+            className="border-primary text-primary hover:bg-primary/10"
             onClick={handleExport}
           >
             Eksportuj
@@ -208,19 +213,27 @@ export function JournalView() {
       )}
 
       {chartData.length > 0 && (
-        <div className="h-56 rounded border border-gray-200 p-2">
+        <div className="h-56 rounded border border-border p-2">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
               <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} textAnchor="end" />
               <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="count" fill="#2f5233" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       )}
 
-      <div className="flex flex-col gap-3">
+      {filteredFindings === undefined && (
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-20 w-full rounded-xl" />
+          <Skeleton className="h-20 w-full rounded-xl" />
+          <Skeleton className="h-20 w-full rounded-xl" />
+        </div>
+      )}
+
+      <div ref={listRef} className="flex flex-col gap-3">
         {filteredFindings?.map((finding) => {
           if (finding.id != null && editingId === finding.id) {
             return (
@@ -303,7 +316,15 @@ export function JournalView() {
           )
         })}
         {filteredFindings?.length === 0 && (
-          <p className="text-sm text-gray-500">Brak zapisanych znalezisk dla wybranego filtru.</p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground"
+          >
+            <NotebookTextIcon className="size-8" />
+            <p className="text-sm">Brak zapisanych znalezisk dla wybranego filtru.</p>
+          </motion.div>
         )}
       </div>
 

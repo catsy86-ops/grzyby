@@ -1,11 +1,16 @@
 import { useMemo, useState } from 'react'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
+import { motion } from 'motion/react'
+import { SearchXIcon, LeafIcon } from 'lucide-react'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
 import { Card, CardContent } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
+import { Toggle } from '../../components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
+import { isInSeason } from '../../utils/seasonFilter'
 
 const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
   { label: 'Wszystkie', value: 'wszystkie' },
@@ -19,6 +24,8 @@ const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
 export function EncyclopediaView() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<EdibilityStatus | 'wszystkie'>('wszystkie')
+  const [seasonOnly, setSeasonOnly] = useState(false)
+  const [listRef] = useAutoAnimate()
 
   const species = speciesData as Species[]
 
@@ -29,20 +36,34 @@ export function EncyclopediaView() {
         query.trim() === '' ||
         s.nameCommon.toLowerCase().includes(query.toLowerCase()) ||
         s.nameLatin.toLowerCase().includes(query.toLowerCase())
-      return matchesFilter && matchesQuery
+      const matchesSeason = !seasonOnly || isInSeason(s.season)
+      return matchesFilter && matchesQuery && matchesSeason
     })
-  }, [species, query, filter])
+  }, [species, query, filter, seasonOnly])
 
   return (
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4">
       <h1 className="text-xl font-semibold">Baza wiedzy o gatunkach</h1>
 
-      <Input
-        type="search"
-        placeholder="Szukaj gatunku..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="flex gap-2">
+        <Input
+          type="search"
+          placeholder="Szukaj gatunku..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="flex-1"
+        />
+        <Toggle
+          variant="outline"
+          pressed={seasonOnly}
+          onPressedChange={setSeasonOnly}
+          aria-label="Pokaż tylko gatunki w sezonie teraz"
+          className="shrink-0 gap-1.5"
+        >
+          <LeafIcon />
+          W sezonie
+        </Toggle>
+      </div>
 
       <ToggleGroup
         variant="outline"
@@ -60,10 +81,18 @@ export function EncyclopediaView() {
         ))}
       </ToggleGroup>
 
-      <div className="flex flex-col gap-3">
+      <div ref={listRef} className="flex flex-col gap-3">
         {filtered.map((s) => (
           <Card key={s.id} size="sm">
             <CardContent>
+              {s.imageUrls[0] && (
+                <img
+                  src={s.imageUrls[0]}
+                  alt={s.nameCommon}
+                  loading="lazy"
+                  className="mb-3 h-40 w-full rounded-lg object-cover"
+                />
+              )}
               <div className="flex items-center justify-between">
                 <p className="font-medium">{s.nameCommon}</p>
                 <EdibilityBadge edibility={s.edibility} />
@@ -78,7 +107,15 @@ export function EncyclopediaView() {
           </Card>
         ))}
         {filtered.length === 0 && (
-          <p className="text-sm text-muted-foreground">Brak wyników dla podanych kryteriów.</p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground"
+          >
+            <SearchXIcon className="size-8" />
+            <p className="text-sm">Brak wyników dla podanych kryteriów.</p>
+          </motion.div>
         )}
       </div>
     </div>
