@@ -141,8 +141,10 @@ zanim ktokolwiek to zaimplementuje.
   `JournalView`/`TripManager`/`tripStats.ts`
 
 **Nowe, zgodne z architekturą (bez backendu) - warte dodania:**
-- [ ] Kompas/GPS "Gdzie jest auto" (Faza 9, propozycja z rozmowy) - zapis punktu startowego,
-      dystans+kierunek powrotu, czysto z lokalnego GPS
+- [x] Kompas/GPS "Gdzie jest auto" (2026-09-14) - `returnPoint` w `appStore.ts` (już
+      wyeksponowany, tylko niepodpięty), przycisk "Zapisz/Zaktualizuj pozycję auta" w
+      `MapView.tsx`, plakietka z dystansem+kierunkiem (`utils/bearing.ts`) i przyciskiem usuwania,
+      marker 🚗 na mapie. Czysto z lokalnego GPS, zero API.
 - [ ] Osobiste "Grzybowiska" - nazwane, zapisane miejsca z historią zbiorów w czasie (rozszerzenie
       istniejącego modelu `Trip`/`Finding` o nazwane lokalizacje, nie tylko pojedyncze pinezki)
 - [ ] Dedykowany ekran "Porównywarka" (Jadalny vs Trujący side-by-side) - dziś sobowtóry są inline

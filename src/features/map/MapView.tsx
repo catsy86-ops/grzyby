@@ -3,10 +3,12 @@ import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from 'rea
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
 import L from 'leaflet'
-import { SunsetIcon } from 'lucide-react'
+import { CarIcon, SunsetIcon, XIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import type { Finding } from '../../db/schema'
+import { useAppStore } from '../../stores/appStore'
 import { clusterFindings } from '../../utils/clusterFindings'
+import { formatDistance, getBearingDegrees, getCardinalDirection, getDistanceMeters } from '../../utils/bearing'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
@@ -38,6 +40,13 @@ const pinIcon = L.icon({
   iconAnchor: [15, 49],
   popupAnchor: [1, -40],
   className: 'hue-rotate-90', // wizualnie odróżnia wybrany pinezkę od pozycji użytkownika
+})
+
+const carIcon = L.divIcon({
+  html: `<div class="flex size-8 items-center justify-center rounded-full border-2 border-white bg-foreground text-background shadow">🚗</div>`,
+  className: '',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
 })
 
 const DEFAULT_CENTER: [number, number] = [52.0693, 19.4803] // środek Polski
@@ -155,6 +164,8 @@ export function MapView() {
   const findings = useLiveQuery(() => db.findings.toArray(), [])
   const { activeTrip } = useActiveTrip()
   const sunsetCountdown = useSunsetCountdown(userPosition)
+  const returnPoint = useAppStore((s) => s.returnPoint)
+  const setReturnPoint = useAppStore((s) => s.setReturnPoint)
 
   async function handleLocate() {
     setLocateError(null)
@@ -165,6 +176,29 @@ export function MapView() {
       setLocateError(error instanceof Error ? error.message : 'Nie udało się ustalić lokalizacji')
     }
   }
+
+  async function handleSaveReturnPoint() {
+    setLocateError(null)
+    try {
+      const coords = userPosition
+        ? { latitude: userPosition[0], longitude: userPosition[1] }
+        : await getCurrentPosition()
+      setReturnPoint({ latitude: coords.latitude, longitude: coords.longitude, savedAt: Date.now() })
+    } catch (error) {
+      setLocateError(error instanceof Error ? error.message : 'Nie udało się ustalić lokalizacji')
+    }
+  }
+
+  // Dystans/kierunek liczone wyłącznie z GPS (patrz utils/bearing.ts) - odświeżają się same przy
+  // każdej aktualizacji userPosition (np. po "Zlokalizuj mnie" w trakcie powrotu przez las).
+  const returnPointInfo = useMemo(() => {
+    if (!returnPoint || !userPosition) return null
+    const returnPosition: [number, number] = [returnPoint.latitude, returnPoint.longitude]
+    return {
+      distanceMeters: getDistanceMeters(userPosition, returnPosition),
+      bearingDegrees: getBearingDegrees(userPosition, returnPosition),
+    }
+  }, [returnPoint, userPosition])
 
   useEffect(() => {
     handleLocate()
@@ -198,6 +232,11 @@ export function MapView() {
         {pinPosition && (
           <Marker position={pinPosition} icon={pinIcon}>
             <Popup>Wybrane miejsce znaleziska</Popup>
+          </Marker>
+        )}
+        {returnPoint && (
+          <Marker position={[returnPoint.latitude, returnPoint.longitude]} icon={carIcon}>
+            <Popup>Zapisana pozycja auta</Popup>
           </Marker>
         )}
         {findings && <FindingMarkers findings={findings} />}
@@ -237,6 +276,30 @@ export function MapView() {
               >
                 <SunsetIcon className="size-3.5" />
                 Zmrok za {sunsetCountdown.label}
+              </Badge>
+            </motion.div>
+          )}
+          {returnPoint && (
+            <motion.div
+              key="return-point-badge"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              <Badge variant="secondary" className="gap-1.5 py-1.5 pl-3 pr-1.5 text-xs shadow">
+                <CarIcon className="size-3.5" />
+                {returnPointInfo
+                  ? `Auto: ${formatDistance(returnPointInfo.distanceMeters)} ${getCardinalDirection(returnPointInfo.bearingDegrees)}`
+                  : 'Auto zapisane'}
+                <button
+                  type="button"
+                  onClick={() => setReturnPoint(null)}
+                  aria-label="Usuń zapisaną pozycję auta"
+                  className="ml-0.5 flex size-4 items-center justify-center rounded-full outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
+                  <XIcon className="size-3" />
+                </button>
               </Badge>
             </motion.div>
           )}
@@ -300,6 +363,10 @@ export function MapView() {
           onClick={() => setShowOfflineDownload(true)}
         >
           Pobierz obszar offline
+        </Button>
+        <Button variant="secondary" className="rounded-full shadow" onClick={handleSaveReturnPoint}>
+          <CarIcon className="size-4" />
+          {returnPoint ? 'Zaktualizuj pozycję auta' : 'Zapisz pozycję auta'}
         </Button>
         <Button variant="secondary" className="rounded-full shadow" onClick={handleLocate}>
           Zlokalizuj mnie
