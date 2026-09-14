@@ -12,22 +12,26 @@ export function FirstAidGuide({ open, onOpenChange }: { open: boolean; onOpenCha
           Pierwsza pomoc przy podejrzeniu zatrucia
         </DialogTitle>
 
-        <ol className="flex flex-col gap-3 text-sm">
+        {/* Tekst kroków pierwszej pomocy celowo WIĘKSZY i wyższego kontrastu niż typowy opis
+            pomocniczy (text-sm zamiast text-xs, text-foreground/85 zamiast text-muted-foreground,
+            leading-relaxed) - to instrukcja czytana w stresie, czasem w słabym świetle lasu, nie
+            drobny podpis. Czytelność tu jest funkcją bezpieczeństwa, nie tylko estetyki. */}
+        <ol className="flex flex-col gap-4 text-base">
           {FIRST_AID_STEPS.map((step, index) => (
-            <li key={step.title} className="flex gap-2.5">
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-destructive text-xs font-bold text-white">
+            <li key={step.title} className="flex gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-destructive text-sm font-bold text-white">
                 {index + 1}
               </span>
               <div>
                 <p className="font-medium">{step.title}</p>
-                <p className="text-xs text-muted-foreground">{step.description}</p>
+                <p className="text-sm leading-relaxed text-foreground/85">{step.description}</p>
               </div>
             </li>
           ))}
         </ol>
 
         <Alert variant="warning" className="mt-2">
-          <AlertDescription className="text-current">{FIRST_AID_DISCLAIMER}</AlertDescription>
+          <AlertDescription className="text-current leading-relaxed">{FIRST_AID_DISCLAIMER}</AlertDescription>
         </Alert>
       </DialogContent>
     </Dialog>

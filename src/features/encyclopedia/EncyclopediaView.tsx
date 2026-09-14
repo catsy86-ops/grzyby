@@ -155,13 +155,16 @@ export function EncyclopediaView() {
                   <ChevronDownIcon className="size-3.5 transition-transform group-data-[panel-open]/details:rotate-180" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <p className="mt-2 text-sm text-foreground/80">{s.description}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-foreground/80">{s.description}</p>
                   <p className="mt-1 text-xs text-muted-foreground">Siedlisko: {s.habitat}</p>
                   <LookalikesWarning species={s} allSpecies={species} />
                   {s.preparationTips && (
+                    // text-sm (nie text-xs) - porady dot. przyrządzania bywają bezpieczeństwem,
+                    // nie ciekawostką (np. smardz/piestrzenica: toksyny niszczone dopiero
+                    // gotowaniem) - nie warto ich miniaturyzować względem reszty karty.
                     <div
                       data-testid="preparation-tip"
-                      className="mt-2 flex items-start gap-1.5 rounded-lg bg-muted/60 p-2 text-xs text-foreground/80"
+                      className="mt-2 flex items-start gap-1.5 rounded-lg bg-muted/60 p-2 text-sm leading-relaxed text-foreground/80"
                     >
                       <ChefHatIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                       <p>{s.preparationTips}</p>
