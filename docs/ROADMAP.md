@@ -180,8 +180,12 @@ błędów w konsoli.
       sugestia przyrządzenia (zwięzłe porady, nie pełne przepisy z miarami - to atlas, nie
       książka kucharska). Sekcja w karcie gatunku w `EncyclopediaView.tsx`. Łączy się z pokrewnym
       punktem "info o suszeniu/mrożeniu/gotowaniu" z trzeciej listy niżej - zrobione razem.
-- [ ] Krótki przewodnik pierwszej pomocy przy podejrzeniu zatrucia - statyczna treść
-      bezpieczeństwa, wysoka wartość/niski koszt, spójna z istniejącymi ostrzeżeniami
+- [x] Krótki przewodnik pierwszej pomocy przy podejrzeniu zatrucia (2026-09-14) -
+      `data/firstAid.ts` (statyczna treść: 6 kroków + zastrzeżenie, spójna z istniejącym
+      ostrzeżeniem w `JournalView.tsx` - 112/Centrum Ostrych Zatruć, zachowanie resztek grzybów,
+      "fałszywa poprawa" przy zatruciu amatoksynami). `FirstAidGuide.tsx` (Dialog) dostępny z
+      ikony w nagłówku apki (każdy ekran) oraz jako link w istniejącym alercie o ciężkiej
+      reakcji w Dzienniku.
 - [ ] Oznaczenie gatunków chronionych prawem - wymaga nowego pola (dziś `edibility` nie rozróżnia
       "chroniony" od jadalności)
 - [ ] Przycisk "Wyślij SMS z lokalizacją" - **da się zrobić bez własnego backendu**: natywny URI

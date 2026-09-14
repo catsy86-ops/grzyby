@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, HardDriveIcon, WifiOffIcon } from 'lucide-react'
+import { MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, HardDriveIcon, PhoneCallIcon, WifiOffIcon } from 'lucide-react'
 import { useAppStore, type ActiveTab } from './stores/appStore'
 import { MapView } from './features/map/MapView'
 import { IdentifyView } from './features/identify/IdentifyView'
@@ -8,6 +8,7 @@ import { JournalView } from './features/journal/JournalView'
 import { EncyclopediaView } from './features/encyclopedia/EncyclopediaView'
 import { Toaster } from './components/ui/sonner'
 import { StorageInfoDrawer } from './components/StorageInfoDrawer'
+import { FirstAidGuide } from './components/FirstAidGuide'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
@@ -38,6 +39,7 @@ function App() {
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const isOnline = useOnlineStatus()
   const [showStorageInfo, setShowStorageInfo] = useState(false)
+  const [showFirstAid, setShowFirstAid] = useState(false)
   useAndroidWidgetSync()
 
   return (
@@ -48,6 +50,14 @@ function App() {
           <span className="text-lg leading-none">🍄</span>
           <span className="text-sm font-bold tracking-[0.15em]">ŁYSY</span>
         </div>
+        <button
+          type="button"
+          onClick={() => setShowFirstAid(true)}
+          aria-label="Pierwsza pomoc przy podejrzeniu zatrucia"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
+        >
+          <PhoneCallIcon className="size-4" />
+        </button>
         <button
           type="button"
           onClick={() => setShowStorageInfo(true)}
@@ -128,6 +138,7 @@ function App() {
       </nav>
       <Toaster position="top-center" />
       <StorageInfoDrawer open={showStorageInfo} onOpenChange={setShowStorageInfo} />
+      <FirstAidGuide open={showFirstAid} onOpenChange={setShowFirstAid} />
     </div>
   )
 }

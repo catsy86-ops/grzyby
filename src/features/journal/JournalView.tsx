@@ -36,6 +36,7 @@ import { Input } from '../../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { Skeleton } from '../../components/ui/skeleton'
 import { Textarea } from '../../components/ui/textarea'
+import { FirstAidGuide } from '../../components/FirstAidGuide'
 import { NotificationPermissionBanner } from '../../components/NotificationPermissionBanner'
 import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
@@ -80,6 +81,7 @@ export function JournalView() {
   const [editSaving, setEditSaving] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [pendingImport, setPendingImport] = useState<{ payload: ExportPayload; duplicateCount: number } | null>(null)
+  const [showFirstAid, setShowFirstAid] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [listRef] = useAutoAnimate()
 
@@ -290,6 +292,15 @@ export function JournalView() {
                 )
               })}
             </ul>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2 border-red-600 text-red-700 hover:bg-red-100"
+              onClick={() => setShowFirstAid(true)}
+            >
+              Zobacz przewodnik pierwszej pomocy
+            </Button>
           </AlertDescription>
         </Alert>
       )}
@@ -571,6 +582,8 @@ export function JournalView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <FirstAidGuide open={showFirstAid} onOpenChange={setShowFirstAid} />
     </div>
   )
 }

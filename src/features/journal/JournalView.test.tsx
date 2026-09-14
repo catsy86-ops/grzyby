@@ -278,3 +278,41 @@ describe('JournalView - ostrzeżenie o duplikatach przy imporcie', () => {
     expect(await db.findings.count()).toBe(1)
   })
 })
+
+describe('JournalView - ostrzeżenie o ciężkiej reakcji', () => {
+  beforeEach(async () => {
+    await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
+      await db.findings.clear()
+      await db.trips.clear()
+      await db.photos.clear()
+    })
+  })
+
+  afterEach(() => cleanup())
+
+  it('pokazuje przycisk do przewodnika pierwszej pomocy i otwiera go po kliknięciu', async () => {
+    await addFinding({
+      speciesNameGuess: 'Muchomor sromotnikowy',
+      consumed: true,
+      consumedAt: Date.now(),
+      reactionSeverity: 'ciężka',
+    })
+
+    render(<JournalView />)
+
+    const button = await screen.findByRole('button', { name: 'Zobacz przewodnik pierwszej pomocy' })
+    fireEvent.click(button)
+
+    expect(await screen.findByText('Pierwsza pomoc przy podejrzeniu zatrucia')).toBeInTheDocument()
+  })
+
+  it('nie pokazuje ostrzeżenia, gdy żadne znalezisko nie zgłosiło ciężkiej reakcji', async () => {
+    await addFinding()
+
+    render(<JournalView />)
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Zobacz przewodnik pierwszej pomocy' })).not.toBeInTheDocument()
+    })
+  })
+})
