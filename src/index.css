@@ -53,6 +53,7 @@ body {
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-brand-accent: var(--brand-accent);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -87,6 +88,10 @@ body {
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
+  /* Drugi, ciepły akcent (ściółka leśna/kapelusz grzyba) obok zielonego --primary - używany
+     oszczędnie (np. gradient nagłówka), NIE zastępuje zieleni i nie dotyka semantycznych
+     kolorów bezpieczeństwa (jadalność) w EdibilityBadge. */
+  --brand-accent: var(--color-amber-700);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -122,6 +127,7 @@ body {
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
+  --brand-accent: var(--color-amber-600);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -147,4 +153,36 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+/* Bardzo subtelna tekstura tła (ziarno) - czysty SVG data-URI (bez plików graficznych, zero
+   wpływu na rozmiar bundla), nałożony jako `background-image` na `body` niezależnie od
+   `--background` (działa identycznie w light/dark, bo opacity szumu jest wewnątrz samego SVG,
+   nie zależy od koloru tła). Rozmiar płytki (`background-size`) dobrany tak, by wzór się
+   powtarzał bez widocznych szwów, a opacity kropek jest na tyle niska (0.4-0.9 w SVG, ale
+   całość dodatkowo przyciszona przez `background-blend-mode` nie jest potrzebna - wartości w
+   SVG już są bardzo niskie), że nie wpływa na czytelność tekstu ani kontrast. */
+body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.02 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 120px 120px;
+}
+
+/* Tryb "W lesie" - większe cele dotyku i wyższy kontrast, dla użycia w terenie (mokre palce,
+   rękawiczki, słońce na ekranie utrudniające odczyt). Skalowanie font-size na korzeniu podbija
+   wszystkie rozmiary oparte na rem (Tailwind v4 domyślnie), a nie tylko wybrane komponenty. */
+.forest-mode {
+  font-size: 118%;
+  --border: oklch(0.5 0 0);
+  --muted-foreground: oklch(0.35 0 0);
+}
+
+.forest-mode.dark {
+  --border: oklch(1 0 0 / 35%);
+  --muted-foreground: oklch(0.85 0 0);
+}
+
+.forest-mode button,
+.forest-mode a[role='button'] {
+  min-height: 2.75rem;
 }

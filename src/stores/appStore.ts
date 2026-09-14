@@ -17,6 +17,8 @@ interface AppState {
   setActiveTripId: (id: number | null) => void
   returnPoint: ReturnPoint | null
   setReturnPoint: (point: ReturnPoint | null) => void
+  forestMode: boolean
+  setForestMode: (enabled: boolean) => void
 }
 
 // activeTripId jest utrwalany, żeby zamknięcie/zabicie aplikacji w trakcie wyprawy w lesie
@@ -30,10 +32,16 @@ export const useAppStore = create<AppState>()(
       setActiveTripId: (id) => set({ activeTripId: id }),
       returnPoint: null,
       setReturnPoint: (point) => set({ returnPoint: point }),
+      forestMode: false,
+      setForestMode: (enabled) => set({ forestMode: enabled }),
     }),
     {
       name: 'lysy-app-store',
-      partialize: (state) => ({ activeTripId: state.activeTripId, returnPoint: state.returnPoint }),
+      partialize: (state) => ({
+        activeTripId: state.activeTripId,
+        returnPoint: state.returnPoint,
+        forestMode: state.forestMode,
+      }),
       onRehydrateStorage: () => () => {
         // Odłożone do makrotaska: onRehydrateStorage jest wywoływane synchronicznie
         // wewnątrz create(), zanim `useAppStore` poniżej zdąży zostać przypisany.

@@ -21,3 +21,21 @@ describe('useAppStore - returnPoint', () => {
     expect(useAppStore.getState().returnPoint).toBeNull()
   })
 })
+
+describe('useAppStore - forestMode', () => {
+  afterEach(() => {
+    useAppStore.setState({ forestMode: false })
+  })
+
+  it('domyślnie wyłączony', () => {
+    expect(useAppStore.getState().forestMode).toBe(false)
+  })
+
+  it('włącza i wyłącza tryb "W lesie"', () => {
+    useAppStore.getState().setForestMode(true)
+    expect(useAppStore.getState().forestMode).toBe(true)
+
+    useAppStore.getState().setForestMode(false)
+    expect(useAppStore.getState().forestMode).toBe(false)
+  })
+})
