@@ -108,6 +108,33 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     })
   })
 
+  it('pozwala ustawić i usunąć wagę znaleziska', async () => {
+    const id = await addFinding({ notes: 'Z wagą' })
+
+    render(<JournalView />)
+    fireEvent.click(await screen.findByText('Edytuj'))
+
+    const weightInput = screen.getByLabelText('Waga (gramy)') as HTMLInputElement
+    fireEvent.change(weightInput, { target: { value: '250' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+
+    await waitFor(async () => {
+      const finding = await db.findings.get(id)
+      expect(finding?.weightGrams).toBe(250)
+    })
+
+    expect(await screen.findByText(/250 g/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Edytuj'))
+    fireEvent.change(screen.getByLabelText('Waga (gramy)'), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+
+    await waitFor(async () => {
+      const finding = await db.findings.get(id)
+      expect(finding?.weightGrams).toBeUndefined()
+    })
+  })
+
   it('pokazuje komunikat błędu, gdy ustalenie lokalizacji GPS się nie powiedzie', async () => {
     await addFinding()
     vi.mocked(geolocation.getCurrentPosition).mockRejectedValue(new Error('Brak sygnału GPS'))

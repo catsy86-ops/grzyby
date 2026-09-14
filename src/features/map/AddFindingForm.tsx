@@ -24,6 +24,7 @@ interface AddFindingFormProps {
 export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps) {
   const [speciesId, setSpeciesId] = useState<string>('')
   const [spotId, setSpotId] = useState<number | ''>('')
+  const [weightGrams, setWeightGrams] = useState('')
   const [notes, setNotes] = useState('')
   const [photos, setPhotos] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
@@ -46,6 +47,7 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
         createdAt: Date.now(),
         tripId: activeTripId ?? undefined,
         spotId: spotId === '' ? undefined : spotId,
+        weightGrams: weightGrams.trim() === '' ? undefined : Number(weightGrams),
       })
       // Schema (Photo.findingId) wspiera wiele zdjęć per znalezisko - kompresja/miniatury
       // liczone równolegle, zapisy sekwencyjnie żeby zachować kolejność wyboru użytkownika.
@@ -141,6 +143,19 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
             {photos.length > 1 && (
               <p className="mt-1 text-xs text-muted-foreground">Wybrano {photos.length} zdjęć.</p>
             )}
+          </label>
+
+          <label className="block text-sm">
+            Waga (gramy, opcjonalnie)
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              value={weightGrams}
+              onChange={(e) => setWeightGrams(e.target.value)}
+              className="mt-1"
+            />
           </label>
 
           <label className="block text-sm">

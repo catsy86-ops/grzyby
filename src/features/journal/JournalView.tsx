@@ -19,7 +19,7 @@ import {
 import { getCurrentPosition } from '../../utils/geolocation'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
-import { countSpeciesDiversity, formatDuration } from '../../utils/tripStats'
+import { countSpeciesDiversity, formatDuration, formatWeight, sumWeightGrams } from '../../utils/tripStats'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
 import {
   AlertDialog,
@@ -71,6 +71,7 @@ export function JournalView() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editSpeciesId, setEditSpeciesId] = useState('')
   const [editNotes, setEditNotes] = useState('')
+  const [editWeightGrams, setEditWeightGrams] = useState('')
   const [editLatitude, setEditLatitude] = useState<number | null>(null)
   const [editLongitude, setEditLongitude] = useState<number | null>(null)
   const [editPhoto, setEditPhoto] = useState<File | null>(null)
@@ -178,6 +179,7 @@ export function JournalView() {
     setEditingId(finding.id ?? null)
     setEditSpeciesId(finding.speciesId ?? '')
     setEditNotes(finding.notes)
+    setEditWeightGrams(finding.weightGrams != null ? String(finding.weightGrams) : '')
     setEditLatitude(finding.latitude)
     setEditLongitude(finding.longitude)
     setEditPhoto(null)
@@ -215,6 +217,7 @@ export function JournalView() {
           speciesId: species?.id ?? null,
           speciesNameGuess: species?.nameCommon ?? null,
           notes: editNotes,
+          weightGrams: editWeightGrams.trim() === '' ? undefined : Number(editWeightGrams),
           latitude: editLatitude,
           longitude: editLongitude,
         })
@@ -311,6 +314,7 @@ export function JournalView() {
               {' · '}
               {formatDuration(selectedTrip.startedAt, selectedTrip.endedAt)} ·{' '}
               {filteredFindings.length} znalezisk · {countSpeciesDiversity(filteredFindings)} gatunków
+              {sumWeightGrams(filteredFindings) > 0 && <> · {formatWeight(sumWeightGrams(filteredFindings))}</>}
             </p>
           </CardContent>
         </Card>
@@ -369,6 +373,19 @@ export function JournalView() {
                       onChange={(e) => setEditNotes(e.target.value)}
                       className="mt-1"
                       rows={2}
+                    />
+                  </label>
+
+                  <label className="text-sm">
+                    Waga (gramy)
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      step={1}
+                      value={editWeightGrams}
+                      onChange={(e) => setEditWeightGrams(e.target.value)}
+                      className="mt-1"
                     />
                   </label>
 
@@ -459,6 +476,7 @@ export function JournalView() {
                           · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
                         </>
                       )}
+                      {finding.weightGrams != null && <> · {formatWeight(finding.weightGrams)}</>}
                     </p>
                     {finding.notes && <p className="mt-1 text-sm text-foreground/80">{finding.notes}</p>}
                     <ConsumptionTracker finding={finding} />

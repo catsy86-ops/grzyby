@@ -11,6 +11,15 @@ export function countSpeciesDiversity(findings: Finding[]): number {
   return speciesIds.size
 }
 
+export function sumWeightGrams(findings: Finding[]): number {
+  return findings.reduce((sum, f) => sum + (f.weightGrams ?? 0), 0)
+}
+
+export function formatWeight(grams: number): string {
+  if (grams < 1000) return `${grams} g`
+  return `${(grams / 1000).toFixed(1)} kg`
+}
+
 export function formatDuration(startedAt: number, endedAt: number | null): string {
   const ms = Math.max(0, (endedAt ?? Date.now()) - startedAt)
   const totalMinutes = Math.floor(ms / 60000)

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import { useActiveTrip } from '../../stores/useActiveTrip'
-import { countSpeciesDiversity, formatDuration, isLongTrip } from '../../utils/tripStats'
+import { countSpeciesDiversity, formatDuration, formatWeight, isLongTrip, sumWeightGrams } from '../../utils/tripStats'
 import { showLocalNotification } from '../../utils/notifications'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
@@ -75,6 +75,9 @@ export function TripManager() {
               {formatDuration(activeTrip.startedAt, null)} · {activeTripFindings?.length ?? 0} znalezisk
               {activeTripFindings && activeTripFindings.length > 0 && (
                 <> · {countSpeciesDiversity(activeTripFindings)} gatunków</>
+              )}
+              {activeTripFindings && sumWeightGrams(activeTripFindings) > 0 && (
+                <> · {formatWeight(sumWeightGrams(activeTripFindings))}</>
               )}
             </p>
           </div>

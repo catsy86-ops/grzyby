@@ -157,8 +157,10 @@ zanim ktokolwiek to zaimplementuje.
       zdjęcie, nazwa, plakietka jadalności, siedlisko, sezon, pełny opis rozpoznawania - zamiast
       nowej, ręcznie kuratorowanej treści "różnic" (ryzyko błędu przy treści bezpieczeństwa),
       wykorzystuje już zweryfikowane dane z `species.json` w czytelnym układzie porównawczym.
-- [ ] Waga/ilość w statystykach zbiorów - wymaga nowego pola w schemacie (`Finding.weightGrams`),
-      dziś `tripStats.ts` liczy tylko liczbę/różnorodność gatunków
+- [x] Waga/ilość w statystykach zbiorów (2026-09-14) - `Finding.weightGrams` (opcjonalne, bez
+      migracji indeksu - niequerowane pole). Pole wagi w `AddFindingForm.tsx` i edycji w
+      `JournalView.tsx`, `sumWeightGrams()`/`formatWeight()` w `tripStats.ts`, suma widoczna w
+      podsumowaniu aktywnej wyprawy (`TripManager.tsx`) i filtrowanej wyprawy (`JournalView.tsx`).
 - [ ] Przepisy kulinarne i porady dot. czyszczenia/suszenia - nowy statyczny dataset (jak
       `species.json`), osobna zakładka/sekcja per gatunek
 - [ ] Krótki przewodnik pierwszej pomocy przy podejrzeniu zatrucia - statyczna treść

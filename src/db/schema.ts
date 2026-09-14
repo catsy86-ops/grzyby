@@ -26,6 +26,7 @@ export interface Finding {
   // Nazwane, zapisane miejsce (np. "grzybowisko pod lasem") - niezależne od `tripId` (jedna
   // wyprawa może dotknąć kilku grzybowisk, jedno grzybowisko odwiedzane jest w wielu wyprawach).
   spotId?: number
+  weightGrams?: number
   // Śledzenie spożycia i ewentualnej reakcji - pomaga powiązać objawy zatrucia
   // z konkretnym znaleziskiem, zwłaszcza że toksyny niektórych gatunków działają
   // z opóźnieniem (nawet 6-24h).
