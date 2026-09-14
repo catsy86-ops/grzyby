@@ -186,6 +186,36 @@ body {
   background-size: 120px 120px;
 }
 
+/* Skeleton "shimmer" tonowany zielenią marki zamiast płaskiego animate-pulse Tailwinda - jedna
+   klasa, obejmuje od razu każde użycie <Skeleton> w apce (mapa, dziennik, miniatury zdjęć), bez
+   zmian w miejscach wywołania. Pasek światła przesuwa się przez tło zamiast go migać - czytelny
+   sygnał "trwa ładowanie", subtelnie spójny z resztą palety zamiast generycznego szarego pulsu.
+   `prefers-reduced-motion` respektowane osobno (poza globalnym `MotionConfig` z main.tsx, który
+   obejmuje tylko `motion/react` - to czysta animacja CSS) - bez animacji zostaje statyczne tło. */
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+.skeleton-shimmer {
+  background-color: var(--color-muted);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in oklab, var(--color-primary) 18%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton-shimmer {
+    animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  }
+}
+
 /* Tryb "W lesie" - większe cele dotyku i wyższy kontrast, dla użycia w terenie (mokre palce,
    rękawiczki, słońce na ekranie utrudniające odczyt). Skalowanie font-size na korzeniu podbija
    wszystkie rozmiary oparte na rem (Tailwind v4 domyślnie), a nie tylko wybrane komponenty. */
