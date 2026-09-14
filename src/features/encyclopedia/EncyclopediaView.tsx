@@ -92,7 +92,13 @@ export function EncyclopediaView() {
           // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (filtrowanie/wyszukiwanie
           // animuje pozycję/usunięcie) - mikrointerakcja `whileTap` idzie na wewnętrzny `motion.div`,
           // nie na `Card`, żeby nie kolidować z transformacjami auto-animate.
-          <Card key={s.id} size="sm" className={`border-l-4 ${edibilityCardAccentClass(s.edibility)}`}>
+          // hover:shadow (bez transform - Card jest dzieckiem useAutoAnimate powyżej, patrz ten
+          // sam komentarz w JournalView.tsx dla tej samej reguły).
+          <Card
+            key={s.id}
+            size="sm"
+            className={`border-l-4 transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15 ${edibilityCardAccentClass(s.edibility)}`}
+          >
             <CardContent>
             <motion.div whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
               {s.imageUrls[0] && (

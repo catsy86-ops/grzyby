@@ -530,7 +530,10 @@ export function JournalView() {
             // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (transform-based
             // pozycjonowanie przy sortowaniu/usuwaniu) - mikrointerakcja `whileTap` (motion) idzie
             // na wewnętrzny wrapper, nie na `Card`, żeby oba mechanizmy transformacji nie kolidowały.
-            <Card key={finding.id} size="sm">
+            // hover:shadow (nie hover:-translate-y, celowo BEZ transform) - osobny transform z
+            // hover kolidowałby z pozycjonowaniem useAutoAnimate (ten sam powód, dla którego
+            // whileTap idzie na wewnętrzny motion.div, nie na Card - patrz komentarz wyżej).
+            <Card key={finding.id} size="sm" className="transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15">
               <CardContent>
                 <motion.div
                   className="flex items-start gap-3"
