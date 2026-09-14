@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { CameraIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
+import { CameraMushroomIllustration } from '../../components/icons/illustrations'
 import { isModelAvailable, type Prediction } from '../../utils/mushroomModel'
 import { identifyMushroomInWorker } from '../../utils/mushroomWorkerClient'
 import { PredictionCard } from './PredictionCard'
@@ -107,6 +108,9 @@ export function IdentifyView() {
           onChange={handleFileChange}
           className="hidden"
         />
+        {!imageUrl && (
+          <CameraMushroomIllustration className="mx-auto mb-3 size-16 text-muted-foreground" />
+        )}
         <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
           <CameraIcon />
           {imageUrl ? 'Zmień zdjęcie' : 'Wybierz lub zrób zdjęcie'}

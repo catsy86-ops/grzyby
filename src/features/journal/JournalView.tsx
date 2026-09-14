@@ -4,7 +4,8 @@ import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
-import { DownloadIcon, FileTextIcon, MoreVerticalIcon, NotebookTextIcon, UploadIcon } from 'lucide-react'
+import { DownloadIcon, FileTextIcon, MoreVerticalIcon, UploadIcon } from 'lucide-react'
+import { EmptyBasketIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
@@ -573,7 +574,7 @@ export function JournalView() {
             transition={{ duration: 0.2 }}
             className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground"
           >
-            <NotebookTextIcon className="size-8" />
+            <EmptyBasketIllustration className="size-14 text-muted-foreground" />
             <p className="text-sm">Brak zapisanych znalezisk dla wybranego filtru.</p>
           </motion.div>
         )}

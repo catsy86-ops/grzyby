@@ -14,6 +14,13 @@ import {
   SunsetIcon,
   XIcon,
 } from 'lucide-react'
+import {
+  candidateMarkerIcon,
+  carMarkerIcon,
+  findingMarkerIcon,
+  spotMarkerIcon,
+  userLocationIcon,
+} from '../../components/icons/mapMarkerIcons'
 import { db } from '../../db/db'
 import type { Finding, Spot } from '../../db/schema'
 import { useAppStore } from '../../stores/appStore'
@@ -37,43 +44,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu'
-
-import iconUrl from 'leaflet/dist/images/marker-icon.png'
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
-import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
-
-const defaultIcon = L.icon({
-  iconUrl,
-  iconRetinaUrl,
-  shadowUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-})
-
-const pinIcon = L.icon({
-  iconUrl,
-  iconRetinaUrl,
-  shadowUrl,
-  iconSize: [30, 49],
-  iconAnchor: [15, 49],
-  popupAnchor: [1, -40],
-  className: 'hue-rotate-90', // wizualnie odróżnia wybrany pinezkę od pozycji użytkownika
-})
-
-const carIcon = L.divIcon({
-  html: `<div class="flex size-8 items-center justify-center rounded-full border-2 border-white bg-foreground text-background shadow">🚗</div>`,
-  className: '',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-})
-
-const spotIcon = L.divIcon({
-  html: `<div class="flex size-8 items-center justify-center rounded-full border-2 border-white bg-amber-600 text-white shadow">📍</div>`,
-  className: '',
-  iconSize: [32, 32],
-  iconAnchor: [16, 28],
-})
 
 const DEFAULT_CENTER: [number, number] = [52.0693, 19.4803] // środek Polski
 
@@ -116,7 +86,7 @@ function FindingMarkers({ findings }: { findings: Finding[] }) {
           const finding = findings.find((f) => f.id === cluster.points[0].id)
           if (!finding) return null
           return (
-            <Marker key={finding.id} position={[cluster.lat, cluster.lng]} icon={defaultIcon}>
+            <Marker key={finding.id} position={[cluster.lat, cluster.lng]} icon={findingMarkerIcon}>
               <Popup>
                 <div className="text-sm">
                   <p className="font-semibold">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
@@ -281,7 +251,7 @@ export function MapView() {
                 pathOptions={{ color: 'var(--color-primary)', weight: 1, fillOpacity: 0.1 }}
               />
             )}
-            <Marker position={userPosition} icon={defaultIcon}>
+            <Marker position={userPosition} icon={userLocationIcon}>
               <Popup>
                 Twoja pozycja
                 {userAccuracyMeters != null && ` (dokładność ±${Math.round(userAccuracyMeters)} m)`}
@@ -290,17 +260,17 @@ export function MapView() {
           </>
         )}
         {pinPosition && (
-          <Marker position={pinPosition} icon={pinIcon}>
+          <Marker position={pinPosition} icon={candidateMarkerIcon}>
             <Popup>Wybrane miejsce znaleziska</Popup>
           </Marker>
         )}
         {returnPoint && (
-          <Marker position={[returnPoint.latitude, returnPoint.longitude]} icon={carIcon}>
+          <Marker position={[returnPoint.latitude, returnPoint.longitude]} icon={carMarkerIcon}>
             <Popup>Zapisana pozycja auta</Popup>
           </Marker>
         )}
         {spots?.map((spot: Spot) => (
-          <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={spotIcon}>
+          <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={spotMarkerIcon}>
             <Popup>
               <div className="text-sm">
                 <p className="font-semibold">{spot.name}</p>

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
-import { SearchXIcon, LeafIcon, ChefHatIcon, ChevronDownIcon, ScaleIcon } from 'lucide-react'
+import { LeafIcon, ChefHatIcon, ChevronDownIcon, ScaleIcon } from 'lucide-react'
+import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
@@ -161,7 +162,7 @@ export function EncyclopediaView() {
             transition={{ duration: 0.2 }}
             className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground"
           >
-            <SearchXIcon className="size-8" />
+            <EmptySearchIllustration className="size-14 text-muted-foreground" />
             <p className="text-sm">Brak wyników dla podanych kryteriów.</p>
           </motion.div>
         )}
