@@ -3,7 +3,17 @@ import { Circle, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } f
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
 import L from 'leaflet'
-import { CarIcon, CloudRainIcon, MapPinnedIcon, MessageCircleIcon, SunsetIcon, XIcon } from 'lucide-react'
+import {
+  CarIcon,
+  CloudRainIcon,
+  CrosshairIcon,
+  DownloadIcon,
+  MapPinnedIcon,
+  MessageCircleIcon,
+  MoreVerticalIcon,
+  SunsetIcon,
+  XIcon,
+} from 'lucide-react'
 import { db } from '../../db/db'
 import type { Finding, Spot } from '../../db/schema'
 import { useAppStore } from '../../stores/appStore'
@@ -21,6 +31,12 @@ import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Skeleton } from '../../components/ui/skeleton'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu'
 
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
@@ -428,36 +444,60 @@ export function MapView() {
             </motion.p>
           )}
         </AnimatePresence>
-        <Button
-          variant="secondary"
-          className="rounded-full shadow"
-          onClick={() => setShowOfflineDownload(true)}
-        >
-          Pobierz obszar offline
-        </Button>
-        <Button variant="secondary" className="rounded-full shadow" onClick={() => setShowSpotManager(true)}>
-          <MapPinnedIcon className="size-4" />
-          Grzybowiska
-        </Button>
-        <Button variant="secondary" className="rounded-full shadow" onClick={handleSaveReturnPoint}>
-          <CarIcon className="size-4" />
-          {returnPoint ? 'Zaktualizuj pozycję auta' : 'Zapisz pozycję auta'}
-        </Button>
-        <Button variant="secondary" className="rounded-full shadow" onClick={handleLocate}>
-          Zlokalizuj mnie
-        </Button>
-        {userPosition && (
+        <div className="flex items-center gap-2">
+          {/* Menu narzędzi map - konsoliduje rzadziej używane akcje (offline, grzybowiska, auto,
+              SMS), żeby prawy dolny róg nie spuchł do sterty nakładających się przycisków przy
+              każdej kolejnej funkcji mapy (było ich już 6 obok siebie). Dwie najczęstsze akcje
+              ("Zlokalizuj mnie", "Dodaj znalezisko") zostają jako osobne, stałe przyciski - to one
+              są używane w każdej wyprawie, reszta okazjonalnie. */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full shadow"
+                  aria-label="Więcej narzędzi mapy"
+                />
+              }
+            >
+              <MoreVerticalIcon className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setShowOfflineDownload(true)}>
+                <DownloadIcon />
+                Pobierz obszar offline
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowSpotManager(true)}>
+                <MapPinnedIcon />
+                Grzybowiska
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSaveReturnPoint}>
+                <CarIcon />
+                {returnPoint ? 'Zaktualizuj pozycję auta' : 'Zapisz pozycję auta'}
+              </DropdownMenuItem>
+              {userPosition && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    window.location.href = buildLocationSmsUrl(userPosition[0], userPosition[1])
+                  }}
+                >
+                  <MessageCircleIcon />
+                  Wyślij SMS z lokalizacją
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="secondary"
+            size="icon"
             className="rounded-full shadow"
-            onClick={() => {
-              window.location.href = buildLocationSmsUrl(userPosition[0], userPosition[1])
-            }}
+            aria-label="Zlokalizuj mnie"
+            onClick={handleLocate}
           >
-            <MessageCircleIcon className="size-4" />
-            Wyślij SMS z lokalizacją
+            <CrosshairIcon className="size-4" />
           </Button>
-        )}
+        </div>
         <Button className="rounded-full shadow" onClick={() => setShowAddForm(true)}>
           + Dodaj znalezisko
         </Button>
