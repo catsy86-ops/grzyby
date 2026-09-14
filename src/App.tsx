@@ -8,6 +8,7 @@ import { JournalView } from './features/journal/JournalView'
 import { EncyclopediaView } from './features/encyclopedia/EncyclopediaView'
 import { Toaster } from './components/ui/sonner'
 import { StorageInfoDrawer } from './components/StorageInfoDrawer'
+import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
@@ -42,7 +43,7 @@ function App() {
   return (
     <div className="flex h-full flex-col bg-background">
       <header className="safe-area-top flex items-center gap-2 bg-primary px-4 pb-3 pt-4 text-primary-foreground shadow-sm">
-        <div className="size-8 shrink-0" aria-hidden="true" />
+        <ThemeToggle />
         <div className="flex flex-1 items-center justify-center gap-2">
           <span className="text-lg leading-none">🍄</span>
           <span className="text-sm font-bold tracking-[0.15em]">ŁYSY</span>
@@ -51,7 +52,7 @@ function App() {
           type="button"
           onClick={() => setShowStorageInfo(true)}
           aria-label="Pamięć i dane"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
         >
           <HardDriveIcon className="size-4" />
         </button>
@@ -95,9 +96,10 @@ function App() {
           return (
             <button
               key={tab.key}
+              type="button"
               onClick={() => setActiveTab(tab.key)}
               aria-current={isActive ? 'page' : undefined}
-              className="flex flex-1 flex-col items-center gap-0.5 py-1.5 transition-colors active:scale-95"
+              className="flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95"
             >
               <span className="relative flex h-8 w-14 items-center justify-center rounded-full">
                 {isActive && (

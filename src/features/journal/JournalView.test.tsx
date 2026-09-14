@@ -119,3 +119,135 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Użyj obecnej (GPS)' })).not.toBeDisabled())
   })
 })
+
+describe('JournalView - paginacja listy', () => {
+  beforeEach(async () => {
+    await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
+      await db.findings.clear()
+      await db.trips.clear()
+      await db.photos.clear()
+    })
+  })
+
+  afterEach(() => cleanup())
+
+  it('pokazuje przycisk "Załaduj więcej", gdy znalezisk jest więcej niż jedna strona', async () => {
+    await Promise.all(Array.from({ length: 105 }, (_, i) => addFinding({ notes: `Wpis ${i}`, createdAt: i })))
+
+    render(<JournalView />)
+
+    const loadMore = await screen.findByRole('button', { name: /Załaduj więcej/ })
+    expect(loadMore).toBeInTheDocument()
+    expect(screen.getAllByText(/^Wpis /)).toHaveLength(100)
+
+    fireEvent.click(loadMore)
+
+    await waitFor(() => expect(screen.getAllByText(/^Wpis /)).toHaveLength(105))
+    expect(screen.queryByRole('button', { name: /Załaduj więcej/ })).not.toBeInTheDocument()
+  }, 15000)
+
+  it('nie pokazuje przycisku "Załaduj więcej", gdy znalezisk jest mniej niż jedna strona', async () => {
+    await addFinding({ notes: 'Jedyny wpis' })
+
+    render(<JournalView />)
+
+    await screen.findByText('Jedyny wpis')
+    expect(screen.queryByRole('button', { name: /Załaduj więcej/ })).not.toBeInTheDocument()
+  })
+
+  it('pokazuje ostrzeżenie o ciężkiej reakcji nawet gdy znalezisko jest poza aktualnie załadowaną stroną', async () => {
+    // 105 nowszych, "nieszkodliwych" wpisów - najstarsze (poza pierwszą stroną 100) miało ciężką reakcję.
+    await Promise.all(Array.from({ length: 105 }, (_, i) => addFinding({ notes: `Wpis ${i}`, createdAt: 1000 + i })))
+    await addFinding({
+      notes: 'Stary, niebezpieczny wpis',
+      createdAt: 1, // najstarszy - poza pierwszą stroną (sortowanie malejące po createdAt)
+      consumed: true,
+      consumedAt: 500,
+      reactionSeverity: 'ciężka',
+    })
+
+    render(<JournalView />)
+
+    expect(await screen.findByText(/Zgłoszono ciężką reakcję po spożyciu/)).toBeInTheDocument()
+  }, 15000)
+})
+
+function makeExportFile(payload: object) {
+  return new File([JSON.stringify(payload)], 'export.json', { type: 'application/json' })
+}
+
+describe('JournalView - ostrzeżenie o duplikatach przy imporcie', () => {
+  beforeEach(async () => {
+    await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
+      await db.findings.clear()
+      await db.trips.clear()
+      await db.photos.clear()
+    })
+  })
+
+  afterEach(() => cleanup())
+
+  it('importuje od razu, gdy plik nie zawiera znalezisk pasujących do już zapisanych', async () => {
+    render(<JournalView />)
+    const file = makeExportFile({
+      exportedAt: '',
+      version: 2,
+      findings: [{ speciesId: null, speciesNameGuess: null, notes: 'Nowe', createdAt: 999, latitude: null, longitude: null }],
+      trips: [],
+      photosByFindingId: {},
+    })
+
+    const input = document.querySelector('input[type="file"]')!
+    fireEvent.change(input, { target: { files: [file] } })
+
+    await waitFor(async () => expect(await db.findings.count()).toBe(1))
+    expect(screen.queryByText('Możliwe duplikaty w pliku')).not.toBeInTheDocument()
+  })
+
+  it('pyta o potwierdzenie, gdy plik zawiera znalezisko identyczne z już zapisanym (ponowny import)', async () => {
+    await addFinding({ notes: 'Powtórka', createdAt: 555, latitude: 1, longitude: 2, speciesId: null })
+
+    render(<JournalView />)
+    await screen.findByText('Powtórka')
+    const file = makeExportFile({
+      exportedAt: '',
+      version: 2,
+      findings: [{ speciesId: null, speciesNameGuess: null, notes: 'Powtórka', createdAt: 555, latitude: 1, longitude: 2 }],
+      trips: [],
+      photosByFindingId: {},
+    })
+
+    const input = document.querySelector('input[type="file"]')!
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByText('Możliwe duplikaty w pliku')).toBeInTheDocument()
+    expect(await db.findings.count()).toBe(1)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Importuj mimo to' }))
+
+    await waitFor(async () => expect(await db.findings.count()).toBe(2))
+  })
+
+  it('nie importuje niczego, gdy użytkownik anuluje ostrzeżenie o duplikatach', async () => {
+    await addFinding({ notes: 'Powtórka', createdAt: 555, latitude: 1, longitude: 2, speciesId: null })
+
+    render(<JournalView />)
+    await screen.findByText('Powtórka')
+    const file = makeExportFile({
+      exportedAt: '',
+      version: 2,
+      findings: [{ speciesId: null, speciesNameGuess: null, notes: 'Powtórka', createdAt: 555, latitude: 1, longitude: 2 }],
+      trips: [],
+      photosByFindingId: {},
+    })
+
+    const input = document.querySelector('input[type="file"]')!
+    fireEvent.change(input, { target: { files: [file] } })
+
+    await screen.findByText('Możliwe duplikaty w pliku')
+    fireEvent.click(screen.getByRole('button', { name: 'Anuluj' }))
+
+    await waitFor(() => expect(screen.queryByText('Możliwe duplikaty w pliku')).not.toBeInTheDocument())
+    expect(await db.findings.count()).toBe(1)
+  })
+})

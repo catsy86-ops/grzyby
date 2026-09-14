@@ -22,7 +22,7 @@ interface AddFindingFormProps {
 export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps) {
   const [speciesId, setSpeciesId] = useState<string>('')
   const [notes, setNotes] = useState('')
-  const [photo, setPhoto] = useState<File | null>(null)
+  const [photos, setPhotos] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { activeTripId, activeTrip } = useActiveTrip()
@@ -42,7 +42,9 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
         createdAt: Date.now(),
         tripId: activeTripId ?? undefined,
       })
-      if (photo) {
+      // Schema (Photo.findingId) wspiera wiele zdjęć per znalezisko - kompresja/miniatury
+      // liczone równolegle, zapisy sekwencyjnie żeby zachować kolejność wyboru użytkownika.
+      for (const photo of photos) {
         const [photoBlob, thumbnailBlob] = await Promise.all([compressPhoto(photo), createThumbnail(photo)])
         await db.photos.add({ findingId, blob: photoBlob, thumbnailBlob })
       }
@@ -100,14 +102,18 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
           </label>
 
           <label className="block text-sm">
-            Zdjęcie
+            Zdjęcia
             <Input
               type="file"
               accept="image/*"
               capture="environment"
-              onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+              multiple
+              onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
               className="mt-1 h-auto"
             />
+            {photos.length > 1 && (
+              <p className="mt-1 text-xs text-muted-foreground">Wybrano {photos.length} zdjęć.</p>
+            )}
           </label>
 
           <label className="block text-sm">

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../db/db'
-import { exportData, importData } from './exportImport'
+import type { Finding } from '../db/schema'
+import { countLikelyDuplicates, exportData, importData } from './exportImport'
 import { createThumbnail } from './imageUtils'
 
 vi.mock('./imageUtils', () => ({
@@ -156,6 +157,46 @@ describe('import - walidacja kształtu pliku', () => {
     const payload = JSON.stringify({ findings: [], trips: [], photosByFindingId: 'nie-obiekt' })
     const file = new File([payload], 'bad.json', { type: 'application/json' })
     await expect(importData(file)).rejects.toThrow(/format zdjęć/)
+  })
+})
+
+describe('countLikelyDuplicates', () => {
+  function finding(overrides: Partial<Finding> = {}): Finding {
+    return {
+      speciesId: 'borowik-szlachetny',
+      speciesNameGuess: 'Borowik szlachetny',
+      notes: 'Test',
+      createdAt: 1000,
+      latitude: 52.1,
+      longitude: 19.5,
+      ...overrides,
+    }
+  }
+
+  it('zwraca 0, gdy żadne znalezisko w pliku nie pasuje do istniejących', () => {
+    const payload = { exportedAt: '', version: 2 as const, findings: [finding()], trips: [], photosByFindingId: {} }
+    const existing = [finding({ createdAt: 2000 })]
+
+    expect(countLikelyDuplicates(payload, existing)).toBe(0)
+  })
+
+  it('liczy znalezisko jako duplikat, gdy wszystkie pola sygnatury się zgadzają (ponowny import tego samego pliku)', () => {
+    const shared = finding()
+    const payload = { exportedAt: '', version: 2 as const, findings: [shared], trips: [], photosByFindingId: {} }
+
+    expect(countLikelyDuplicates(payload, [shared])).toBe(1)
+  })
+
+  it('nie liczy jako duplikatu, gdy różnią się notatki', () => {
+    const payload = {
+      exportedAt: '',
+      version: 2 as const,
+      findings: [finding({ notes: 'Inna notatka' })],
+      trips: [],
+      photosByFindingId: {},
+    }
+
+    expect(countLikelyDuplicates(payload, [finding()])).toBe(0)
   })
 })
 

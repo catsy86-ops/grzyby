@@ -6,20 +6,54 @@ describe('getCacheInfo', () => {
     vi.unstubAllGlobals()
   })
 
+  function mockCacheWithSizes(sizes: number[]) {
+    const keys = sizes.map((_, i) => `key-${i}`)
+    return {
+      keys: vi.fn(async () => keys),
+      match: vi.fn(async (key: string) => {
+        const index = keys.indexOf(key)
+        return new Response(null, { headers: { 'content-length': String(sizes[index]) } })
+      }),
+    }
+  }
+
   it('zwraca liczbę wpisów dla każdego zarządzanego cache', async () => {
-    const mockCache = (keyCount: number) => ({
-      keys: vi.fn(async () => Array.from({ length: keyCount }, (_, i) => `key-${i}`)),
-    })
     vi.stubGlobal('caches', {
-      open: vi.fn(async (name: string) => (name === 'map-tiles' ? mockCache(42) : mockCache(3))),
+      open: vi.fn(async (name: string) =>
+        name === 'map-tiles' ? mockCacheWithSizes(new Array(42).fill(100)) : mockCacheWithSizes(new Array(3).fill(50)),
+      ),
     })
 
     const info = await getCacheInfo()
 
     expect(info).toEqual([
-      { name: 'map-tiles', label: 'Kafelki mapy (offline)', entryCount: 42 },
-      { name: 'ai-model', label: 'Model rozpoznawania AI', entryCount: 3 },
+      { name: 'map-tiles', label: 'Kafelki mapy (offline)', entryCount: 42, sizeBytes: 4200 },
+      { name: 'ai-model', label: 'Model rozpoznawania AI', entryCount: 3, sizeBytes: 150 },
     ])
+  })
+
+  it('sumuje rozmiar wpisów z nagłówka content-length osobno od liczby plików', async () => {
+    vi.stubGlobal('caches', {
+      open: vi.fn(async () => mockCacheWithSizes([1000, 2000, 3000])),
+    })
+
+    const info = await getCacheInfo()
+
+    expect(info[0].entryCount).toBe(3)
+    expect(info[0].sizeBytes).toBe(6000)
+  })
+
+  it('zwraca sizeBytes null, gdy rozmiaru żadnego wpisu nie udało się ustalić', async () => {
+    vi.stubGlobal('caches', {
+      open: vi.fn(async () => ({
+        keys: vi.fn(async () => ['key-0']),
+        match: vi.fn(async () => undefined),
+      })),
+    })
+
+    const info = await getCacheInfo()
+
+    expect(info[0].sizeBytes).toBeNull()
   })
 
   it('zwraca 0 wpisów, gdy otwarcie cache się nie powiedzie', async () => {
@@ -27,7 +61,7 @@ describe('getCacheInfo', () => {
 
     const info = await getCacheInfo()
 
-    expect(info.every((c) => c.entryCount === 0)).toBe(true)
+    expect(info.every((c) => c.entryCount === 0 && c.sizeBytes === null)).toBe(true)
   })
 
   it('zwraca pustą listę, gdy Cache Storage jest niedostępne', async () => {

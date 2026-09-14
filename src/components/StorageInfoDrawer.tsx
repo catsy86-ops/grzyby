@@ -37,10 +37,15 @@ export function StorageInfoDrawer({ open, onOpenChange }: StorageInfoDrawerProps
 
   async function handleConfirmClear() {
     if (!pendingClear) return
-    await clearCache(pendingClear.name)
-    toast.success(`Wyczyszczono: ${pendingClear.label}`)
-    setPendingClear(null)
-    await refresh()
+    try {
+      await clearCache(pendingClear.name)
+      toast.success(`Wyczyszczono: ${pendingClear.label}`)
+      await refresh()
+    } catch {
+      toast.error(`Nie udało się wyczyścić: ${pendingClear.label}`)
+    } finally {
+      setPendingClear(null)
+    }
   }
 
   return (
@@ -71,7 +76,10 @@ export function StorageInfoDrawer({ open, onOpenChange }: StorageInfoDrawerProps
               <div key={cache.name} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3">
                 <div>
                   <p className="text-sm font-medium text-foreground">{cache.label}</p>
-                  <p className="text-xs text-muted-foreground">{cache.entryCount} plików</p>
+                  <p className="text-xs text-muted-foreground">
+                    {cache.entryCount} {cache.entryCount === 1 ? 'plik' : 'plików'}
+                    {cache.sizeBytes != null && ` · ${formatStorageBytes(cache.sizeBytes)}`}
+                  </p>
                 </div>
                 <Button
                   type="button"

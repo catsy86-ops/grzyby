@@ -17,6 +17,11 @@ export class GrzybyDatabase extends Dexie {
       trips: '++id, startedAt',
       photos: '++id, findingId',
     })
+    // Indeks na reactionSeverity - pozwala wyszukać znaleziska z ciężką reakcją (ostrzeżenie
+    // bezpieczeństwa w JournalView) bez skanowania całej tabeli findings.
+    this.version(3).stores({
+      findings: '++id, speciesId, createdAt, tripId, reactionSeverity',
+    })
   }
 }
 

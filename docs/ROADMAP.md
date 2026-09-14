@@ -45,15 +45,31 @@ pominięte przy iteracyjnej pracy. Pełny raport w historii sesji - tu skrót z 
    (grupowanie kubełkowe w przestrzeni pikseli mapy, niezależne od zoomu) + `FindingMarkers` w
    `MapView.tsx`, klik w klaster przybliża mapę.
 
-**Średni:** martwy kod dark mode (`next-themes` bez `ThemeProvider`, klasa `.dark` nigdy nie
-nadawana - do decyzji: dokończyć czy usunąć); brak ostrzeżenia przed duplikatami przy
-podwójnym imporcie tego samego pliku; brak testów na scenariusze błędów (tylko happy-path);
-`useLiveQuery(() => db.findings.toArray())` bez limitu/paginacji; `AddFindingForm` pozwala na
-tylko 1 zdjęcie mimo że schema (`Photo.findingId`) już wspiera wiele; drobne braki a11y
-(`type="button"` niespójnie, fokus-ring na custom przyciskach); panel "Pamięć i dane" miesza
-liczbę plików z rozmiarem w bajtach.
+**Średni — ✅ wszystkie zrobione (2026-09-14):**
+1. ~~Martwy kod dark mode~~ - użytkownik zdecydował: dokończyć. `ThemeProvider` (`next-themes`,
+   `attribute="class"`) owija apkę w `main.tsx`, `ThemeToggle.tsx` (ikona Słońce/Księżyc w
+   nagłówku) przełącza `light`/`dark`. Tokeny `.dark` w `index.css` już istniały (Faza 6/7).
+2. ~~Brak ostrzeżenia przed duplikatami przy podwójnym imporcie~~ - `countLikelyDuplicates()` w
+   `exportImport.ts` porównuje sygnatury znalezisk z pliku z już zapisanymi; `JournalView.tsx`
+   pokazuje `AlertDialog` z potwierdzeniem przed importem, gdy wykryje dopasowania.
+3. ~~Brak testów na scenariusze błędów~~ - dodano pokrycie błędu czyszczenia cache w
+   `StorageInfoDrawer` (wcześniej nieobsłużony wyjątek bez feedbacku dla użytkownika).
+4. ~~`useLiveQuery(() => db.findings.toArray())` bez limitu~~ - `JournalView.tsx` pobiera listę
+   stronami (`PAGE_SIZE = 100`, przycisk "Załaduj więcej"); ostrzeżenie o ciężkiej reakcji i
+   wykrywanie nakładających się spożyć celowo NIE są objęte limitem (osobne, indeksowane
+   zapytanie po `reactionSeverity` - nowy indeks w `db.ts` wersja 3) - to alert bezpieczeństwa,
+   musi widzieć całą historię.
+5. ~~`AddFindingForm` pozwalał tylko na 1 zdjęcie~~ - `input type="file" multiple`, zapisuje
+   wszystkie wybrane zdjęcia do `db.photos`. `FindingThumbnail.tsx` przebudowany na galerię:
+   miniatura z odznaką "+N", lightbox z nawigacją strzałkami między zdjęciami.
+6. ~~Drobne braki a11y~~ - wszystkie surowe `<button>` w kodzie mają teraz `type="button"` i
+   widoczny `focus-visible:ring` (`App.tsx`, `JournalView.tsx`, `FindingThumbnail.tsx`).
+7. ~~Panel "Pamięć i dane" mieszał liczbę plików z rozmiarem~~ - `getCacheInfo()` liczy teraz
+   też `sizeBytes` per cache (z nagłówka `content-length`, fallback do odczytu bloba), UI pokazuje
+   "N plików · X MB" jako osobne, opisane wartości zamiast samej liczby wpisów.
 
-**Niskie:** `shadcn` (CLI) w `dependencies` zamiast `devDependencies`.
+**Niskie — ✅ zrobione:** `shadcn` (CLI) przeniesiony z `dependencies` do `devDependencies`
+(używany tylko przy imporcie CSS w build-time, nie w runtime przeglądarki).
 
 **Nowe funkcje zgodne z charakterem apki (bez backendu):** wielozdjęciowe znaleziska (schema już
 gotowa), lightbox pełnego zdjęcia, statystyki sezonowe/roczne (na bazie już przetestowanego

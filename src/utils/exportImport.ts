@@ -103,12 +103,33 @@ function validateExportPayload(value: unknown): asserts value is ExportPayload {
   })
 }
 
-export async function importData(file: File): Promise<{ findingsImported: number; tripsImported: number }> {
+export type { ExportPayload }
+
+// Parsuje i waliduje plik importu bez zapisywania czegokolwiek do bazy - pozwala np. sprawdzić
+// możliwe duplikaty (patrz `countLikelyDuplicates`) i poprosić użytkownika o potwierdzenie, zanim
+// `importPayload` faktycznie zapisze dane.
+export async function readExportFile(file: File): Promise<ExportPayload> {
   const text = await file.text()
   const parsed: unknown = JSON.parse(text)
   validateExportPayload(parsed)
-  const payload = parsed
+  return parsed
+}
 
+// Sygnatura znaleziska do wykrywania duplikatów przy ponownym imporcie tego samego pliku -
+// nie porównujemy id (remapowane przy każdym imporcie), tylko treść, która powinna być
+// identyczna dla dokładnie tego samego znaleziska wyeksportowanego dwa razy.
+function findingSignature(finding: Pick<Finding, 'speciesId' | 'notes' | 'createdAt' | 'latitude' | 'longitude'>) {
+  return [finding.speciesId, finding.notes, finding.createdAt, finding.latitude, finding.longitude].join('|')
+}
+
+// Liczy, ile znalezisk z pliku importu ma dokładnie taką samą sygnaturę jak znalezisko już
+// zapisane w dzienniku - wysoki wynik oznacza najczęściej ponowny import tego samego pliku.
+export function countLikelyDuplicates(payload: ExportPayload, existingFindings: Finding[]): number {
+  const existingSignatures = new Set(existingFindings.map(findingSignature))
+  return payload.findings.filter((finding) => existingSignatures.has(findingSignature(finding))).length
+}
+
+export async function importPayload(payload: ExportPayload): Promise<{ findingsImported: number; tripsImported: number }> {
   // Zdekodowanie zdjęć i wygenerowanie miniatur musi zajść PRZED transakcją Dexie:
   // operacje asynchroniczne spoza API Dexie w środku transakcji przedwcześnie ją zamykają.
   const decodedPhotosByOldFindingId = new Map<number, { blob: Blob; thumbnailBlob: Blob }>()
@@ -143,6 +164,11 @@ export async function importData(file: File): Promise<{ findingsImported: number
   })
 
   return { findingsImported: payload.findings.length, tripsImported: payload.trips.length }
+}
+
+export async function importData(file: File): Promise<{ findingsImported: number; tripsImported: number }> {
+  const payload = await readExportFile(file)
+  return importPayload(payload)
 }
 
 export function downloadBlob(blob: Blob, filename: string) {

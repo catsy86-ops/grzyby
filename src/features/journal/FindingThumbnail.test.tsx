@@ -79,4 +79,21 @@ describe('FindingThumbnail', () => {
     const fullImg = await screen.findByAltText('Zdjęcie znaleziska')
     expect(fullImg).toHaveAttribute('src', createdUrls[1])
   })
+
+  it('pokazuje licznik dodatkowych zdjęć i pozwala nawigować w podglądzie, gdy znalezisko ma kilka zdjęć', async () => {
+    await db.photos.add({ findingId: 5, blob: new Blob(['full-1']), thumbnailBlob: new Blob(['thumb-1']) })
+    await db.photos.add({ findingId: 5, blob: new Blob(['full-2']), thumbnailBlob: new Blob(['thumb-2']) })
+
+    render(<FindingThumbnail findingId={5} />)
+    expect(await screen.findByText('+1')).toBeInTheDocument()
+
+    const trigger = screen.getByRole('button', { name: 'Powiększ zdjęcia znaleziska (2)' })
+    fireEvent.click(trigger)
+
+    await screen.findByAltText('Zdjęcie znaleziska')
+    expect(screen.getByText('1 / 2')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Następne zdjęcie' }))
+    await waitFor(() => expect(screen.getByText('2 / 2')).toBeInTheDocument())
+  })
 })

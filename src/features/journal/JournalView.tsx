@@ -8,7 +8,14 @@ import { NotebookTextIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
-import { downloadBlob, exportData, importData } from '../../utils/exportImport'
+import {
+  countLikelyDuplicates,
+  downloadBlob,
+  exportData,
+  importPayload,
+  readExportFile,
+  type ExportPayload,
+} from '../../utils/exportImport'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
@@ -37,9 +44,28 @@ import { TripsHistory } from './TripsHistory'
 
 type TripFilter = number | 'wszystkie' | 'bez-wyprawy'
 const NONE_SPECIES = '__none__'
+// Strona listy znalezisk - bez tego `db.findings.toArray()` ładowałby całą historię do pamięci
+// przy każdej zmianie (useLiveQuery), co przy wieloletnim dzienniku zbiorów niepotrzebnie rośnie.
+// Ostrzeżenie o ciężkich reakcjach (patrz `severeReactionFindings` niżej) celowo NIE jest objęte
+// tym limitem - to alert bezpieczeństwa i musi widzieć całą historię, nie tylko najnowszą stronę.
+const PAGE_SIZE = 100
 
 export function JournalView() {
-  const findings = useLiveQuery(() => db.findings.orderBy('createdAt').reverse().toArray(), [])
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const pageQueryResult = useLiveQuery(
+    () => db.findings.orderBy('createdAt').reverse().limit(visibleCount + 1).toArray(),
+    [visibleCount],
+  )
+  const hasMoreFindings = (pageQueryResult?.length ?? 0) > visibleCount
+  const findings = pageQueryResult && (hasMoreFindings ? pageQueryResult.slice(0, visibleCount) : pageQueryResult)
+
+  // Zapytanie niezależne od paginacji listy - ostrzeżenie o zatruciu musi obejmować całą historię.
+  const severeReactionCandidates = useLiveQuery(
+    () => db.findings.where('reactionSeverity').equals('ciężka').toArray(),
+    [],
+  )
+  const consumedFindings = useLiveQuery(() => db.findings.filter((f) => f.consumed === true).toArray(), [])
+
   const [tripFilter, setTripFilter] = useState<TripFilter>('wszystkie')
   const [searchQuery, setSearchQuery] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -52,6 +78,7 @@ export function JournalView() {
   const [editLocating, setEditLocating] = useState(false)
   const [editSaving, setEditSaving] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [pendingImport, setPendingImport] = useState<{ payload: ExportPayload; duplicateCount: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [listRef] = useAutoAnimate()
 
@@ -90,8 +117,8 @@ export function JournalView() {
   // szybko znaleźć powiązane znaleziska zjedzone w tym samym oknie czasowym (zatrucia
   // grzybami z opóźnionym działaniem toksyn ujawniają się nawet po ~24h).
   const severeReactionFindings = useMemo(
-    () => (findings ?? []).filter((f) => f.consumed && f.reactionSeverity === 'ciężka'),
-    [findings],
+    () => (severeReactionCandidates ?? []).filter((f) => f.consumed),
+    [severeReactionCandidates],
   )
 
   const chartData = useMemo(() => {
@@ -110,12 +137,28 @@ export function JournalView() {
     downloadBlob(blob, `lysy-dziennik-${new Date().toISOString().slice(0, 10)}.json`)
   }
 
+  async function finishImport(payload: ExportPayload) {
+    try {
+      const result = await importPayload(payload)
+      toast.success(`Zaimportowano ${result.findingsImported} znalezisk i ${result.tripsImported} wypraw.`)
+    } catch (err) {
+      toast.error(err instanceof Error ? `Błąd importu: ${err.message}` : 'Błąd importu pliku')
+    }
+  }
+
   async function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
     try {
-      const result = await importData(file)
-      toast.success(`Zaimportowano ${result.findingsImported} znalezisk i ${result.tripsImported} wypraw.`)
+      const payload = await readExportFile(file)
+      // Wykrywanie ponownego importu tego samego pliku - np. użytkownik kliknął "Importuj" dwa
+      // razy albo pomylił plik. Nie blokujemy importu, tylko prosimy o potwierdzenie.
+      const duplicateCount = countLikelyDuplicates(payload, findings ?? [])
+      if (duplicateCount > 0) {
+        setPendingImport({ payload, duplicateCount })
+      } else {
+        await finishImport(payload)
+      }
     } catch (err) {
       toast.error(err instanceof Error ? `Błąd importu: ${err.message}` : 'Błąd importu pliku')
     } finally {
@@ -234,7 +277,7 @@ export function JournalView() {
             </p>
             <ul className="mt-1 list-inside list-disc text-xs">
               {severeReactionFindings.map((f) => {
-                const overlapping = findOverlappingConsumedFindings(f, findings ?? [])
+                const overlapping = findOverlappingConsumedFindings(f, consumedFindings ?? [])
                 return (
                   <li key={f.id}>
                     {f.speciesNameGuess ?? 'Nieokreślony gatunek'} —{' '}
@@ -421,12 +464,17 @@ export function JournalView() {
                     <ConsumptionTracker finding={finding} />
                   </div>
                   <div className="flex shrink-0 gap-2 text-xs">
-                    <button onClick={() => handleStartEdit(finding)} className="text-muted-foreground hover:underline">
+                    <button
+                      type="button"
+                      onClick={() => handleStartEdit(finding)}
+                      className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-muted-foreground hover:underline"
+                    >
                       Edytuj
                     </button>
                     <button
+                      type="button"
                       onClick={() => setConfirmDeleteId(finding.id ?? null)}
-                      className="text-red-600 hover:underline"
+                      className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-red-600 hover:underline"
                     >
                       Usuń
                     </button>
@@ -449,6 +497,12 @@ export function JournalView() {
         )}
       </div>
 
+      {hasMoreFindings && (
+        <Button variant="outline" size="sm" className="mx-auto" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
+          Załaduj więcej (pokazano {visibleCount} najnowszych)
+        </Button>
+      )}
+
       <AlertDialog
         open={confirmDeleteId != null}
         onOpenChange={(open) => {
@@ -468,6 +522,33 @@ export function JournalView() {
               onClick={() => confirmDeleteId != null && handleDelete(confirmDeleteId)}
             >
               Tak, usuń
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={pendingImport != null}
+        onOpenChange={(open) => {
+          if (!open) setPendingImport(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>Możliwe duplikaty w pliku</AlertDialogTitle>
+          <AlertDialogDescription>
+            {pendingImport?.duplicateCount} z {pendingImport?.payload.findings.length} znalezisk w tym pliku wygląda
+            tak samo jak wpisy już zapisane w dzienniku - być może ten plik był już importowany. Zaimportować mimo
+            to? Duplikaty zostaną dodane jako osobne, nowe wpisy.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (pendingImport) await finishImport(pendingImport.payload)
+                setPendingImport(null)
+              }}
+            >
+              Importuj mimo to
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
