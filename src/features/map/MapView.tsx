@@ -3,7 +3,7 @@ import { Circle, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } f
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
 import L from 'leaflet'
-import { CarIcon, MapPinnedIcon, MessageCircleIcon, SunsetIcon, XIcon } from 'lucide-react'
+import { CarIcon, CloudRainIcon, MapPinnedIcon, MessageCircleIcon, SunsetIcon, XIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import type { Finding, Spot } from '../../db/schema'
 import { useAppStore } from '../../stores/appStore'
@@ -13,6 +13,7 @@ import { getCurrentPosition, watchPosition } from '../../utils/geolocation'
 import { buildLocationSmsUrl } from '../../utils/locationSms'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
+import { useMushroomOutlook } from '../../hooks/useMushroomOutlook'
 import { AddFindingForm } from './AddFindingForm'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
 import { SpotManager } from './SpotManager'
@@ -180,6 +181,7 @@ export function MapView() {
   const spots = useLiveQuery(() => db.spots.toArray(), [])
   const { activeTrip } = useActiveTrip()
   const sunsetCountdown = useSunsetCountdown(userPosition)
+  const mushroomOutlook = useMushroomOutlook(userPosition)
   const returnPoint = useAppStore((s) => s.returnPoint)
   const setReturnPoint = useAppStore((s) => s.setReturnPoint)
 
@@ -328,6 +330,23 @@ export function MapView() {
               >
                 <SunsetIcon className="size-3.5" />
                 Zmrok za {sunsetCountdown.label}
+              </Badge>
+            </motion.div>
+          )}
+          {mushroomOutlook && (
+            <motion.div
+              key="mushroom-outlook-badge"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              <Badge
+                variant={mushroomOutlook.score === 'dobry' ? 'secondary' : 'outline'}
+                className="gap-1.5 px-3 py-1.5 text-xs shadow"
+              >
+                <CloudRainIcon className="size-3.5" />
+                {mushroomOutlook.label}
               </Badge>
             </motion.div>
           )}

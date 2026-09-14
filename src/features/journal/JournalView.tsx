@@ -487,42 +487,51 @@ export function JournalView() {
           }
 
           return (
+            // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (transform-based
+            // pozycjonowanie przy sortowaniu/usuwaniu) - mikrointerakcja `whileTap` (motion) idzie
+            // na wewnętrzny wrapper, nie na `Card`, żeby oba mechanizmy transformacji nie kolidowały.
             <Card key={finding.id} size="sm">
-              <CardContent className="flex items-start gap-3">
-                {finding.id != null && <FindingThumbnail findingId={finding.id} />}
-                <div className="flex flex-1 items-start justify-between">
-                  <div>
-                    <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(finding.createdAt).toLocaleString('pl-PL')}
-                      {finding.latitude != null && finding.longitude != null && (
-                        <>
-                          {' '}
-                          · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
-                        </>
-                      )}
-                      {finding.weightGrams != null && <> · {formatWeight(finding.weightGrams)}</>}
-                    </p>
-                    {finding.notes && <p className="mt-1 text-sm text-foreground/80">{finding.notes}</p>}
-                    <ConsumptionTracker finding={finding} />
+              <CardContent>
+                <motion.div
+                  className="flex items-start gap-3"
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                >
+                  {finding.id != null && <FindingThumbnail findingId={finding.id} />}
+                  <div className="flex flex-1 items-start justify-between">
+                    <div>
+                      <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(finding.createdAt).toLocaleString('pl-PL')}
+                        {finding.latitude != null && finding.longitude != null && (
+                          <>
+                            {' '}
+                            · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
+                          </>
+                        )}
+                        {finding.weightGrams != null && <> · {formatWeight(finding.weightGrams)}</>}
+                      </p>
+                      {finding.notes && <p className="mt-1 text-sm text-foreground/80">{finding.notes}</p>}
+                      <ConsumptionTracker finding={finding} />
+                    </div>
+                    <div className="flex shrink-0 gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(finding)}
+                        className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-muted-foreground hover:underline"
+                      >
+                        Edytuj
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(finding.id ?? null)}
+                        className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-red-600 hover:underline"
+                      >
+                        Usuń
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex shrink-0 gap-2 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => handleStartEdit(finding)}
-                      className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-muted-foreground hover:underline"
-                    >
-                      Edytuj
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmDeleteId(finding.id ?? null)}
-                      className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-red-600 hover:underline"
-                    >
-                      Usuń
-                    </button>
-                  </div>
-                </div>
+                </motion.div>
               </CardContent>
             </Card>
           )

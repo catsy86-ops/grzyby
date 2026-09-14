@@ -85,8 +85,12 @@ export function EncyclopediaView() {
 
       <div ref={listRef} className="flex flex-col gap-3">
         {filtered.map((s) => (
+          // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (filtrowanie/wyszukiwanie
+          // animuje pozycję/usunięcie) - mikrointerakcja `whileTap` idzie na wewnętrzny `motion.div`,
+          // nie na `Card`, żeby nie kolidować z transformacjami auto-animate.
           <Card key={s.id} size="sm">
             <CardContent>
+            <motion.div whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
               {s.imageUrls[0] && (
                 <img
                   src={s.imageUrls[0]}
@@ -129,6 +133,7 @@ export function EncyclopediaView() {
                   <p>{s.preparationTips}</p>
                 </div>
               )}
+            </motion.div>
             </CardContent>
           </Card>
         ))}

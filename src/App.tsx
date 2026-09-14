@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, HardDriveIcon, PhoneCallIcon, WifiOffIcon } from 'lucide-react'
+import { MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, WifiOffIcon, WrenchIcon } from 'lucide-react'
 import { useAppStore, type ActiveTab } from './stores/appStore'
 import { MapView } from './features/map/MapView'
 import { IdentifyView } from './features/identify/IdentifyView'
@@ -9,6 +9,12 @@ import { EncyclopediaView } from './features/encyclopedia/EncyclopediaView'
 import { Toaster } from './components/ui/sonner'
 import { StorageInfoDrawer } from './components/StorageInfoDrawer'
 import { FirstAidGuide } from './components/FirstAidGuide'
+import { GearChecklist } from './components/GearChecklist'
+import { TickCareGuide } from './components/TickCareGuide'
+import { CookingTimer } from './components/CookingTimer'
+import { ToolsMenu, type ToolKey } from './components/ToolsMenu'
+import { Logo } from './components/Logo'
+import { useTickReminders } from './hooks/useTickReminders'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
@@ -40,31 +46,55 @@ function App() {
   const isOnline = useOnlineStatus()
   const [showStorageInfo, setShowStorageInfo] = useState(false)
   const [showFirstAid, setShowFirstAid] = useState(false)
+  const [showGearChecklist, setShowGearChecklist] = useState(false)
+  const [showTickCare, setShowTickCare] = useState(false)
+  const [showCookingTimer, setShowCookingTimer] = useState(false)
+  const [showToolsMenu, setShowToolsMenu] = useState(false)
+  const forestMode = useAppStore((s) => s.forestMode)
+  const setForestMode = useAppStore((s) => s.setForestMode)
   useAndroidWidgetSync()
+  useTickReminders()
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('forest-mode', forestMode)
+  }, [forestMode])
+
+  function handleSelectTool(tool: ToolKey) {
+    setShowToolsMenu(false)
+    switch (tool) {
+      case 'first-aid':
+        setShowFirstAid(true)
+        break
+      case 'gear-checklist':
+        setShowGearChecklist(true)
+        break
+      case 'tick-care':
+        setShowTickCare(true)
+        break
+      case 'cooking-timer':
+        setShowCookingTimer(true)
+        break
+      case 'storage-info':
+        setShowStorageInfo(true)
+        break
+    }
+  }
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <header className="safe-area-top flex items-center gap-2 bg-primary px-4 pb-3 pt-4 text-primary-foreground shadow-sm">
+      <header className="safe-area-top flex items-center gap-2 bg-gradient-to-b from-primary to-primary/90 px-4 pb-3 pt-4 text-primary-foreground shadow-sm shadow-brand-accent/20">
         <ThemeToggle />
-        <div className="flex flex-1 items-center justify-center gap-2">
-          <span className="text-lg leading-none">🍄</span>
-          <span className="text-sm font-bold tracking-[0.15em]">ŁYSY</span>
+        <div className="flex flex-1 items-center justify-center gap-1.5">
+          <Logo className="size-5" />
+          <span className="text-sm font-bold tracking-wide">Grzybobranie</span>
         </div>
         <button
           type="button"
-          onClick={() => setShowFirstAid(true)}
-          aria-label="Pierwsza pomoc przy podejrzeniu zatrucia"
+          onClick={() => setShowToolsMenu(true)}
+          aria-label="Narzędzia"
           className="flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
         >
-          <PhoneCallIcon className="size-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowStorageInfo(true)}
-          aria-label="Pamięć i dane"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
-        >
-          <HardDriveIcon className="size-4" />
+          <WrenchIcon className="size-4" />
         </button>
       </header>
       <AnimatePresence>
@@ -109,9 +139,13 @@ function App() {
               type="button"
               onClick={() => setActiveTab(tab.key)}
               aria-current={isActive ? 'page' : undefined}
-              className="flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95"
+              className="flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <span className="relative flex h-8 w-14 items-center justify-center rounded-full">
+              <motion.span
+                className="relative flex h-8 w-14 items-center justify-center rounded-full"
+                whileTap={{ scale: 0.85 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+              >
                 {isActive && (
                   <motion.span
                     layoutId="nav-pill"
@@ -124,7 +158,7 @@ function App() {
                     isActive ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 />
-              </span>
+              </motion.span>
               <span
                 className={`text-[11px] leading-none transition-colors ${
                   isActive ? 'font-semibold text-primary' : 'text-muted-foreground'
@@ -139,6 +173,16 @@ function App() {
       <Toaster position="top-center" />
       <StorageInfoDrawer open={showStorageInfo} onOpenChange={setShowStorageInfo} />
       <FirstAidGuide open={showFirstAid} onOpenChange={setShowFirstAid} />
+      <GearChecklist open={showGearChecklist} onOpenChange={setShowGearChecklist} />
+      <TickCareGuide open={showTickCare} onOpenChange={setShowTickCare} />
+      <CookingTimer open={showCookingTimer} onOpenChange={setShowCookingTimer} />
+      <ToolsMenu
+        open={showToolsMenu}
+        onOpenChange={setShowToolsMenu}
+        onSelect={handleSelectTool}
+        forestMode={forestMode}
+        onToggleForestMode={() => setForestMode(!forestMode)}
+      />
     </div>
   )
 }
