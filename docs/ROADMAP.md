@@ -13,6 +13,39 @@ zakres i priorytet.
 
 ---
 
+## Faza 13 - Ciągłe dopracowywanie UI (2026-09-14)
+
+Po domknięciu Fazy 12 - dalsze przejście po ekranach na wyraźną prośbę użytkownika ("użyj
+najlepszych bibliotek UI i najlepszych technik"). Dwa nowe komponenty shadcn/ui (na bazie
+`@base-ui/react`, spójne z resztą stosu) dodane przez `npx shadcn add`, nie pisane ręcznie.
+
+- [x] **Drag & drop w "Rozpoznaj"** - `IdentifyView.tsx`: strefa wyboru zdjęcia miała wygląd
+      dropzone'y (przerywana ramka) ale obsługiwała tylko klik - myląca afordancja na
+      desktopie/tablecie z myszą. Dodano `onDragOver`/`onDrop` z wizualnym stanem najechania.
+- [x] **Speed-dial FAB na mapie** - `MapView.tsx`: 6 osobnych, pełnych przycisków spiętrzonych w
+      prawym dolnym rogu ("Pobierz obszar offline", "Grzybowiska", "Auto", "Zlokalizuj mnie",
+      "SMS", "Dodaj znalezisko") skonsolidowane - dwie najczęstsze akcje (Zlokalizuj/Dodaj)
+      zostają jako stałe przyciski-ikony, reszta (okazjonalna) przeniesiona do `DropdownMenu`
+      (nowy komponent shadcn, Base UI Menu) pod ikoną ⋮.
+- [x] **Menu eksportu/importu w Dzienniku** - `JournalView.tsx`: "Eksportuj"/"Importuj"/"PDF" (3
+      przyciski w nagłówku obok tytułu) skonsolidowane w to samo `DropdownMenu` pod ikoną ⋮ - to
+      akcje okazjonalne (backup/udostępnianie), nie potrzebują stałego miejsca w nagłówku.
+- [x] **Theming wykresu pod dark mode** - `JournalView.tsx`: tooltip/osie `recharts` renderowały
+      się na twardo zakodowanym białym tle niezależnie od motywu (łamane w dark mode) - podpięte
+      pod tokeny `--color-popover`/`--color-muted-foreground`/`--color-border`.
+- [x] **Progresywne odkrywanie treści w Bazie wiedzy** - `EncyclopediaView.tsx`: każda z 19 kart
+      gatunków pokazywała od razu pełny opis, siedlisko, sobowtóry i porady kulinarne - długa
+      ściana tekstu utrudniająca skanowanie listy wzrokiem. Opis/siedlisko/sobowtóry/przepisy
+      domknięte domyślnie za przyciskiem "Szczegóły" (nowy komponent shadcn `Collapsible`, Base UI
+      Collapsible). Jadalność i ostrzeżenie o ochronie prawnej (bezpieczeństwo/legalność, nie
+      ciekawostka) zostają zawsze widoczne, NAD zwijaną sekcją.
+- Zweryfikowane: `tsc -b` czysty, 261/261 testów (2 zaktualizowane pod nowe menu/collapsible w
+  DOM), build produkcyjny przechodzi. Live-test w przeglądarce niedostępny w tej sesji (brak
+  połączonego rozszerzenia Chrome) - zmiany zweryfikowane przez testy komponentów i przegląd kodu,
+  nie manualnie w przeglądarce.
+
+---
+
 ## Faza 9 - Świeży audyt całej aplikacji (2026-09-13, agent `architect`)
 
 Po Fazach 4-8 zlecono niezależną, pełną analizę kodu (nie tylko diff sesji), żeby złapać rzeczy
