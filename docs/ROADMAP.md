@@ -13,6 +13,54 @@ zakres i priorytet.
 
 ---
 
+## Faza 17 - Plan layoutu + widoczniejsze Narzędzia (2026-09-14)
+
+Na wprost postawione pytanie użytkownika "jak jeszcze upiększyć layout" - audyt struktury (nie
+tylko kolorów/ikon/ruchu jak w Fazach 14-16) ujawnił realną lukę: cała apka jednokolumnowa,
+ograniczona do `max-w-2xl`/`max-w-md` (szerokość telefonu) NIEZALEŻNIE od szerokości ekranu -
+zero breakpointów `md:`/`lg:` w którymkolwiek widoku. Plan (5 punktów) + osobna, wyraźna prośba
+użytkownika o widoczniejszy przycisk/menu Narzędzia, zrealizowane po kolei, każdy krok
+zweryfikowany osobno.
+
+- [x] **0/5 - widoczniejszy przycisk Narzędzia + przebudowa menu** (na wyraźną prośbę
+      użytkownika) - `App.tsx`: przycisk dostaje stałe tło/obwódkę (nie tylko hover) i pełną
+      nieprzezroczystość, wyraźnie odróżniając się od kosmetycznego `ThemeToggle` obok.
+      `ToolsMenu.tsx`: 5 narzędzi pogrupowanych w 3 sekcje ("Bezpieczeństwo w terenie",
+      "Przygotowanie", "Aplikacja"), krótki tytuł + podtytuł zamiast jednego długiego zdania,
+      ikona w kolorowej odznadce wg charakteru narzędzia.
+- [x] **1/5 - responsywna siatka kart** - `EncyclopediaView.tsx`/`JournalView.tsx`: kontener
+      rośnie `md:max-w-4xl lg:max-w-6xl`, lista kart z `flex flex-col` na
+      `grid md:grid-cols-2 lg:grid-cols-3`. Puste stany i karta w trybie edycji (formularz)
+      dostają `md:col-span-2 lg:col-span-3` - rozpięte na całą szerokość niezależnie od kolumny.
+- [x] **2/5 - podsumowanie wyprawy jako kafle liczb** - `src/components/StatTiles.tsx`
+      (`StatTile`/`StatTileRow`, ten sam wzorzec co wskaźniki na mapie) zamiast zdania
+      "12 znalezisk · 5 gatunków · 2.3 kg" rozdzielanego kropkami - w `JournalView.tsx`
+      (podsumowanie wybranej wyprawy) i `TripManager.tsx` (aktywna wyprawa).
+- [x] **3/5 - Grzybowiska jako boczny panel na szerokim ekranie** - nowy
+      `src/hooks/useMediaQuery.ts` (do decyzji layoutu w JS, których nie da się wyrazić samym
+      Tailwindem) + `SpotManager.tsx`: na `lg:+` `swipeDirection="right"` zamiast domyślnego
+      "down" - lista grzybowisk wysuwa się z prawej obok mapy zamiast arkusza z dołu
+      najeżdżającego na widok (Drawer/Base UI już miał gotową obsługę osi X, to podłączenie
+      istniejącej funkcji, nie nowa implementacja od zera). Telefon bez zmian.
+      Przy okazji: globalny mock `matchMedia` w `vitest.setup.ts` (jsdom go nie implementuje,
+      trzeci konsument - `useMediaQuery` - był dobrym progiem, żeby przenieść go ze
+      zdublowanych mocków lokalnych w `ThemeToggle.test.tsx`/`StorageInfoDrawer.test.tsx`).
+- **Świadomie pominięte - 4/5, karta gatunku dwukolumnowa (zdjęcie obok tekstu)** - koliduje z
+  punktem 1/5: po wprowadzeniu siatki 2-3 kolumn każda karta jest węższa niż telefon (ok. 1/3
+  szerokości kontenera na `lg:`), więc układ zdjęcie-obok-tekstu wewnątrz karty wyglądałby
+  ciasno i zaprzeczał sensowi samej siatki (więcej widocznych kart naraz). Grid z punktu 1/5
+  jest lepszym, spójnym rozwiązaniem "wykorzystania szerokiego ekranu" niż wewnętrzny
+  dwukolumnowy layout pojedynczej karty.
+- **5/5 - porządek odstępów** - przegląd rytmu pionowego (nagłówki, listy, pływające plakietki
+  na mapie) w głównych widokach - już spójny z poprzednich faz (`gap-4` sekcje, `gap-3` karty,
+  `gap-2` plakietki, `mt-1` podpisy), bez realnej niespójności wartej osobnej poprawki.
+- Live-test w przeglądarce niedostępny przez całą sesję (brak połączonego rozszerzenia Chrome) -
+  jak w Fazach 14-16, wszystkie kroki zweryfikowane typecheckiem/testami/buildem, nie wizualnie.
+  Szczególnie warte potwierdzenia na żywo: zachowanie siatki kart i panelu Grzybowisk przy
+  zmianie szerokości okna.
+
+---
+
 ## Faza 16 - Dalsze upiększanie UI/grafiki (2026-09-14)
 
 Kontynuacja po Fazie 15, na wprost postawione pytanie użytkownika "jak jeszcze upiększyć UI i
