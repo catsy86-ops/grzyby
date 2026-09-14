@@ -21,6 +21,32 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Scrollbar dostosowany do palety apki (desktop/web - mobile Safari/Chrome i tak używają swojego
+   nakładkowego paska, te reguły dla nich nic nie zmieniają). Cienki, stonowany suwak w kolorze
+   `--border` zamiast domyślnego systemowego, ciemniejący do `--primary` przy najechaniu - mały,
+   ale zauważalny detal na długich listach (Dziennik, Baza wiedzy) na większym ekranie. Firefox i
+   przeglądarki webkit mają osobne właściwości, więc oba warianty obok siebie. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary);
+}
+
 .safe-area-top {
   padding-top: env(safe-area-inset-top, 0px);
 }
