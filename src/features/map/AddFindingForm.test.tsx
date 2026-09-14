@@ -7,6 +7,7 @@ describe('AddFindingForm', () => {
   beforeEach(async () => {
     await db.findings.clear()
     await db.photos.clear()
+    await db.spots.clear()
   })
 
   afterEach(() => {
@@ -81,5 +82,27 @@ describe('AddFindingForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Zapisz' })).not.toBeDisabled())
+  })
+
+  it('nie pokazuje wyboru grzybowiska, gdy nie ma żadnych zapisanych', async () => {
+    render(<AddFindingForm initialPosition={[52.1, 19.5]} onClose={vi.fn()} />)
+
+    await waitFor(() => expect(screen.queryByText(/Grzybowisko/)).not.toBeInTheDocument())
+  })
+
+  it('pokazuje wybór grzybowiska, gdy istnieją zapisane grzybowiska, i zapisuje wybrane spotId', async () => {
+    const spotId = await db.spots.add({ name: 'Sosnowy zagajnik', latitude: 1, longitude: 1, notes: '', createdAt: 1 })
+    const onClose = vi.fn()
+    render(<AddFindingForm initialPosition={[52.1, 19.5]} onClose={onClose} />)
+
+    expect(await screen.findByText(/Grzybowisko \(opcjonalnie\)/)).toBeInTheDocument()
+
+    // Domyślnie bez wyboru - znalezisko zapisuje się bez spotId.
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true))
+
+    const finding = (await db.findings.toArray())[0]
+    expect(finding.spotId).toBeUndefined()
+    expect(spotId).toBeGreaterThan(0)
   })
 })

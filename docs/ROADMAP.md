@@ -145,8 +145,13 @@ zanim ktokolwiek to zaimplementuje.
       wyeksponowany, tylko niepodpięty), przycisk "Zapisz/Zaktualizuj pozycję auta" w
       `MapView.tsx`, plakietka z dystansem+kierunkiem (`utils/bearing.ts`) i przyciskiem usuwania,
       marker 🚗 na mapie. Czysto z lokalnego GPS, zero API.
-- [ ] Osobiste "Grzybowiska" - nazwane, zapisane miejsca z historią zbiorów w czasie (rozszerzenie
-      istniejącego modelu `Trip`/`Finding` o nazwane lokalizacje, nie tylko pojedyncze pinezki)
+- [x] Osobiste "Grzybowiska" (2026-09-14) - nowa tabela `spots` (db.ts wersja 4, `Spot` w
+      schema.ts) i pole `Finding.spotId` (niezależne od `tripId` - jedna wyprawa może dotknąć
+      kilku grzybowisk). `SpotManager.tsx` (drawer z `MapView.tsx`, przycisk "Grzybowiska"):
+      zapis nazwanego miejsca (wybrana pinezka lub GPS), lista z `spotStats.ts` (liczba
+      znalezisk/różnorodność gatunków/data ostatniej wizyty), usuwanie (znaleziska zostają,
+      tracą tylko powiązanie). Marker 📍 na mapie. `AddFindingForm.tsx` pozwala opcjonalnie
+      przypisać nowe znalezisko do istniejącego grzybowiska.
 - [ ] Dedykowany ekran "Porównywarka" (Jadalny vs Trujący side-by-side) - dziś sobowtóry są inline
       w karcie gatunku, osobny widok "X kontra Y" z dwoma zdjęciami obok siebie i listą różnic
       byłby czytelniejszy do szybkiej weryfikacji w terenie

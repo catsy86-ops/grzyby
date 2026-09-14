@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { toast } from 'sonner'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../../components/ui/textarea'
 
 const NONE_SPECIES = '__none__'
+const NONE_SPOT = '__none__'
 
 interface AddFindingFormProps {
   initialPosition: [number, number] | null
@@ -21,11 +23,13 @@ interface AddFindingFormProps {
 
 export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps) {
   const [speciesId, setSpeciesId] = useState<string>('')
+  const [spotId, setSpotId] = useState<number | ''>('')
   const [notes, setNotes] = useState('')
   const [photos, setPhotos] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { activeTripId, activeTrip } = useActiveTrip()
+  const spots = useLiveQuery(() => db.spots.toArray(), [])
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -41,6 +45,7 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
         notes,
         createdAt: Date.now(),
         tripId: activeTripId ?? undefined,
+        spotId: spotId === '' ? undefined : spotId,
       })
       // Schema (Photo.findingId) wspiera wiele zdjęć per znalezisko - kompresja/miniatury
       // liczone równolegle, zapisy sekwencyjnie żeby zachować kolejność wyboru użytkownika.
@@ -100,6 +105,28 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
               </SelectContent>
             </Select>
           </label>
+
+          {spots && spots.length > 0 && (
+            <label className="block text-sm">
+              Grzybowisko (opcjonalnie)
+              <Select
+                value={spotId === '' ? NONE_SPOT : String(spotId)}
+                onValueChange={(value) => setSpotId(value == null || value === NONE_SPOT ? '' : Number(value))}
+              >
+                <SelectTrigger className="mt-1 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_SPOT}>-- brak --</SelectItem>
+                  {spots.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+          )}
 
           <label className="block text-sm">
             Zdjęcia

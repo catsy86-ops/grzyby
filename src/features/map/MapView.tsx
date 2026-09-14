@@ -3,9 +3,9 @@ import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from 'rea
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
 import L from 'leaflet'
-import { CarIcon, SunsetIcon, XIcon } from 'lucide-react'
+import { CarIcon, MapPinnedIcon, SunsetIcon, XIcon } from 'lucide-react'
 import { db } from '../../db/db'
-import type { Finding } from '../../db/schema'
+import type { Finding, Spot } from '../../db/schema'
 import { useAppStore } from '../../stores/appStore'
 import { clusterFindings } from '../../utils/clusterFindings'
 import { formatDistance, getBearingDegrees, getCardinalDirection, getDistanceMeters } from '../../utils/bearing'
@@ -14,6 +14,7 @@ import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
 import { AddFindingForm } from './AddFindingForm'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
+import { SpotManager } from './SpotManager'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
@@ -47,6 +48,13 @@ const carIcon = L.divIcon({
   className: '',
   iconSize: [32, 32],
   iconAnchor: [16, 16],
+})
+
+const spotIcon = L.divIcon({
+  html: `<div class="flex size-8 items-center justify-center rounded-full border-2 border-white bg-amber-600 text-white shadow">📍</div>`,
+  className: '',
+  iconSize: [32, 32],
+  iconAnchor: [16, 28],
 })
 
 const DEFAULT_CENTER: [number, number] = [52.0693, 19.4803] // środek Polski
@@ -157,11 +165,13 @@ export function MapView() {
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [showOfflineDownload, setShowOfflineDownload] = useState(false)
+  const [showSpotManager, setShowSpotManager] = useState(false)
   const [locateError, setLocateError] = useState<string | null>(null)
   const [tileLoadIssue, setTileLoadIssue] = useState(false)
   const mapRef = useRef<L.Map | null>(null)
 
   const findings = useLiveQuery(() => db.findings.toArray(), [])
+  const spots = useLiveQuery(() => db.spots.toArray(), [])
   const { activeTrip } = useActiveTrip()
   const sunsetCountdown = useSunsetCountdown(userPosition)
   const returnPoint = useAppStore((s) => s.returnPoint)
@@ -239,6 +249,16 @@ export function MapView() {
             <Popup>Zapisana pozycja auta</Popup>
           </Marker>
         )}
+        {spots?.map((spot: Spot) => (
+          <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={spotIcon}>
+            <Popup>
+              <div className="text-sm">
+                <p className="font-semibold">{spot.name}</p>
+                {spot.notes && <p className="mt-1">{spot.notes}</p>}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
         {findings && <FindingMarkers findings={findings} />}
       </MapContainer>
 
@@ -364,6 +384,10 @@ export function MapView() {
         >
           Pobierz obszar offline
         </Button>
+        <Button variant="secondary" className="rounded-full shadow" onClick={() => setShowSpotManager(true)}>
+          <MapPinnedIcon className="size-4" />
+          Grzybowiska
+        </Button>
         <Button variant="secondary" className="rounded-full shadow" onClick={handleSaveReturnPoint}>
           <CarIcon className="size-4" />
           {returnPoint ? 'Zaktualizuj pozycję auta' : 'Zapisz pozycję auta'}
@@ -394,6 +418,8 @@ export function MapView() {
           return center ? [center.lat, center.lng] : null
         }}
       />
+
+      <SpotManager open={showSpotManager} onOpenChange={setShowSpotManager} pinPosition={pinPosition} />
     </div>
   )
 }

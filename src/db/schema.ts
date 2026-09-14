@@ -23,6 +23,9 @@ export interface Finding {
   notes: string
   createdAt: number
   tripId?: number
+  // Nazwane, zapisane miejsce (np. "grzybowisko pod lasem") - niezależne od `tripId` (jedna
+  // wyprawa może dotknąć kilku grzybowisk, jedno grzybowisko odwiedzane jest w wielu wyprawach).
+  spotId?: number
   // Śledzenie spożycia i ewentualnej reakcji - pomaga powiązać objawy zatrucia
   // z konkretnym znaleziskiem, zwłaszcza że toksyny niektórych gatunków działają
   // z opóźnieniem (nawet 6-24h).
@@ -49,4 +52,15 @@ export interface Trip {
   endedAt: number | null
   name: string
   notes: string
+}
+
+// Osobiste "grzybowisko" - nazwane, stałe miejsce (w odróżnieniu od Trip, który jest pojedynczą,
+// czasową wyprawą) odwiedzane wielokrotnie w czasie, np. "sosnowy zagajnik za rzeką".
+export interface Spot {
+  id?: number
+  name: string
+  latitude: number
+  longitude: number
+  notes: string
+  createdAt: number
 }
