@@ -1,4 +1,4 @@
-# Plan rozbudowy, naprawy i dopracowania - ŁYSY
+# Plan rozbudowy, naprawy i dopracowania - Grzybobranie (dawniej ŁYSY)
 
 Kontynuacja po Fazie 0-3 i P0-P2 (historia commitów). Trzy twarde wymagania będące punktem
 wyjścia tego planu:
@@ -285,24 +285,47 @@ Już zrobione:
   Dokończenie tego = jednocześnie realizacja tego pomysłu.
 
 Realne, zgodne z architekturą, warte dodania:
-- [ ] **"Kiedy na grzyby"** (wskaźnik na podstawie opadów/temperatury) - da się zrobić **bez
-      własnego backendu i bez klucza API** przez darmowe, publiczne API pogodowe
-      (np. Open-Meteo - historyczne i prognozowane dane, brak wymaganego klucza, hojny darmowy
-      limit) wywoływane bezpośrednio z przeglądarki, tylko gdy online; wynik można cache'ować do
-      wglądu offline. Sam "algorytm wysypu" to nasza własna heurystyka na tych danych.
-- [ ] Interaktywna checklista sprzętu przed wyjściem - czysto lokalne, żadnych zależności
-      zewnętrznych, prosty do dodania.
-- [ ] Asystent ochrony przed kleszczami (przypomnienie o spray'u co 3-4h, przewodnik usuwania,
-      przypomnienie o kontroli po 14 dniach) - da się zrealizować na już istniejącej
-      infrastrukturze lokalnych powiadomień (`src/utils/notifications.ts`, ten sam mechanizm co
-      przypomnienie o długiej wyprawie z P2).
+- [x] **"Kiedy na grzyby"** (2026-09-14) - `src/utils/mushroomWeather.ts` (Open-Meteo, bez klucza
+      API - suma opadów i średnia temperatura z ostatnich 7 dni, własna, ludowa heurystyka
+      "wysypu" na tych danych) + `src/hooks/useMushroomOutlook.ts` (spina z pozycją GPS z
+      `MapView.tsx`, fetch tylko gdy online (`useOnlineStatus`), wynik cache'owany w
+      `localStorage` do wglądu offline, odświeżany w tle po 6h lub istotnej zmianie pozycji,
+      błąd sieci po cichu zostaje przy ostatniej znanej wartości - zero błędów w UI). Badge w
+      `MapView.tsx` obok liczników "Aktywna wyprawa"/zachodu słońca. Testy: `mushroomWeather.test.ts`,
+      `useMushroomOutlook.test.ts`.
+- [x] Interaktywna checklista sprzętu przed wyjściem (2026-09-14) - `src/data/gearChecklist.ts`
+      (statyczna lista kategorii: zbiór/nawigacja i bezpieczeństwo/odzież/prowiant),
+      `src/components/GearChecklist.tsx` (Dialog, dostępny z ikony w nagłówku), zaznaczenia
+      trwałe w `localStorage` (przetrwają zamknięcie apki), przycisk "Wyczyść zaznaczenia" na
+      kolejne wyjście. Testy: `GearChecklist.test.tsx`.
+- [x] Asystent ochrony przed kleszczami (2026-09-14) - `src/utils/tickReminders.ts`
+      (`shouldRemindSpray`/`shouldRemindTickCheck` - czyste funkcje progowe), `src/hooks/useTickReminders.ts`
+      (montowany raz w `App.tsx`, ta sama infrastruktura `showLocalNotification` co przypomnienie o
+      długiej wyprawie, P2): przypomnienie o ponownym spryskaniu co ~3-4h w trakcie aktywnej
+      wyprawy, jednorazowe przypomnienie o kontroli skóry ~14 dni po zakończeniu wyprawy (uczciwe
+      ograniczenie: działa tylko przy otwarciu apki po tym czasie, brak backendu = brak realnego
+      push w tle). `src/data/tickCare.ts` + `TickCareGuide.tsx` (Dialog z krokami usuwania
+      kleszcza) dostępny z ikony w nagłówku. Testy: `tickReminders.test.ts`, `useTickReminders.test.ts`,
+      `TickCareGuide.test.tsx`.
 - [x] Info o suszeniu/mrożeniu/gotowaniu per gatunek (2026-09-14) - zrobione razem z punktem
       "Przepisy kulinarne i porady..." wyżej (`Species.preparationTips`).
-- [ ] Timer do blanszowania/gotowania - prosty stoper w UI, opcjonalnie z czasami sugerowanymi per
-      gatunek z punktu wyżej.
-- [ ] Tryb "W lesie" (duże przyciski, wysoki kontrast) - czysto UI/CSS, realna wartość (mokre
-      palce, rękawiczki, słońce na ekranie) - dobry kandydat obok wcześniejszego planu
-      wizualnego mobile/desktop.
+- [x] Timer do blanszowania/gotowania (2026-09-14) - `src/utils/cookingTimer.ts` (`formatCountdown`),
+      `src/components/CookingTimer.tsx` (Dialog z presetami: blanszowanie 5 min, gotowanie 15 min,
+      smardz/piestrzenica 20 min - zgodnie z ostrzeżeniami "wyłącznie po ugotowaniu" w
+      `preparationTips`, plus własny czas w minutach). Start/pauza/reset, po zakończeniu:
+      wibracja (`navigator.vibrate`), toast (`sonner`) i `showLocalNotification` (na wypadek
+      zminimalizowanej karty) - uczciwe zastrzeżenie: to zwykły `setInterval` w przeglądarce, nie
+      realny timer w tle, jeśli karta zostanie zamknięta całkowicie. Testy: `cookingTimer.test.ts`,
+      `CookingTimer.test.tsx`.
+      **Przy okazji:** nagłówek apki spuchł do 5 osobnych ikon narzędzi (pierwsza pomoc,
+      checklista, kleszcze, timer, pamięć) - skonsolidowane w jedną szufladę `ToolsMenu.tsx`
+      (ikona "Narzędzia" 🔧), żeby nagłówek nie rozrastał się z każdą kolejną funkcją pomocniczą.
+- [x] Tryb "W lesie" (2026-09-14) - `appStore.ts` (`forestMode`, trwały w localStorage),
+      przełącznik w `ToolsMenu.tsx`, klasa `.forest-mode` nadawana na `<html>` w `App.tsx`
+      (wzorem `.dark` z next-themes). CSS w `index.css`: skalowanie `font-size` na korzeniu
+      (podbija wszystkie rozmiary oparte na rem w całej apce, nie tylko wybrane komponenty),
+      wyższy kontrast obramowań/tekstu drugorzędnego, większe minimalne cele dotyku przycisków.
+      Testy: `appStore.test.ts`, `ToolsMenu.test.tsx`.
 
 Technicznie wątpliwe / trzeba uczciwie zaznaczyć ograniczenie:
 - **Komendy głosowe** ("Zapisz tutaj borowika") - Web Speech API (`SpeechRecognition`) istnieje w
@@ -315,6 +338,44 @@ Technicznie wątpliwe / trzeba uczciwie zaznaczyć ograniczenie:
   wymaga infrastruktury (Web Push = serwer wysyłający powiadomienia, sprzeczne z "bez backendu").
   Wersja zgodna z architekturą: sprawdzenie pogody na żądanie, gdy apka jest otwarta i jest sieć
   (przez to samo darmowe API co "Kiedy na grzyby") - bez powiadomień w tle.
+
+---
+
+## Faza 12 - Rebranding "Grzybobranie" + polish UI ✅ zrobione (2026-09-14)
+
+Na wyraźną prośbę użytkownika: zmiana nazwy z "ŁYSY" na "Grzybobranie" + podniesienie UI do
+poziomu "pięknego natywnego mobile z animacjami". Audyt UI (agent, przed wdrożeniem) wykazał
+solidne podstawy (Skeleton, `AnimatePresence`, `useAutoAnimate`, `active`/`focus-visible` states
+już w kodzie) i wskazał konkretne luki - zaadresowane poniżej, bez migracji frameworka/biblioteki
+stylów (Tailwind v4 + shadcn/ui na Base UI, `motion/react`).
+
+- [x] **Rebranding nazwy** - `App.tsx` (nagłówek), `index.html` (`<title>`), `vite.config.ts`
+      (PWA manifest `name`/`short_name`), `android/app/src/main/res/values/strings.xml`
+      (`app_name`, teksty widgetu), `README.md`. Świadomie NIE ruszone: wewnętrzne klucze
+      `localStorage`/IndexedDB (`lysy-*`) - to szczegół implementacyjny niewidoczny dla
+      użytkownika, zmiana zresetowałaby część zapisanego stanu (np. zaznaczenia checklisty).
+      Nowa grafika ikon PWA (`public/icons/*`) zostaje jako osobne zadanie - wymaga wygenerowania
+      plików graficznych, nie tylko podmiany tekstu.
+- [x] **Animowane logo** - `src/components/Logo.tsx`: własne SVG (grzyb, nie emoji - spójny
+      wygląd niezależnie od fontu systemowego), animacja "pop" + kołysanie kapelusza przy
+      montowaniu (`motion/react`, spring). Zastępuje statyczny emoji 🍄 w nagłówku.
+- [x] **Głębia wizualna** - drugi, ciepły akcent `--brand-accent` (bursztyn, `index.css`) obok
+      zielonego `--primary`, użyty oszczędnie (gradient nagłówka `App.tsx`, barwiony cień)
+      - celowo NIE dotyka semantycznych kolorów bezpieczeństwa w `EdibilityBadge.tsx`. Karty
+      (`ui/card.tsx`) - dodany subtelny cień barwiony zamiast czystej czerni.
+- [x] **Mikroanimacje** - dolna nawigacja: `whileTap` spring-bounce ikony przy tapnięciu
+      (`App.tsx`, zamiast statycznego `active:scale-95`). `ToolsMenu.tsx`: stagger wejścia
+      pozycji listy przy otwarciu szuflady. Dialogi/Drawery (Base UI) miały już solidne
+      wbudowane animacje wejścia/wyjścia (fade/zoom, spring slide) - audyt to potwierdził, nie
+      wymagały zmian.
+- [x] **Typografia** - `tabular-nums` na liczbach w timerze kuchennym i liczniku checklisty
+      sprzętu (`CookingTimer.tsx`, `GearChecklist.tsx`) - stabilna szerokość cyfr przy
+      odliczaniu/odznaczaniu.
+- Zweryfikowane: 261 testów zielonych, build produkcyjny przechodzi, live-test w przeglądarce
+  (nagłówek, `ToolsMenu`, `CookingTimer`) - zero błędów w konsoli.
+- **Nieujęte, do rozważenia osobno:** nowa grafika ikon PWA/favicon (wymaga narzędzia
+  graficznego, nie samego kodu), animowany splash screen przy starcie PWA, tekstura/ziarno tła,
+  hover/tap mikrointerakcje na kartach list (`JournalView`/`EncyclopediaView`).
 
 ---
 
