@@ -15,6 +15,8 @@ import { Input } from '../../components/ui/input'
 import { Toggle } from '../../components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
 import { getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'
+import { SHAPE_GROUP_LABEL, getSpeciesShapeGroup } from '../../utils/speciesShape'
+import { SpeciesShapeIcon } from '../../components/icons/speciesShapeIcons'
 
 const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
   { label: 'Wszystkie', value: 'wszystkie' },
@@ -116,7 +118,14 @@ export function EncyclopediaView() {
                   <EdibilityBadge edibility={s.edibility} />
                 </div>
               </div>
-              <p className="text-sm italic text-muted-foreground">{s.nameLatin}</p>
+              <p className="flex items-center gap-1.5 text-sm italic text-muted-foreground">
+                {s.nameLatin}
+                {getSpeciesShapeGroup(s.id) && (
+                  <span title={SHAPE_GROUP_LABEL[getSpeciesShapeGroup(s.id)!]} className="not-italic">
+                    <SpeciesShapeIcon group={getSpeciesShapeGroup(s.id)!} className="text-muted-foreground/70" />
+                  </span>
+                )}
+              </p>
               {/* Sezon zawsze widoczny (nie dopiero po rozwinięciu "Szczegóły") - to jedna z
                   rzeczy, które grzybiarz chce wiedzieć od razu, skanując listę, nie po otwarciu
                   karty. Kolor kropki to pora roku (uproszczona), tekst to dokładny zakres. */}
