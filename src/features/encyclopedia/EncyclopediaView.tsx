@@ -5,7 +5,7 @@ import { LeafIcon, ChefHatIcon, ChevronDownIcon, ScaleIcon } from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
-import { EdibilityBadge, edibilityCardAccentClass } from '../../components/EdibilityBadge'
+import { EdibilityBadge, edibilityCardAccentClass, edibilityChartColor } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
 import { Badge } from '../../components/ui/badge'
@@ -96,12 +96,19 @@ export function EncyclopediaView() {
             <CardContent>
             <motion.div whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
               {s.imageUrls[0] && (
-                <img
-                  src={s.imageUrls[0]}
-                  alt={s.nameCommon}
-                  loading="lazy"
-                  className="mb-3 h-40 w-full rounded-lg object-cover"
-                />
+                <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg">
+                  <img src={s.imageUrls[0]} alt={s.nameCommon} loading="lazy" className="size-full object-cover" />
+                  {/* Winieta u dołu zdjęcia, tonowana kolorem jadalności (ta sama skala co lewy
+                      pasek karty) - łączy fotografię z systemem kolorów bezpieczeństwa zamiast
+                      być oderwaną dekoracją, i daje zdjęciu głębi zamiast płaskiego object-cover. */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
+                    style={{
+                      background: `linear-gradient(to top, color-mix(in oklab, ${edibilityChartColor(s.edibility)} 30%, transparent), transparent)`,
+                    }}
+                  />
+                </div>
               )}
               <div className="flex items-center justify-between gap-2">
                 <p className="font-medium">{s.nameCommon}</p>
