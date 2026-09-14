@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
-import { SearchXIcon, LeafIcon, ChefHatIcon, ScaleIcon } from 'lucide-react'
+import { SearchXIcon, LeafIcon, ChefHatIcon, ChevronDownIcon, ScaleIcon } from 'lucide-react'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
@@ -9,6 +9,7 @@ import { LookalikesWarning } from '../../components/LookalikesWarning'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
 import { Badge } from '../../components/ui/badge'
 import { Card, CardContent } from '../../components/ui/card'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../components/ui/collapsible'
 import { Input } from '../../components/ui/input'
 import { Toggle } from '../../components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
@@ -112,10 +113,9 @@ export function EncyclopediaView() {
                 </div>
               </div>
               <p className="text-sm italic text-muted-foreground">{s.nameLatin}</p>
-              <p className="mt-2 text-sm text-foreground/80">{s.description}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Siedlisko: {s.habitat} · Sezon: {s.season}
-              </p>
+              {/* Ostrzeżenie o ochronie prawnej zostaje zawsze widoczne (obok jadalności) - to,
+                  razem z LookalikesWarning w widoku Rozpoznaj, jest bezpieczeństwo/legalność, nie
+                  ciekawostka do zwinięcia. */}
               {s.legalProtection && (
                 <Alert variant="warning" className="mt-2 text-xs">
                   <ScaleIcon />
@@ -123,16 +123,33 @@ export function EncyclopediaView() {
                   <AlertDescription className="text-current">{s.legalProtection}</AlertDescription>
                 </Alert>
               )}
-              <LookalikesWarning species={s} allSpecies={species} />
-              {s.preparationTips && (
-                <div
-                  data-testid="preparation-tip"
-                  className="mt-2 flex items-start gap-1.5 rounded-lg bg-muted/60 p-2 text-xs text-foreground/80"
+              {/* Reszta (opis/siedlisko/sobowtóry/przepisy) domknięta domyślnie - progresywne
+                  odkrywanie treści, żeby lista 19 gatunków dała się skanować wzrokiem zamiast
+                  wymuszać przescrollowanie ściany tekstu na każdej karcie. */}
+              <Collapsible defaultOpen={false}>
+                <CollapsibleTrigger
+                  className="group/details mt-2 flex items-center gap-1 text-xs font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
-                  <ChefHatIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                  <p>{s.preparationTips}</p>
-                </div>
-              )}
+                  Szczegóły
+                  <ChevronDownIcon className="size-3.5 transition-transform group-data-[panel-open]/details:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <p className="mt-2 text-sm text-foreground/80">{s.description}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Siedlisko: {s.habitat} · Sezon: {s.season}
+                  </p>
+                  <LookalikesWarning species={s} allSpecies={species} />
+                  {s.preparationTips && (
+                    <div
+                      data-testid="preparation-tip"
+                      className="mt-2 flex items-start gap-1.5 rounded-lg bg-muted/60 p-2 text-xs text-foreground/80"
+                    >
+                      <ChefHatIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                      <p>{s.preparationTips}</p>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
             </motion.div>
             </CardContent>
           </Card>
