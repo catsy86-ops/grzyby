@@ -13,6 +13,49 @@ zakres i priorytet.
 
 ---
 
+## Faza 20 - Pierwszy prawdziwy model skanera + porządki Android/Mapa (2026-09-15)
+
+Na prośbę użytkownika "zajmij się mapą i dodaj prawdziwy, 100% sprawny skaner" - dwa agenty
+eksploracyjne + jeden planujący ustaliły, że skaner miał kompletny kod, ale zero wytrenowanego
+modelu, oraz że Android miał dwa niezależne, nieudokumentowane bugi (brak `INTERNET`, brak
+`onShowFileChooser`). Użytkownik świadomie wybrał: model TERAZ (filtr techniczny + trening, nie
+pełna ręczna kuracja) oznaczony jako alpha, i self-hosted trening (nie Teachable Machine).
+
+- [x] **Pierwszy model AI wgrany** - `scripts/prepare-dataset/sanity-filter.mjs` (dedupe/
+      uszkodzone pliki, NIE kuracja merytoryczna) + `fetch-negative-images.mjs` (klasa `inne`)
+      nad istniejącym zbiorem ~380 zdjęć z Wikimedia → 428 zdjęć/20 klas w `dataset/`. Trening
+      (`train.py`, MobileNetV2, teraz też obsługuje opcjonalną klasę `inne` i zapisuje
+      `metadata.json`) uruchomiony w kontenerze Docker (Windows nie ma koła binarnego dla
+      `tensorflow-decision-forests` w ŻADNEJ wersji Pythona - zależność `tensorflowjs`, patrz
+      `requirements.txt`). Wynik: 96.8% acc. treningowe, 69.4% walidacyjne (85 zdjęć) - spodziewany
+      overfitting przy tak małym, nieskuratorowanym zbiorze. **Zweryfikowane end-to-end w Chrome**:
+      zdjęcie borowika szlachetnego → 90% trafienie z ostrzeżeniem o borowiku szatańskim
+      (lookalikes). UI dostał wzmocniony disclaimer "model alpha" (`IdentifyView.tsx`) i czytelną
+      etykietę dla klasy `inne` zamiast surowego id (`PredictionCard.tsx`).
+      Naprawiony przy okazji błąd w udokumentowanej komendzie `tensorflowjs_converter`
+      (`--quantize_uint8` bez `=1` łyka ścieżkę wyjściową jako swoją wartość).
+- [x] **Android - dwa niezależne, nieudokumentowane bugi naprawione** - `AndroidManifest.xml`
+      dostał `INTERNET` (bez niego kafle mapy/pogoda/pobieranie offline nie mogły się połączyć,
+      niezależnie od TLS MITM antywirusa, na który błędnie zrzucano winę w README);
+      `MainActivity.kt` dostał `onShowFileChooser` (bez niego wybór/zrobienie zdjęcia dla
+      `<input type="file">` prawdopodobnie w ogóle nie działał w spakowanej apce). Kompiluje się
+      (`gradlew assembleDebug`) - **nie zweryfikowane na realnym urządzeniu/emulatorze** (brak
+      `adb` w tym środowisku), do zrobienia przy najbliższej okazji z dostępem do urządzenia.
+- [x] **Mapa - domknięcie luk testowych z Fazy 19** - nowe testy `MapLayers`/`MapStatusBadges`/
+      `MapToolbar` (dotąd pokryte tylko pośrednio przez smoke test) + nowe e2e specs (klik na
+      mapie, przełącznik Mapa/Lista, eksport GPX) - **nieuruchomione lokalnie**: Playwright/
+      Chromium nie mógł nawiązać połączenia z `localhost` w tym środowisku (ten sam MITM
+      antywirusa co wyżej). Przy okazji naprawiony realny problem w `vite.config.ts`
+      (`server.host: true` - serwer dev słuchał tylko na `::1`, nie `127.0.0.1`).
+- Weryfikacja: `npx tsc -b`, `npx vitest run` (313/313) i `npm run build` zielone. Model
+  end-to-end potwierdzony wizualnie w Chrome (opisane wyżej).
+- **Do zrobienia dalej**: pełna ręczna kuracja zdjęć treningowych
+  (`scripts/prepare-dataset/README.md`, 80-150/gatunek) żeby zastąpić model alpha czymś
+  wiarygodniejszym; retest zmian Androida na realnym urządzeniu/emulatorze; uruchomienie nowych
+  e2e specs w środowisku bez lokalnego przechwytywania TLS.
+
+---
+
 ## Faza 19 - Poważna refaktoryzacja i rozbudowa widoku Mapy (2026-09-15)
 
 Na wyraźną prośbę użytkownika ("zajmij się mapą na poważnie, zrób szczegółowy plan, użyj
