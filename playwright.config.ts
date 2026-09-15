@@ -5,12 +5,14 @@ export default defineConfig({
   fullyParallel: true,
   retries: 0,
   use: {
-    baseURL: 'http://localhost:5173',
+    // "localhost" zamiast 127.0.0.1 wisi bez końca w Chromium na niektórych maszynach z lokalnym
+    // przechwytywaniem ruchu (antywirus) - 127.0.0.1 jawnie omija rozwiązywanie nazwy.
+    baseURL: 'http://127.0.0.1:5173',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:5173',
+    url: 'http://127.0.0.1:5173',
     reuseExistingServer: !process.env.CI,
   },
 })

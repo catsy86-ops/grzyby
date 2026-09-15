@@ -38,10 +38,22 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
     setError(null)
     const species = (speciesData as Species[]).find((s) => s.id === speciesId) ?? null
     try {
-      // Zapis znaleziska + wszystkich zdjęć w jednej transakcji - bez tego błąd w połowie pętli
-      // zdjęć (np. QuotaExceededError przy trzecim z pięciu) zostawiał w bazie "osierocone"
-      // znalezisko z zerem lub częścią zdjęć, mimo że UI sugerował całkowitą porażkę zapisu
-      // (możliwy duplikat przy ponownej próbie). Dexie wycofuje całą transakcję przy błędzie.
+      // Kompresja PRZED transakcją, nie w środku niej - createImageBitmap/canvas.toBlob są
+      // prawdziwie asynchroniczne (dekodowanie obrazu, praca canvasu poza mikrotaskami, które
+      // Dexie potrafi śledzić), więc IndexedDB auto-commituje natywną transakcję w trakcie
+      // czekania na nie i kolejny zapis w tej samej transakcji Dexie kończy się realnym
+      // `TransactionInactiveError` w prawdziwej przeglądarce - niewidocznym w testach
+      // jednostkowych, bo fake-indexeddb nie wymusza tej ścisłości cyklu życia transakcji
+      // (złapane w Fazie 20 przez e2e w prawdziwym Chromium). Sama transakcja niżej zawiera już
+      // tylko czyste, natywnie-synchroniczne operacje Dexie, więc atomowość (wycofanie całości
+      // przy błędzie, np. QuotaExceededError) zostaje zachowana.
+      const compressedPhotos = await Promise.all(
+        photos.map(async (photo) => ({
+          blob: await compressPhoto(photo),
+          thumbnailBlob: await createThumbnail(photo),
+        })),
+      )
+
       await db.transaction('rw', db.findings, db.photos, async () => {
         const findingId = await db.findings.add({
           speciesId: species?.id ?? null,
@@ -54,11 +66,10 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
           spotId: spotId === '' ? undefined : spotId,
           weightGrams: weightGrams.trim() === '' ? undefined : Number(weightGrams),
         })
-        // Schema (Photo.findingId) wspiera wiele zdjęć per znalezisko - kompresja/miniatury
-        // liczone równolegle, zapisy sekwencyjnie żeby zachować kolejność wyboru użytkownika.
-        for (const photo of photos) {
-          const [photoBlob, thumbnailBlob] = await Promise.all([compressPhoto(photo), createThumbnail(photo)])
-          await db.photos.add({ findingId, blob: photoBlob, thumbnailBlob })
+        // Schema (Photo.findingId) wspiera wiele zdjęć per znalezisko - zapisy sekwencyjnie, żeby
+        // zachować kolejność wyboru użytkownika.
+        for (const { blob, thumbnailBlob } of compressedPhotos) {
+          await db.photos.add({ findingId, blob, thumbnailBlob })
         }
       })
       // Potwierdzenie zapisu - dotąd formularz po prostu cicho się zamykał, bez żadnego
