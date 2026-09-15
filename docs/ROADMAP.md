@@ -49,18 +49,28 @@ pełna ręczna kuracja) oznaczony jako alpha, i self-hosted trening (nie Teachab
       `adb uninstall` przed instalacją przy weryfikacji zmian web.
 - [x] **Mapa - domknięcie luk testowych z Fazy 19** - nowe testy `MapLayers`/`MapStatusBadges`/
       `MapToolbar` (dotąd pokryte tylko pośrednio przez smoke test) + nowe e2e specs (klik na
-      mapie, przełącznik Mapa/Lista, eksport GPX) - **nieuruchomione lokalnie**: Playwright/
-      Chromium nie mógł nawiązać połączenia z `localhost` w tym środowisku (ten sam MITM
-      antywirusa co wyżej). Przy okazji naprawiony realny problem w `vite.config.ts`
-      (`server.host: true` - serwer dev słuchał tylko na `::1`, nie `127.0.0.1`).
+      mapie, przełącznik Mapa/Lista, eksport GPX). Przy okazji naprawiony realny problem w
+      `vite.config.ts` (`server.host: true` - serwer dev słuchał tylko na `::1`, nie `127.0.0.1`).
+- [x] **E2E naprawione i faktycznie zielone (4/4)** - nawigacja Chromium do `localhost` wisiała
+      bez końca na tej maszynie mimo poprawnie odpowiadającego serwera (zweryfikowane `curl` na
+      obu adresach) - `127.0.0.1` w `playwright.config.ts` naprawia to od razu. Po odblokowaniu
+      e2e złapały **realny, wcześniej niewykryty bug**: `AddFindingForm.tsx` (zapis znaleziska +
+      zdjęć w jednej transakcji Dexie, Faza 19) kończył się `TransactionInactiveError` w
+      prawdziwej przeglądarce, bo kompresja zdjęć (`createImageBitmap`/`canvas.toBlob`) działa
+      się wewnątrz transakcji - te operacje są prawdziwie asynchroniczne (poza mikrotaskami,
+      które Dexie śledzi), więc natywna transakcja IndexedDB auto-commitowała się w trakcie
+      oczekiwania. Niewidoczne w testach jednostkowych, bo `fake-indexeddb` nie wymusza tej
+      ścisłości. Naprawione przez przeniesienie kompresji przed transakcję - dokładnie ten sam
+      wzorzec, jaki już wcześniej istniał (i był udokumentowany komentarzem) w
+      `JournalView.tsx`'s `handleSaveEdit`, tylko nie zastosowany konsekwentnie przy Fazie 19.
 - Weryfikacja: `npx tsc -b`, `npx vitest run` (313/313) i `npm run build` zielone. Model
   end-to-end potwierdzony wizualnie w Chrome (opisane wyżej).
 - **Do zrobienia dalej**: pełna ręczna kuracja zdjęć treningowych
   (`scripts/prepare-dataset/README.md`, 80-150/gatunek) żeby zastąpić model alpha czymś
   wiarygodniejszym; retest kafli mapy na Androidzie w środowisku bez lokalnego MITM antywirusa
-  (kod i uprawnienia już poprawne, potwierdzone TLS handshake reaches the network - blokerem jest
-  wyłącznie zaufanie do certyfikatu w tym konkretnym środowisku); uruchomienie nowych e2e specs w
-  środowisku bez lokalnego przechwytywania TLS; realne urządzenie fizyczne (dotąd tylko emulator).
+  (kod i uprawnienia już poprawne, potwierdzony TLS handshake dociera do sieci - blokerem jest
+  wyłącznie zaufanie do certyfikatu w tym konkretnym środowisku); realne urządzenie fizyczne
+  (dotąd tylko emulator).
 
 ---
 
