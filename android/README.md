@@ -106,23 +106,34 @@ AGP 9.1.1 + wbudowana obsługa Kotlina w AGP (od AGP 9.0 osobny plugin
 - Service Worker rejestruje się bez błędu w konsoli (po dodaniu `ServiceWorkerControllerCompat`).
 - Prośba o `ACCESS_FINE_LOCATION` faktycznie pokazuje natywny dialog systemowy i po zaakceptowaniu
   geolokalizacja w WebView działa (`adb emu geo fix` + "Zlokalizuj mnie" → pinezka na mapie).
-- **Nie zweryfikowano na urządzeniu/emulatorze** (brak `adb`/uruchomionego emulatora w środowisku,
-  w którym te zmiany powstały - tylko `./gradlew assembleDebug` się kompiluje): `onShowFileChooser`
-  (nowa obsługa wyboru/zrobienia zdjęcia w `MainActivity.kt` dla `<input type="file">`, m.in. w
-  "Rozpoznaj") oraz realne połączenia sieciowe po dodaniu uprawnienia `INTERNET` (kafle mapy,
-  pogoda, pobieranie offline). Oba wymagają realnego testu na urządzeniu/emulatorze przed uznaniem
-  za gotowe - patrz "Znane luki" niżej.
+  Brak fixa lokalizacji na emulatorze poprawnie kończy się komunikatem "Ustalanie lokalizacji
+  trwało zbyt długo" zamiast cichego zawieszenia - działa zgodnie z projektem.
+- **`onShowFileChooser` (Faza 20) zweryfikowane na urządzeniu i działa**: dotknięcie "Wybierz lub
+  zrób zdjęcie" w "Rozpoznaj" faktycznie otwiera natywny picker zdjęć Androida (`Photos`/
+  `Collections`). Zweryfikowane przez `adb shell input tap` + zrzuty ekranu na świeżej instalacji
+  (bez starych danych/cache).
+- **Uprawnienie `INTERNET` (Faza 20) dodane i potwierdzone jako konieczne, ale niewystarczające w
+  tym konkretnym środowisku testowym**: po dodaniu, WebView faktycznie próbuje otworzyć połączenie
+  (wcześniej nie było nawet próby) - ale handshake TLS do `maps.wikimedia.org` kończy się
+  `net::ERR_CERT_AUTHORITY_INVALID` (potwierdzone w `logcat`, tag `chromium`), dokładnie tym samym
+  objawem, jaki ten plik już wcześniej dokumentował dla Gradle/pip w tym środowisku (lokalny
+  MITM antywirusa, certyfikat nie zaufany przez system). Zegar systemowy emulatora sprawdzony i
+  poprawny (wyklucza błąd daty jako przyczynę). To ograniczenie tego konkretnego środowiska
+  deweloperskiego, nie błąd w kodzie apki - na urządzeniu/środowisku bez takiej ingerencji w TLS
+  kafle powinny się ładować normalnie.
+- **Ważna pułapka przy testowaniu zmian**: `adb install -r` **zachowuje dane appki** (Cache
+  Storage, rejestrację Service Workera, IndexedDB) - jeśli na danym emulatorze/urządzeniu apka
+  była już wcześniej zainstalowana, `-r` może zostawić Service Worker serwujący STARĄ,
+  zcache'owaną wersję JS/CSS zamiast świeżo zbudowanej. Przy weryfikacji zmian w kodzie web (nie
+  tylko natywnych) rób `adb uninstall com.lysy.app` przed `adb install`, inaczej można pomylić
+  cache'owany stary bug z realnym.
 
 ## Znane luki / środowiskowe ograniczenia
 
-- Kafelki mapy (`maps.wikimedia.org`) i wstępny request geolokalizacji w tym konkretnym
-  środowisku testowym failowały z `ERR_CERT_AUTHORITY_INVALID` / timeoutem. Manifest do niedawna
-  **w ogóle nie miał uprawnienia `INTERNET`** — to samo w sobie w pełni tłumaczy brak połączenia,
-  niezależnie od jakiegokolwiek MITM antywirusa (WebView bez tego uprawnienia nie otworzy żadnego
-  socketu). Uprawnienie zostało dodane w `AndroidManifest.xml` — jeśli po tej zmianie kafle/pogoda
-  nadal nie ładują się w konkretnym środowisku testowym, to dopiero wtedy warto podejrzewać
-  lokalny MITM antywirusa jako drugą, niezależną przyczynę. Wymaga ponownego testu na
-  emulatorze/urządzeniu.
+- Kafelki mapy/pogoda nie ładują się w tym konkretnym środowisku deweloperskim z powodu lokalnego
+  MITM antywirusa przechwytującego TLS (`ERR_CERT_AUTHORITY_INVALID`, potwierdzone w Fazie 20 -
+  patrz wyżej) - do zrobienia: retest na urządzeniu/środowisku bez takiej ingerencji w TLS, żeby
+  potwierdzić, że to jedyna pozostała przyczyna.
 - Nie przetestowano: realnego działania IndexedDB (Dexie) pod kątem zapisu/odczytu w tej
   otoczce (strona się załadowała i nie rzuciła błędów, ale nie zweryfikowano zapisu znaleziska
   end-to-end), wyglądu widgetu na ekranie głównym po faktycznym dodaniu go (`StatsWidgetProvider`

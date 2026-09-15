@@ -34,13 +34,19 @@ pełna ręczna kuracja) oznaczony jako alpha, i self-hosted trening (nie Teachab
       etykietę dla klasy `inne` zamiast surowego id (`PredictionCard.tsx`).
       Naprawiony przy okazji błąd w udokumentowanej komendzie `tensorflowjs_converter`
       (`--quantize_uint8` bez `=1` łyka ścieżkę wyjściową jako swoją wartość).
-- [x] **Android - dwa niezależne, nieudokumentowane bugi naprawione** - `AndroidManifest.xml`
-      dostał `INTERNET` (bez niego kafle mapy/pogoda/pobieranie offline nie mogły się połączyć,
-      niezależnie od TLS MITM antywirusa, na który błędnie zrzucano winę w README);
-      `MainActivity.kt` dostał `onShowFileChooser` (bez niego wybór/zrobienie zdjęcia dla
-      `<input type="file">` prawdopodobnie w ogóle nie działał w spakowanej apce). Kompiluje się
-      (`gradlew assembleDebug`) - **nie zweryfikowane na realnym urządzeniu/emulatorze** (brak
-      `adb` w tym środowisku), do zrobienia przy najbliższej okazji z dostępem do urządzenia.
+- [x] **Android - dwa niezależne, nieudokumentowane bugi naprawione, zweryfikowane na emulatorze
+      (Pixel_4a)** - `AndroidManifest.xml` dostał `INTERNET`; `MainActivity.kt` dostał
+      `onShowFileChooser`. **`onShowFileChooser` potwierdzone jako działające**: dotknięcie
+      "Wybierz lub zrób zdjęcie" w "Rozpoznaj" realnie otwiera natywny picker zdjęć Androida.
+      **`INTERNET` potwierdzone jako konieczne, ale w tym konkretnym środowisku niewystarczające**
+      - po dodaniu WebView faktycznie próbuje się połączyć (wcześniej nie próbował wcale), ale
+      TLS handshake do `maps.wikimedia.org` kończy się `ERR_CERT_AUTHORITY_INVALID` - ten sam
+      lokalny MITM antywirusa, co już wcześniej udokumentowany dla Gradle/pip w tej sesji (zegar
+      systemowy emulatora sprawdzony, poprawny - wyklucza błąd daty). To ograniczenie środowiska
+      deweloperskiego, nie kodu. Przy okazji złapana i udokumentowana pułapka: `adb install -r`
+      zachowuje Cache Storage/Service Worker, więc testowanie zmian w kodzie web na urządzeniu z
+      wcześniejszą instalacją apki może pokazywać STARY, zcache'owany JS - wymaga
+      `adb uninstall` przed instalacją przy weryfikacji zmian web.
 - [x] **Mapa - domknięcie luk testowych z Fazy 19** - nowe testy `MapLayers`/`MapStatusBadges`/
       `MapToolbar` (dotąd pokryte tylko pośrednio przez smoke test) + nowe e2e specs (klik na
       mapie, przełącznik Mapa/Lista, eksport GPX) - **nieuruchomione lokalnie**: Playwright/
@@ -51,8 +57,10 @@ pełna ręczna kuracja) oznaczony jako alpha, i self-hosted trening (nie Teachab
   end-to-end potwierdzony wizualnie w Chrome (opisane wyżej).
 - **Do zrobienia dalej**: pełna ręczna kuracja zdjęć treningowych
   (`scripts/prepare-dataset/README.md`, 80-150/gatunek) żeby zastąpić model alpha czymś
-  wiarygodniejszym; retest zmian Androida na realnym urządzeniu/emulatorze; uruchomienie nowych
-  e2e specs w środowisku bez lokalnego przechwytywania TLS.
+  wiarygodniejszym; retest kafli mapy na Androidzie w środowisku bez lokalnego MITM antywirusa
+  (kod i uprawnienia już poprawne, potwierdzone TLS handshake reaches the network - blokerem jest
+  wyłącznie zaufanie do certyfikatu w tym konkretnym środowisku); uruchomienie nowych e2e specs w
+  środowisku bez lokalnego przechwytywania TLS; realne urządzenie fizyczne (dotąd tylko emulator).
 
 ---
 
