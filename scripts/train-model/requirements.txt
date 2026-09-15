@@ -1,2 +1,9 @@
+# Na Windows: `tensorflowjs` zależy od `tensorflow-decision-forests`, które NIE ma koła binarnego
+# dla Windows w ŻADNEJ wersji (tylko macOS/manylinux) - `pip install` tego pliku nie zadziała na
+# gołym Windows, niezależnie od wersji Pythona. Użyj WSL, Dockera (np. `python:3.11-slim`) albo
+# macOS/Linuksa. Na tych platformach dodatkowo trzeba przypiąć `tensorflow==2.15.0` +
+# `tensorflow-decision-forests==1.8.1` (jedyna wersja z realnym kołem binarnym w chwili pisania
+# tego komentarza) zamiast zakresu niżej, który przy pełnym `pip install -r` prowadzi do
+# nierozwiązywalnego konfliktu zależności. Patrz docs/MODEL-TRAINING.md, ścieżka B, krok 2.
 tensorflow>=2.16,<3
 tensorflowjs>=4.20,<5

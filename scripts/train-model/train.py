@@ -13,6 +13,8 @@ Oczekiwana struktura danych:
       borowik-szlachetny/*.jpg
       goryczak-zolciowy/*.jpg
       ...  (jeden podkatalog na każdy `id` ze src/data/species.json, min. kilkadziesiąt zdjęć)
+      inne/*.jpg  (opcjonalnie - klasa negatywna "to nie grzyb", patrz
+                   scripts/prepare-dataset/fetch-negative-images.mjs)
 
 WAŻNE - musi się zgadzać z preprocessingiem w src/utils/mushroomModel.ts:
   - rozmiar wejścia: 224x224 RGB
@@ -39,9 +41,18 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPECIES_JSON = REPO_ROOT / "src" / "data" / "species.json"
 
 
-def load_class_order() -> list[str]:
+NEGATIVE_CLASS = "inne"
+
+
+def load_class_order(dataset_dir: pathlib.Path) -> list[str]:
     species = json.loads(SPECIES_JSON.read_text(encoding="utf-8"))
-    return [s["id"] for s in species]
+    class_names = [s["id"] for s in species]
+    # Klasa negatywna "inne" (nie-grzyb) jest opcjonalna - dołączana tylko jeśli ktoś faktycznie
+    # przygotował dla niej dane (patrz scripts/prepare-dataset/fetch-negative-images.mjs). Zawsze
+    # na końcu listy, żeby nie przesuwać indeksów pozostałych 19 klas względem species.json.
+    if (dataset_dir / NEGATIVE_CLASS).is_dir():
+        class_names.append(NEGATIVE_CLASS)
+    return class_names
 
 
 def build_datasets(dataset_dir: pathlib.Path, class_names: list[str], batch_size: int, val_split: float):
@@ -107,7 +118,7 @@ def main() -> int:
     parser.add_argument("--val-split", type=float, default=0.2)
     args = parser.parse_args()
 
-    class_names = load_class_order()
+    class_names = load_class_order(args.dataset)
     missing = [c for c in class_names if not (args.dataset / c).is_dir()]
     if missing:
         print(f"Brakuje katalogów w {args.dataset} dla gatunków: {missing}", file=sys.stderr)
@@ -134,8 +145,20 @@ def main() -> int:
     model.save(keras_path)
     print(f"\nZapisano model Keras: {keras_path}")
 
+    # mushroomModel.ts (loadClassLabels) czyta ten plik z public/models/metadata.json, jeśli
+    # istnieje - bez niego zakłada kolejność klas = species.json (19 pozycji), co nie obejmuje
+    # dodatkowej klasy "inne" pod indeksem 19. Zapisujemy go zawsze, żeby kolejność klas była
+    # jawna niezależnie od tego, czy klasa negatywna została użyta.
+    metadata_path = args.output / "metadata.json"
+    metadata_path.write_text(json.dumps({"labels": class_names}, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Zapisano metadata.json: {metadata_path}")
+
     print("\nKolejny krok - konwersja do TensorFlow.js (patrz docs/MODEL-TRAINING.md):")
-    print(f"  tensorflowjs_converter --input_format=keras --quantize_uint8 {keras_path} public/models")
+    # UWAGA: `--quantize_uint8` bez `=1` łyka następny argument (ścieżkę modelu) jako swoją
+    # wartość (nargs='?' w argparse tensorflowjs) i converter kończy błędem "Missing output_path
+    # argument" - odkryte przy pierwszym realnym użyciu tego polecenia (Faza 20).
+    print(f"  tensorflowjs_converter --input_format=keras --quantize_uint8=1 {keras_path} public/models")
+    print(f"  cp {metadata_path} public/models/metadata.json")
     print(f"\nKolejność klas w wyjściu modelu (do weryfikacji ze species.json): {class_names}")
     return 0
 

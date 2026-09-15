@@ -2,8 +2,10 @@ package com.lysy.app
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.webkit.GeolocationPermissions
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -44,6 +46,19 @@ class MainActivity : AppCompatActivity() {
             if (origin != null && callback != null) {
                 callback.invoke(origin, granted, false)
             }
+        }
+
+    // Wypełniany przez onShowFileChooser (input[type=file] w "Rozpoznaj"/dodawaniu zdjęć),
+    // rozwiązywany w launcherze poniżej - kontrakt WebView wymaga wywołania go dokładnie raz,
+    // również przy anulowaniu (pusty wynik), inaczej kolejny picker w WebView się nie otworzy.
+    private var pendingFileChooserCallback: ValueCallback<Array<Uri>>? = null
+
+    private val requestFileChooser =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val callback = pendingFileChooserCallback
+            pendingFileChooserCallback = null
+            val results = WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
+            callback?.onReceiveValue(results)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,6 +117,20 @@ class MainActivity : AppCompatActivity() {
                     pendingGeolocationCallback = callback
                     requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                 }
+            }
+
+            override fun onShowFileChooser(
+                webView: WebView,
+                filePathCallback: ValueCallback<Array<Uri>>,
+                fileChooserParams: FileChooserParams,
+            ): Boolean {
+                pendingFileChooserCallback?.onReceiveValue(null)
+                pendingFileChooserCallback = filePathCallback
+                // createIntent() respektuje accept/capture zadeklarowane na <input type="file">
+                // w HTML-u (np. accept="image/*" capture="environment" w IdentifyView.tsx) -
+                // dla zdjęć zwykle otwiera wybór między galerią a aparatem.
+                requestFileChooser.launch(fileChooserParams.createIntent())
+                return true
             }
         }
 

@@ -19,7 +19,7 @@ i co wymaga Twojego działania.
   bez dodatkowego przesunięcia w kodzie przeglądarki - patrz `INPUT_SIZE` i preprocessing w
   `src/utils/mushroomModel.ts`).
 - Wyjście: wektor prawdopodobieństw o długości = liczba gatunków w `src/data/species.json`
-  (obecnie 9).
+  (obecnie 19), plus opcjonalnie jedna dodatkowa klasa "inne" (patrz niżej).
 - Kolejność klas wyjściowych: albo dokładnie kolejność `id` w `species.json` (domyślne założenie),
   albo dowolna inna kolejność opisana w opcjonalnym `public/models/metadata.json` (patrz niżej) -
   `mushroomModel.ts` obsługuje oba przypadki automatycznie.
@@ -30,10 +30,12 @@ i co wymaga Twojego działania.
    skryptem pobierającym kandydatów z Wikimedia Commons, ale **każde zdjęcie trzeba ręcznie
    zweryfikować**). Rekomendowane minimum: 80-150 zdjęć/gatunek, zróżnicowane kątem/tłem/
    oświetleniem.
-2. Dodaj też klasę **"inne"** (zdjęcia niebędące żadnym z 9 gatunków - ręka, liście, inne grzyby,
-   puste tło) - ogranicza to fałszywie pewne trafienia na zdjęciach niezwiązanych z grzybami.
-   `mushroomModel.ts` po prostu zignoruje tę klasę, jeśli nie ma jej w `species.json` (trafi do
-   `species: null`, patrz `PredictionCard.tsx` obsługa `null`).
+2. Dodaj też klasę **"inne"** (zdjęcia niebędące żadnym z 19 gatunków - ręka, liście, ściółka,
+   puste tło; `scripts/prepare-dataset/fetch-negative-images.mjs` pobiera dla niej kandydatów z
+   Commons tak samo jak dla gatunków) - ogranicza to fałszywie pewne trafienia na zdjęciach
+   niezwiązanych z grzybami. `mushroomModel.ts` nie ma tej klasy w `species.json`, więc trafia do
+   `species: null` - `PredictionCard.tsx` pokazuje wtedy czytelny tekst "To raczej nie jest grzyb"
+   zamiast surowej etykiety `inne`.
 3. Wejdź na [Teachable Machine](https://teachablemachine.withgoogle.com/) → "Image Project" →
    "Standard image model".
 4. Utwórz jedną klasę na gatunek. **Nazwij każdą klasę dokładnie tak jak `id` w
@@ -60,24 +62,35 @@ i co wymaga Twojego działania.
 Dla kogoś, kto woli pełną kontrolę nad architekturą/augmentacją i ma lokalnie Pythona (GPU nie
 jest wymagane, ale trening będzie szybszy).
 
-1. Przygotuj `dataset/<species-id>/*.jpg` (jeden podkatalog na każdy `id` ze `species.json`) -
-   patrz `scripts/prepare-dataset/README.md`.
-2. `pip install -r scripts/train-model/requirements.txt` (TensorFlow + tensorflowjs).
+1. Przygotuj `dataset/<species-id>/*.jpg` (jeden podkatalog na każdy `id` ze `species.json`, plus
+   opcjonalnie `dataset/inne/*.jpg` dla klasy negatywnej) - patrz `scripts/prepare-dataset/README.md`.
+   `scripts/prepare-dataset/sanity-filter.mjs` odrzuca uszkodzone/zbyt małe pliki i duplikaty z
+   `raw/` i kopiuje resztę do `dataset/` - to filtr techniczny, nie merytoryczny, wciąż nie
+   zastępuje ręcznego przeglądu opisanego w kroku 2 ścieżki A.
+2. `pip install -r scripts/train-model/requirements.txt` (TensorFlow + tensorflowjs). Uwaga: na
+   Windows z Pythonem 3.12 pakiet `tensorflow-decision-forests` (zależność `tensorflowjs`) nie ma
+   koła binarnego zgodnego z żadną wersją TensorFlow dostępną dla 3.12 - użyj Pythona 3.10 lub
+   3.11 dla tego środowiska.
 3. `python scripts/train-model/train.py --epochs 15 --fine-tune-epochs 5` - transfer learning na
    MobileNetV2, zamrożona baza w pierwszej fazie, częściowy fine-tuning ostatnich warstw w drugiej.
-   Skrypt sam wymusza kolejność klas = kolejność w `species.json` i wypisuje ją na końcu do
-   weryfikacji. Wynikowy `model-export/model.h5` ma wbudowany preprocessing dopasowany do
-   `mushroomModel.ts` (wejście `[0,1]`, przesunięcie do zakresu MobileNetV2 dzieje się wewnątrz
-   modelu) - nie trzeba nic dodatkowo zmieniać w kodzie przeglądarki.
+   Skrypt sam wymusza kolejność klas = kolejność w `species.json` (+ `inne` na końcu, jeśli istnieje
+   `dataset/inne/`) i wypisuje ją na końcu do weryfikacji. Wynikowy `model-export/model.h5` ma
+   wbudowany preprocessing dopasowany do `mushroomModel.ts` (wejście `[0,1]`, przesunięcie do
+   zakresu MobileNetV2 dzieje się wewnątrz modelu) - nie trzeba nic dodatkowo zmieniać w kodzie
+   przeglądarki.
 4. Konwersja do TensorFlow.js:
    ```bash
-   tensorflowjs_converter --input_format=keras --quantize_uint8 model-export/model.h5 public/models
+   tensorflowjs_converter --input_format=keras --quantize_uint8=1 model-export/model.h5 public/models
+   cp model-export/metadata.json public/models/metadata.json
    ```
    `--quantize_uint8` zmniejsza rozmiar wag (istotne dla precache w Service Workerze i transferu w
-   terenie na słabym łączu).
-5. `npm run build && npm run preview`, sprawdź zakładkę "Rozpoznaj" jak w kroku 9 ścieżki A. Przy
-   tej ścieżce nie ma `metadata.json` - `mushroomModel.ts` użyje domyślnie kolejności ze
-   `species.json`, która i tak jest tym, co wymusił `train.py`.
+   terenie na słabym łączu) - **koniecznie z `=1`**, bez tego argparse `tensorflowjs_converter`
+   łyka ścieżkę wejściową jako wartość flagi i converter kończy się błędem "Missing output_path
+   argument" (zweryfikowane przy pierwszym realnym użyciu tego polecenia). `train.py` zapisuje też `model-export/metadata.json` z jawną listą
+   klas w kolejności wyjścia modelu - skopiuj go obok `model.json`, żeby `loadClassLabels()` w
+   `mushroomModel.ts` nie musiał zgadywać kolejności (istotne zwłaszcza z klasą `inne`, która nie
+   ma odpowiednika w `species.json`).
+5. `npm run build && npm run preview`, sprawdź zakładkę "Rozpoznaj" jak w kroku 9 ścieżki A.
 
 ## Po dostarczeniu modelu
 

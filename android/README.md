@@ -18,9 +18,12 @@ funkcjonalności Chrome (autofill, część rozszerzeń Custom Tabs), które i t
 
 Treść jest serwowana z `https://appassets.androidplatform.net` (przez `WebViewAssetLoader`), a
 nie z gołego `file://` — `file://` dostaje w WebView nieprzezroczyste ("opaque") origin, co psuje
-IndexedDB (Dexie) i uniemożliwia rejestrację Service Workera. Nie jest wymagany dostęp do sieci —
-`WebViewAssetLoader` przechwytuje te żądania lokalnie, zanim trafią do sieci, więc apka **nie ma
-uprawnienia INTERNET** w manifeście.
+IndexedDB (Dexie) i uniemożliwia rejestrację Service Workera. `WebViewAssetLoader` przechwytuje
+lokalnie tylko żądania **powłoki appki** (HTML/JS/CSS z `assets/`) — to jedyna część, dla której
+sieć faktycznie nie jest potrzebna. Sama web appka w runtime wykonuje prawdziwe zapytania sieciowe
+(kafle mapy z `maps.wikimedia.org`, pogoda z Open-Meteo, samo pobieranie offline) i te **wymagają**
+uprawnienia `INTERNET` w manifeście — bez niego WebView nie otworzy żadnego socketu, niezależnie od
+ewentualnego przechwytywania TLS przez antywirus (patrz "Znane luki" niżej).
 
 **Ważne:** `index.html` generowany przez Vite odwołuje się do zasobów ścieżkami bezwzględnymi
 względem roota (`/assets/index-xxx.js`), więc strona **musi** być serwowana z roota wirtualnej
@@ -103,14 +106,23 @@ AGP 9.1.1 + wbudowana obsługa Kotlina w AGP (od AGP 9.0 osobny plugin
 - Service Worker rejestruje się bez błędu w konsoli (po dodaniu `ServiceWorkerControllerCompat`).
 - Prośba o `ACCESS_FINE_LOCATION` faktycznie pokazuje natywny dialog systemowy i po zaakceptowaniu
   geolokalizacja w WebView działa (`adb emu geo fix` + "Zlokalizuj mnie" → pinezka na mapie).
+- **Nie zweryfikowano na urządzeniu/emulatorze** (brak `adb`/uruchomionego emulatora w środowisku,
+  w którym te zmiany powstały - tylko `./gradlew assembleDebug` się kompiluje): `onShowFileChooser`
+  (nowa obsługa wyboru/zrobienia zdjęcia w `MainActivity.kt` dla `<input type="file">`, m.in. w
+  "Rozpoznaj") oraz realne połączenia sieciowe po dodaniu uprawnienia `INTERNET` (kafle mapy,
+  pogoda, pobieranie offline). Oba wymagają realnego testu na urządzeniu/emulatorze przed uznaniem
+  za gotowe - patrz "Znane luki" niżej.
 
 ## Znane luki / środowiskowe ograniczenia
 
 - Kafelki mapy (`maps.wikimedia.org`) i wstępny request geolokalizacji w tym konkretnym
-  środowisku testowym failowały z `ERR_CERT_AUTHORITY_INVALID` / timeoutem — to ten sam lokalny
-  MITM antywirusa co przy Gradle (patrz wyżej), emulator dziedziczy sieć hosta. Nie jest to błąd
-  w kodzie apki — na urządzeniu/emulatorze bez takiej ingerencji w TLS powinno działać tak samo
-  jak w zwykłej przeglądarce.
+  środowisku testowym failowały z `ERR_CERT_AUTHORITY_INVALID` / timeoutem. Manifest do niedawna
+  **w ogóle nie miał uprawnienia `INTERNET`** — to samo w sobie w pełni tłumaczy brak połączenia,
+  niezależnie od jakiegokolwiek MITM antywirusa (WebView bez tego uprawnienia nie otworzy żadnego
+  socketu). Uprawnienie zostało dodane w `AndroidManifest.xml` — jeśli po tej zmianie kafle/pogoda
+  nadal nie ładują się w konkretnym środowisku testowym, to dopiero wtedy warto podejrzewać
+  lokalny MITM antywirusa jako drugą, niezależną przyczynę. Wymaga ponownego testu na
+  emulatorze/urządzeniu.
 - Nie przetestowano: realnego działania IndexedDB (Dexie) pod kątem zapisu/odczytu w tej
   otoczce (strona się załadowała i nie rzuciła błędów, ale nie zweryfikowano zapisu znaleziska
   end-to-end), wyglądu widgetu na ekranie głównym po faktycznym dodaniu go (`StatsWidgetProvider`

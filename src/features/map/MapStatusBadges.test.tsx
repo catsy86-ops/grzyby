@@ -1,0 +1,81 @@
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MapStatusBadges } from './MapStatusBadges'
+
+const baseProps = {
+  activeTripName: null,
+  sunsetCountdown: null,
+  mushroomOutlook: null,
+  returnPoint: null,
+  returnPointInfo: null,
+  onClearReturnPoint: vi.fn(),
+}
+
+describe('MapStatusBadges', () => {
+  afterEach(() => cleanup())
+
+  it('nie pokazuje żadnej plakietki, gdy wszystko jest puste', () => {
+    render(<MapStatusBadges {...baseProps} />)
+    expect(screen.queryByText(/./)).not.toBeInTheDocument()
+  })
+
+  it('pokazuje plakietkę aktywnej wyprawy', () => {
+    render(<MapStatusBadges {...baseProps} activeTripName="Las pod Niebuszewem" />)
+    expect(screen.getByText(/Aktywna wyprawa: Las pod Niebuszewem/)).toBeInTheDocument()
+  })
+
+  it('pokazuje odliczanie do zmroku, w tym wariant pilny', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        sunsetCountdown={{ label: '32 min', isUrgent: true }}
+      />,
+    )
+    expect(screen.getByText(/Zmrok za 32 min/)).toBeInTheDocument()
+  })
+
+  it('pokazuje prognozę grzybową', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        mushroomOutlook={{ recentRainMm: 5, avgTempC: 14, score: 'dobry', label: 'Dobre warunki' }}
+      />,
+    )
+    expect(screen.getByText('Dobre warunki')).toBeInTheDocument()
+  })
+
+  it('pokazuje zapisaną pozycję auta bez dystansu, gdy brak returnPointInfo', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        returnPoint={{ latitude: 1, longitude: 2, savedAt: Date.now() }}
+      />,
+    )
+    expect(screen.getByText('Auto zapisane')).toBeInTheDocument()
+  })
+
+  it('pokazuje dystans i kierunek do auta, gdy returnPointInfo jest dostępne', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        returnPoint={{ latitude: 1, longitude: 2, savedAt: Date.now() }}
+        returnPointInfo={{ distanceMeters: 250, bearingDegrees: 0 }}
+      />,
+    )
+    expect(screen.getByText(/Auto: .*250 m.*N/)).toBeInTheDocument()
+  })
+
+  it('wywołuje onClearReturnPoint po kliknięciu przycisku usuwania', () => {
+    const onClearReturnPoint = vi.fn()
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        returnPoint={{ latitude: 1, longitude: 2, savedAt: Date.now() }}
+        onClearReturnPoint={onClearReturnPoint}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Usuń zapisaną pozycję auta' }))
+    expect(onClearReturnPoint).toHaveBeenCalledOnce()
+  })
+})

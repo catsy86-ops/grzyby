@@ -14,7 +14,7 @@ interface FindingsListViewProps {
   userPosition: Position | null
 }
 
-// Alternatywa dla samej mapy jako lista - z dwóch powodów naraz (Faza 22): dostępność (osoby
+// Alternatywa dla samej mapy jako lista - z dwóch powodów naraz (Faza 19): dostępność (osoby
 // niekorzystające z mapy wzrokowo/klawiaturą+czytnikiem ekranu nie mają dziś ŻADNEGO sposobu na
 // przejrzenie znalezisk/grzybowisk z widoku Mapy - Dziennik pokazuje znaleziska, ale bez
 // kontekstu przestrzennego "gdzie to jest względem mnie teraz") oraz praktyczny przypadek

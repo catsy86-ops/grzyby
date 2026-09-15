@@ -153,9 +153,11 @@ export function IdentifyView() {
           <Alert variant="destructive-soft" className="font-medium">
             <TriangleAlertIcon />
             <AlertDescription className="text-current">
-              To nie jest profesjonalna weryfikacja. Nigdy nie spożywaj grzyba wyłącznie na
-              podstawie wyniku tej aplikacji — w razie wątpliwości skonsultuj się z mikologiem lub
-              punktem klasyfikacji grzybów (Sanepid).
+              Model jest w wersji alpha, trenowany na niewielkim, nieskuratorowanym zbiorze zdjęć —
+              traktuj wynik jako bardzo zgrubną wskazówkę, nie potwierdzenie gatunku. To nie jest
+              profesjonalna weryfikacja. Nigdy nie spożywaj grzyba wyłącznie na podstawie wyniku tej
+              aplikacji — w razie wątpliwości skonsultuj się z mikologiem lub punktem klasyfikacji
+              grzybów (Sanepid).
             </AlertDescription>
           </Alert>
         )}

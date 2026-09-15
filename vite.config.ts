@@ -6,6 +6,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Domyślnie Vite/Node na tej maszynie wiąże "localhost" tylko z ::1 (IPv6), nie 127.0.0.1 -
+  // przeglądarka Playwrighta rozwiązuje "localhost" na 127.0.0.1 i wisi do timeoutu zamiast
+  // dostać ECONNREFUSED. `host: true` wiąże serwer deweloperski na wszystkich interfejsach
+  // (IPv4 i IPv6), więc oba adresy działają. Dotyczy tylko `vite dev`/`vite preview`, nie builda.
+  server: {
+    host: true,
+  },
+  preview: {
+    host: true,
+  },
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),

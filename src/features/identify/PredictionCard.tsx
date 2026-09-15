@@ -8,6 +8,17 @@ import type { Species } from '../../db/schema'
 
 const LOW_CONFIDENCE_THRESHOLD = 0.4
 
+// "inne" to opcjonalna klasa negatywna z train.py (patrz scripts/prepare-dataset/
+// fetch-negative-images.mjs) - surowy label modelu nie jest gatunkiem, więc dostaje własny,
+// czytelny dla użytkownika tekst zamiast pokazywania id klasy wprost.
+const NOT_A_MUSHROOM_LABEL = 'inne'
+
+function displayName(species: Prediction['species'], labelRaw: string): string {
+  if (species) return species.nameCommon
+  if (labelRaw === NOT_A_MUSHROOM_LABEL) return 'To raczej nie jest grzyb'
+  return labelRaw
+}
+
 export function PredictionCard({ prediction, rank }: { prediction: Prediction; rank: number }) {
   const { species, confidence, labelRaw } = prediction
   const confidencePct = Math.round(confidence * 100)
@@ -19,7 +30,7 @@ export function PredictionCard({ prediction, rank }: { prediction: Prediction; r
         <CardContent>
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              #{rank} {species?.nameCommon ?? labelRaw} — zbyt niska pewność
+              #{rank} {displayName(species, labelRaw)} — zbyt niska pewność
             </p>
             <span className="text-sm text-muted-foreground">{confidencePct}%</span>
           </div>
@@ -47,7 +58,7 @@ export function PredictionCard({ prediction, rank }: { prediction: Prediction; r
         <CardContent>
           <div className="flex items-center justify-between">
             <p className="font-medium">
-              #{rank} {species?.nameCommon ?? labelRaw}
+              #{rank} {displayName(species, labelRaw)}
             </p>
             <span className="text-sm text-muted-foreground">{confidencePct}%</span>
           </div>

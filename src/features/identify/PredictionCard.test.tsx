@@ -37,4 +37,16 @@ describe('PredictionCard', () => {
     expect(screen.getByText('Boletus edulis')).toBeInTheDocument()
     expect(screen.getByText('Opis borowika.')).toBeInTheDocument()
   })
+
+  it('pokazuje czytelny tekst zamiast surowej etykiety dla klasy negatywnej "inne"', () => {
+    render(
+      <PredictionCard
+        prediction={makePrediction({ labelRaw: 'inne', species: null, confidence: 0.8 })}
+        rank={1}
+      />,
+    )
+
+    expect(screen.getByText(/to raczej nie jest grzyb/i)).toBeInTheDocument()
+    expect(screen.queryByText('inne')).not.toBeInTheDocument()
+  })
 })
