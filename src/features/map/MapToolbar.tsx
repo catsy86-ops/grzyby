@@ -1,0 +1,113 @@
+import {
+  CarIcon,
+  CrosshairIcon,
+  DownloadIcon,
+  ListIcon,
+  MapIcon,
+  MapPinnedIcon,
+  MessageCircleIcon,
+  MoreVerticalIcon,
+} from 'lucide-react'
+import { Button } from '../../components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu'
+import { buildLocationSmsUrl } from '../../utils/locationSms'
+import type { Position } from '../../utils/bearing'
+import type { ActiveSheet } from './MapView'
+
+interface MapToolbarProps {
+  userPosition: Position | null
+  hasReturnPoint: boolean
+  isListView: boolean
+  onToggleListView: () => void
+  onLocate: () => void
+  onOpenSheet: (sheet: ActiveSheet) => void
+  onSaveReturnPoint: () => void
+  onAddFinding: () => void
+}
+
+// Przyciski akcji + menu narzędzi (prawy dolny róg) - wydzielone z MapView (Faza 19). Menu
+// konsoliduje rzadziej używane akcje (offline, grzybowiska, auto, SMS), żeby róg nie spuchł do
+// sterty nakładających się przycisków przy każdej kolejnej funkcji mapy (było ich już 6 obok
+// siebie). Najczęstsze akcje ("Zlokalizuj mnie", "Dodaj znalezisko") zostają jako osobne, stałe
+// przyciski - to one są używane w każdej wyprawie, reszta okazjonalnie.
+export function MapToolbar({
+  userPosition,
+  hasReturnPoint,
+  isListView,
+  onToggleListView,
+  onLocate,
+  onOpenSheet,
+  onSaveReturnPoint,
+  onAddFinding,
+}: MapToolbarProps) {
+  return (
+    <div className="flex flex-col items-end gap-2">
+      <div className="flex items-center gap-2">
+      <Button
+        variant="secondary"
+        size="icon"
+        className="rounded-full shadow"
+        aria-label={isListView ? 'Pokaż mapę' : 'Pokaż listę znalezisk i grzybowisk'}
+        onClick={onToggleListView}
+      >
+        {isListView ? <MapIcon className="size-4" /> : <ListIcon className="size-4" />}
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="secondary"
+              size="icon"
+              className="rounded-full shadow"
+              aria-label="Więcej narzędzi mapy"
+            />
+          }
+        >
+          <MoreVerticalIcon className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="top" align="end" className="w-56">
+          <DropdownMenuItem onClick={() => onOpenSheet('offline-download')}>
+            <DownloadIcon />
+            Pobierz obszar offline
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onOpenSheet('spots')}>
+            <MapPinnedIcon />
+            Grzybowiska
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onSaveReturnPoint}>
+            <CarIcon />
+            {hasReturnPoint ? 'Zaktualizuj pozycję auta' : 'Zapisz pozycję auta'}
+          </DropdownMenuItem>
+          {userPosition && (
+            <DropdownMenuItem
+              onClick={() => {
+                window.location.href = buildLocationSmsUrl(userPosition[0], userPosition[1])
+              }}
+            >
+              <MessageCircleIcon />
+              Wyślij SMS z lokalizacją
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Button
+        variant="secondary"
+        size="icon"
+        className="rounded-full shadow"
+        aria-label="Zlokalizuj mnie"
+        onClick={onLocate}
+      >
+        <CrosshairIcon className="size-4" />
+      </Button>
+      </div>
+      <Button className="rounded-full shadow" onClick={onAddFinding}>
+        + Dodaj znalezisko
+      </Button>
+    </div>
+  )
+}

@@ -1,12 +1,9 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, WifiOffIcon, WrenchIcon } from 'lucide-react'
 import { useAppStore, type ActiveTab } from './stores/appStore'
-import { MapView } from './features/map/MapView'
-import { IdentifyView } from './features/identify/IdentifyView'
-import { JournalView } from './features/journal/JournalView'
-import { EncyclopediaView } from './features/encyclopedia/EncyclopediaView'
 import { Toaster } from './components/ui/sonner'
+import { Skeleton } from './components/ui/skeleton'
 import { StorageInfoDrawer } from './components/StorageInfoDrawer'
 import { FirstAidGuide } from './components/FirstAidGuide'
 import { GearChecklist } from './components/GearChecklist'
@@ -14,6 +11,7 @@ import { TickCareGuide } from './components/TickCareGuide'
 import { CookingTimer } from './components/CookingTimer'
 import { ToolsMenu, type ToolKey } from './components/ToolsMenu'
 import { Logo } from './components/Logo'
+import { AnimatedHeaderTitle } from './components/AnimatedHeaderTitle'
 import { AppSplash } from './components/AppSplash'
 import { useTickReminders } from './hooks/useTickReminders'
 import { ThemeToggle } from './components/ThemeToggle'
@@ -28,17 +26,43 @@ const TABS: { key: ActiveTab; label: string; icon: typeof MapIcon }[] = [
   { key: 'baza-wiedzy', label: 'Baza wiedzy', icon: BookOpenIcon },
 ]
 
+// Każdy widok lazy-loadowany osobno - żaden z nich (zwłaszcza Mapa, ciągnąca za sobą
+// Leaflet/react-leaflet) nie musi lądować w głównym bundlu, jeśli użytkownik danej zakładki
+// nigdy nie otworzy. `Suspense` fallback to prosty skeleton - przejście jest praktycznie
+// niezauważalne po pierwszym załadowaniu (moduł zostaje w cache przeglądarki/Service Workera).
+const MapView = lazy(() => import('./features/map/MapView').then((m) => ({ default: m.MapView })))
+const IdentifyView = lazy(() => import('./features/identify/IdentifyView').then((m) => ({ default: m.IdentifyView })))
+const JournalView = lazy(() => import('./features/journal/JournalView').then((m) => ({ default: m.JournalView })))
+const EncyclopediaView = lazy(() =>
+  import('./features/encyclopedia/EncyclopediaView').then((m) => ({ default: m.EncyclopediaView })),
+)
+
+function ViewSkeleton() {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-2">
+      <Skeleton className="h-10 w-10 rounded-full" />
+      <Skeleton className="h-3 w-32" />
+    </div>
+  )
+}
+
 function ActiveView({ tab }: { tab: ActiveTab }) {
-  switch (tab) {
-    case 'mapa':
-      return <MapView />
-    case 'rozpoznaj':
-      return <IdentifyView />
-    case 'dziennik':
-      return <JournalView />
-    case 'baza-wiedzy':
-      return <EncyclopediaView />
-  }
+  return (
+    <Suspense fallback={<ViewSkeleton />}>
+      {(() => {
+        switch (tab) {
+          case 'mapa':
+            return <MapView />
+          case 'rozpoznaj':
+            return <IdentifyView />
+          case 'dziennik':
+            return <JournalView />
+          case 'baza-wiedzy':
+            return <EncyclopediaView />
+        }
+      })()}
+    </Suspense>
+  )
 }
 
 function App() {
@@ -92,7 +116,7 @@ function App() {
         <ThemeToggle />
         <div className="flex flex-1 items-center justify-center gap-1.5">
           <Logo className="size-5" />
-          <span className="text-sm font-bold tracking-wide">Grzybobranie</span>
+          <AnimatedHeaderTitle />
         </div>
         {/* Przycisk "Narzędzia" celowo WYRAŹNIEJSZY niż ThemeToggle obok (stała, nie tylko
             hover, obwódka/tło + pełna nieprzezroczystość ikony) - to wejście do pierwszej

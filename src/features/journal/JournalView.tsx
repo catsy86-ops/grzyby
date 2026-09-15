@@ -4,7 +4,7 @@ import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
-import { DownloadIcon, FileTextIcon, MoreVerticalIcon, UploadIcon } from 'lucide-react'
+import { DownloadIcon, FileTextIcon, MapIcon, MoreVerticalIcon, UploadIcon } from 'lucide-react'
 import { EmptyBasketIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
@@ -22,6 +22,7 @@ import {
 import { getCurrentPosition } from '../../utils/geolocation'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { exportFindingsToPdf } from '../../utils/pdfExport'
+import { exportFindingsToGpx } from '../../utils/gpxExport'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
 import { countSpeciesDiversity, formatDuration, formatWeight, sumWeightGrams } from '../../utils/tripStats'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
@@ -161,6 +162,12 @@ export function JournalView() {
     downloadBlob(blob, `lysy-${selectedTrip ? selectedTrip.name.replace(/\s+/g, '-').toLowerCase() : 'dziennik'}-${new Date().toISOString().slice(0, 10)}.pdf`)
   }
 
+  function handleExportGpx() {
+    if (!filteredFindings) return
+    const blob = exportFindingsToGpx(filteredFindings)
+    downloadBlob(blob, `lysy-${selectedTrip ? selectedTrip.name.replace(/\s+/g, '-').toLowerCase() : 'dziennik'}-${new Date().toISOString().slice(0, 10)}.gpx`)
+  }
+
   async function finishImport(payload: ExportPayload) {
     try {
       const result = await importPayload(payload)
@@ -291,6 +298,10 @@ export function JournalView() {
             <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportPdf}>
               <FileTextIcon />
               Eksportuj (PDF)
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportGpx}>
+              <MapIcon />
+              Eksportuj trasę (GPX)
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

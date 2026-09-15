@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
@@ -11,6 +11,7 @@ import {
   formatBytes,
   OFFLINE_RADIUS_PRESETS,
   type DownloadProgress,
+  type TileCoord,
 } from '../../utils/offlineMapTiles'
 
 interface OfflineAreaDownloadProps {
@@ -24,32 +25,61 @@ export function OfflineAreaDownload({ open, onOpenChange, getCenter }: OfflineAr
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Kafelki, które faktycznie nie zapisały się w poprzedniej próbie - pozwala na "Ponów nieudane"
+  // zamiast pobierania całego obszaru od nowa (choć już zapisane kafelki i tak są pomijane dzięki
+  // `cache.match` w downloadTilesForOfflineUse, więc koszt ponowienia całości jest niższy niż
+  // mogłoby się wydawać - "Ponów nieudane" jest mimo to jaśniejszym sygnałem dla użytkownika).
+  const [failedTiles, setFailedTiles] = useState<TileCoord[] | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const center = getCenter()
   const tiles = center ? computeTilesForArea(center, radiusKm) : []
   const estimatedBytes = estimateDownloadSizeBytes(tiles.length)
 
-  async function handleDownload() {
+  async function runDownload(tilesToDownload: TileCoord[]) {
+    setError(null)
+    setDownloading(true)
+    setFailedTiles(null)
+    setProgress({ downloaded: 0, total: tilesToDownload.length, failed: 0 })
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+    try {
+      const result = await downloadTilesForOfflineUse(tilesToDownload, setProgress, controller.signal)
+      if (controller.signal.aborted) {
+        toast.info('Pobieranie anulowane - zapisane już kafelki zostają dostępne offline.')
+        return
+      }
+      if (result.failed === 0) {
+        toast.success(`Pobrano obszar offline (${result.total} kafelków map).`)
+        onOpenChange(false)
+      } else {
+        toast.warning(`Pobrano obszar offline, ${result.failed} kafelków nie udało się zapisać.`)
+        setFailedTiles(result.failedTiles)
+      }
+    } catch (err) {
+      if (!controller.signal.aborted) {
+        setError(err instanceof Error ? err.message : 'Nie udało się pobrać kafelków mapy.')
+      }
+    } finally {
+      setDownloading(false)
+      abortControllerRef.current = null
+    }
+  }
+
+  function handleDownload() {
     if (!center) {
       setError('Nie udało się ustalić środka mapy - odśwież mapę i spróbuj ponownie.')
       return
     }
-    setError(null)
-    setDownloading(true)
-    setProgress({ downloaded: 0, total: tiles.length, failed: 0 })
-    try {
-      const result = await downloadTilesForOfflineUse(tiles, setProgress)
-      if (result.failed === 0) {
-        toast.success(`Pobrano obszar offline (${result.total} kafelków map).`)
-      } else {
-        toast.warning(`Pobrano obszar offline, ${result.failed} kafelków nie udało się zapisać.`)
-      }
-      onOpenChange(false)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nie udało się pobrać kafelków mapy.')
-    } finally {
-      setDownloading(false)
-    }
+    void runDownload(tiles)
+  }
+
+  function handleRetryFailed() {
+    if (failedTiles && failedTiles.length > 0) void runDownload(failedTiles)
+  }
+
+  function handleCancel() {
+    abortControllerRef.current?.abort()
   }
 
   return (
@@ -113,9 +143,24 @@ export function OfflineAreaDownload({ open, onOpenChange, getCenter }: OfflineAr
         </div>
 
         <DrawerFooter>
-          <Button onClick={handleDownload} disabled={downloading || !navigator.onLine}>
-            {downloading ? 'Pobieranie...' : 'Pobierz'}
-          </Button>
+          {downloading ? (
+            <Button variant="outline" onClick={handleCancel}>
+              Anuluj pobieranie
+            </Button>
+          ) : failedTiles && failedTiles.length > 0 ? (
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={handleDownload}>
+                Pobierz od nowa
+              </Button>
+              <Button className="flex-1" onClick={handleRetryFailed}>
+                Ponów nieudane ({failedTiles.length})
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={handleDownload} disabled={!navigator.onLine}>
+              Pobierz
+            </Button>
+          )}
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

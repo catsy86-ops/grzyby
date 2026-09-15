@@ -138,19 +138,24 @@ body {
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  /* Faza 18: dotąd czysto achromatyczna (chroma 0) szarość - identyczna z domyślnym
+     "korporacyjnym" ciemnym motywem shadcn, zero związku z motywem lasu/grzybobrania.
+     Delikatny zielonkawy odcień (hue ~150, ta sama rodzina co --primary) w tle/karcie/popoverze
+     daje wrażenie "lasu o zmierzchu" zamiast neutralnego dashboardu, przy zachowaniu kontrastu
+     WCAG AA (jasność bez zmian, zmienia się tylko chroma+hue). */
+  --background: oklch(0.145 0.012 155);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.205 0.014 155);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.205 0.014 155);
   --popover-foreground: oklch(0.985 0 0);
   --primary: var(--color-green-600);
   --primary-foreground: var(--color-white);
-  --secondary: oklch(0.269 0 0);
+  --secondary: oklch(0.269 0.012 155);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --muted: oklch(0.269 0.012 155);
+  --muted-foreground: oklch(0.708 0.008 155);
+  --accent: oklch(0.269 0.012 155);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -162,11 +167,11 @@ body {
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.205 0.014 155);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.269 0.012 155);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
@@ -259,4 +264,18 @@ body {
 .forest-mode button,
 .forest-mode a[role='button'] {
   min-height: 2.75rem;
+}
+
+/* Tint kafli mapy (Leaflet/OSM) pod zielono-bursztynową paletę marki - domyślna kolorystyka
+   OSM (niebiesko-beżowa) gryzła się z resztą apki. Filtr działa na całą warstwę kafli naraz
+   (nie per-<img>), więc jest tani, i nie dotyka źródła/URL kafli ani cache'u offline
+   (Service Worker cache'uje niezmienione pliki PNG - filtr jest czysto wizualny przy renderze). */
+.leaflet-tile-pane {
+  filter: saturate(0.85) sepia(0.12) hue-rotate(-6deg) brightness(1.02);
+}
+
+/* W trybie ciemnym jasne kafle OSM świeciłyby na tle ciemnej apki - klasyczna sztuczka
+   invert+counter-hue-rotate odwraca jasność bez drastycznego psucia odcieni wody/lasu. */
+.dark .leaflet-tile-pane {
+  filter: saturate(0.7) sepia(0.1) hue-rotate(-6deg) brightness(0.65) invert(1) hue-rotate(180deg) contrast(0.9);
 }

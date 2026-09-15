@@ -1,0 +1,92 @@
+import { MapPinnedIcon } from 'lucide-react'
+import { EdibilityBadge } from '../../components/EdibilityBadge'
+import { Card, CardContent } from '../../components/ui/card'
+import speciesData from '../../data/species.json'
+import type { Finding, Spot, Species } from '../../db/schema'
+import type { Position } from '../../utils/bearing'
+import { formatDistance, getBearingDegrees, getCardinalDirection, getDistanceMeters } from '../../utils/bearing'
+
+const speciesById = new Map((speciesData as Species[]).map((s) => [s.id, s]))
+
+interface FindingsListViewProps {
+  findings: Finding[]
+  spots: Spot[]
+  userPosition: Position | null
+}
+
+// Alternatywa dla samej mapy jako lista - z dwóch powodów naraz (Faza 22): dostępność (osoby
+// niekorzystające z mapy wzrokowo/klawiaturą+czytnikiem ekranu nie mają dziś ŻADNEGO sposobu na
+// przejrzenie znalezisk/grzybowisk z widoku Mapy - Dziennik pokazuje znaleziska, ale bez
+// kontekstu przestrzennego "gdzie to jest względem mnie teraz") oraz praktyczny przypadek
+// "słabo widać ekran w pełnym słońcu w terenie", gdzie tekst czyta się łatwiej niż małe pinezki.
+export function FindingsListView({ findings, spots, userPosition }: FindingsListViewProps) {
+  const located = findings.filter((f) => f.latitude != null && f.longitude != null)
+  const sorted = userPosition
+    ? [...located].sort((a, b) => {
+        const distA = getDistanceMeters(userPosition, [a.latitude!, a.longitude!])
+        const distB = getDistanceMeters(userPosition, [b.latitude!, b.longitude!])
+        return distA - distB
+      })
+    : located
+
+  function describePosition(position: Position) {
+    if (!userPosition) return null
+    const distance = getDistanceMeters(userPosition, position)
+    const bearing = getBearingDegrees(userPosition, position)
+    return `${formatDistance(distance)} ${getCardinalDirection(bearing)}`
+  }
+
+  return (
+    <div className="h-full overflow-y-auto p-4">
+      <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+        Grzybowiska ({spots.length})
+      </h2>
+      <div className="mb-4 flex flex-col gap-2">
+        {spots.length === 0 && <p className="text-sm text-muted-foreground">Brak zapisanych grzybowisk.</p>}
+        {spots.map((spot) => {
+          const description = describePosition([spot.latitude, spot.longitude])
+          return (
+            <Card key={spot.id} size="sm">
+              <CardContent className="flex items-center gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-accent/10 text-brand-accent">
+                  <MapPinnedIcon className="size-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-medium">{spot.name}</p>
+                  {description && <p className="text-xs text-muted-foreground">{description}</p>}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+        Znaleziska na mapie ({sorted.length})
+      </h2>
+      <div className="flex flex-col gap-2">
+        {sorted.length === 0 && (
+          <p className="text-sm text-muted-foreground">Brak znalezisk z zapisaną lokalizacją.</p>
+        )}
+        {sorted.map((finding) => {
+          const species = finding.speciesId ? speciesById.get(finding.speciesId) : undefined
+          const description = describePosition([finding.latitude!, finding.longitude!])
+          return (
+            <Card key={finding.id} size="sm">
+              <CardContent className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(finding.createdAt).toLocaleDateString('pl-PL')}
+                    {description && ` · ${description}`}
+                  </p>
+                </div>
+                {species && <EdibilityBadge edibility={species.edibility} />}
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

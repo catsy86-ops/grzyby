@@ -86,11 +86,18 @@ export interface DownloadProgress {
   failed: number
 }
 
+export interface DownloadResult extends DownloadProgress {
+  // Konkretne kafelki, które nie zapisały się w tej próbie - pozwala UI zaoferować "Ponów
+  // nieudane" zamiast całego obszaru od nowa (choć ponowienie całości i tak jest tanie dzięki
+  // `cache.match` niżej - to tylko jaśniejszy sygnał dla użytkownika, co realnie się nie udało).
+  failedTiles: TileCoord[]
+}
+
 export async function downloadTilesForOfflineUse(
   tiles: TileCoord[],
   onProgress?: (progress: DownloadProgress) => void,
   signal?: AbortSignal,
-): Promise<DownloadProgress> {
+): Promise<DownloadResult> {
   if (tiles.length > MAX_TILES_PER_DOWNLOAD) {
     throw new Error(
       `Zbyt duży obszar (${tiles.length} kafelków, limit ${MAX_TILES_PER_DOWNLOAD}) - wybierz mniejszy promień.`,
@@ -99,7 +106,7 @@ export async function downloadTilesForOfflineUse(
 
   const cache = await caches.open(MAP_TILES_CACHE_NAME)
   let downloaded = 0
-  let failed = 0
+  const failedTiles: TileCoord[] = []
   const total = tiles.length
   let nextIndex = 0
 
@@ -115,18 +122,18 @@ export async function downloadTilesForOfflineUse(
           if (response.ok) {
             await cache.put(url, response)
           } else {
-            failed++
+            failedTiles.push(tile)
           }
         }
       } catch {
-        failed++
+        if (!signal?.aborted) failedTiles.push(tile)
       }
       downloaded++
-      onProgress?.({ downloaded, total, failed })
+      onProgress?.({ downloaded, total, failed: failedTiles.length })
     }
   }
 
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, tiles.length) }, () => worker()))
 
-  return { downloaded, total, failed }
+  return { downloaded, total, failed: failedTiles.length, failedTiles }
 }

@@ -1,0 +1,105 @@
+import { AnimatePresence, motion } from 'motion/react'
+import { CarIcon, CloudRainIcon, SunsetIcon, XIcon } from 'lucide-react'
+import { Badge } from '../../components/ui/badge'
+import type { SunsetCountdown } from '../../hooks/useSunsetCountdown'
+import type { MushroomOutlook } from '../../utils/mushroomWeather'
+import type { ReturnPointInfo } from '../../hooks/useReturnPointTracking'
+import type { ReturnPoint } from '../../stores/appStore'
+import { formatDistance, getCardinalDirection } from '../../utils/bearing'
+
+interface MapStatusBadgesProps {
+  activeTripName: string | null
+  sunsetCountdown: SunsetCountdown | null
+  mushroomOutlook: MushroomOutlook | null
+  returnPoint: ReturnPoint | null
+  returnPointInfo: ReturnPointInfo | null
+  onClearReturnPoint: () => void
+}
+
+// Pasek plakietek stanu (lewy górny róg mapy) - czysto prezentacyjny, wydzielony z MapView
+// (Faza 19). Każda plakietka animuje wejście/wyjście niezależnie (AnimatePresence), więc
+// pojawianie/znikanie jednej nie przeskakuje pozostałych.
+export function MapStatusBadges({
+  activeTripName,
+  sunsetCountdown,
+  mushroomOutlook,
+  returnPoint,
+  returnPointInfo,
+  onClearReturnPoint,
+}: MapStatusBadgesProps) {
+  return (
+    <div className="absolute left-4 top-4 z-[1000] flex flex-col items-start gap-2">
+      <AnimatePresence>
+        {activeTripName && (
+          <motion.div
+            key="active-trip-badge"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+          >
+            <Badge className="px-3 py-1.5 text-xs shadow">🥾 Aktywna wyprawa: {activeTripName}</Badge>
+          </motion.div>
+        )}
+        {sunsetCountdown && (
+          <motion.div
+            key="sunset-countdown-badge"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+          >
+            <Badge
+              variant={sunsetCountdown.isUrgent ? 'destructive-solid' : 'secondary'}
+              className="gap-1.5 px-3 py-1.5 text-xs shadow"
+            >
+              <SunsetIcon className="size-3.5" />
+              Zmrok za {sunsetCountdown.label}
+            </Badge>
+          </motion.div>
+        )}
+        {mushroomOutlook && (
+          <motion.div
+            key="mushroom-outlook-badge"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+          >
+            <Badge
+              variant={mushroomOutlook.score === 'dobry' ? 'secondary' : 'outline'}
+              className="gap-1.5 px-3 py-1.5 text-xs shadow"
+            >
+              <CloudRainIcon className="size-3.5" />
+              {mushroomOutlook.label}
+            </Badge>
+          </motion.div>
+        )}
+        {returnPoint && (
+          <motion.div
+            key="return-point-badge"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+          >
+            <Badge variant="secondary" className="gap-1.5 py-1.5 pl-3 pr-1.5 text-xs shadow">
+              <CarIcon className="size-3.5" />
+              {returnPointInfo
+                ? `Auto: ${formatDistance(returnPointInfo.distanceMeters)} ${getCardinalDirection(returnPointInfo.bearingDegrees)}`
+                : 'Auto zapisane'}
+              <button
+                type="button"
+                onClick={onClearReturnPoint}
+                aria-label="Usuń zapisaną pozycję auta"
+                className="ml-0.5 flex size-4 items-center justify-center rounded-full outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                <XIcon className="size-3" />
+              </button>
+            </Badge>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}

@@ -83,7 +83,7 @@ describe('downloadTilesForOfflineUse', () => {
 
     const result = await downloadTilesForOfflineUse(tiles)
 
-    expect(result).toEqual({ downloaded: 3, total: 3, failed: 0 })
+    expect(result).toEqual({ downloaded: 3, total: 3, failed: 0, failedTiles: [] })
     expect(putCalls).toHaveLength(3)
   })
 
@@ -93,17 +93,17 @@ describe('downloadTilesForOfflineUse', () => {
 
     const result = await downloadTilesForOfflineUse(tiles)
 
-    expect(result).toEqual({ downloaded: 1, total: 1, failed: 0 })
+    expect(result).toEqual({ downloaded: 1, total: 1, failed: 0, failedTiles: [] })
     expect(fetch).not.toHaveBeenCalled()
   })
 
-  it('zlicza nieudane pobrania zamiast przerywać całość', async () => {
+  it('zlicza nieudane pobrania zamiast przerywać całość i zwraca ich listę', async () => {
     mockCachesAndFetch({ failRate: 1 })
     const tiles = [{ z: 14, x: 1, y: 1 }]
 
     const result = await downloadTilesForOfflineUse(tiles)
 
-    expect(result).toEqual({ downloaded: 1, total: 1, failed: 1 })
+    expect(result).toEqual({ downloaded: 1, total: 1, failed: 1, failedTiles: tiles })
   })
 
   it('zgłasza postęp przez callback', async () => {

@@ -38,23 +38,29 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
     setError(null)
     const species = (speciesData as Species[]).find((s) => s.id === speciesId) ?? null
     try {
-      const findingId = await db.findings.add({
-        speciesId: species?.id ?? null,
-        speciesNameGuess: species?.nameCommon ?? null,
-        latitude: initialPosition?.[0] ?? null,
-        longitude: initialPosition?.[1] ?? null,
-        notes,
-        createdAt: Date.now(),
-        tripId: activeTripId ?? undefined,
-        spotId: spotId === '' ? undefined : spotId,
-        weightGrams: weightGrams.trim() === '' ? undefined : Number(weightGrams),
+      // Zapis znaleziska + wszystkich zdjęć w jednej transakcji - bez tego błąd w połowie pętli
+      // zdjęć (np. QuotaExceededError przy trzecim z pięciu) zostawiał w bazie "osierocone"
+      // znalezisko z zerem lub częścią zdjęć, mimo że UI sugerował całkowitą porażkę zapisu
+      // (możliwy duplikat przy ponownej próbie). Dexie wycofuje całą transakcję przy błędzie.
+      await db.transaction('rw', db.findings, db.photos, async () => {
+        const findingId = await db.findings.add({
+          speciesId: species?.id ?? null,
+          speciesNameGuess: species?.nameCommon ?? null,
+          latitude: initialPosition?.[0] ?? null,
+          longitude: initialPosition?.[1] ?? null,
+          notes,
+          createdAt: Date.now(),
+          tripId: activeTripId ?? undefined,
+          spotId: spotId === '' ? undefined : spotId,
+          weightGrams: weightGrams.trim() === '' ? undefined : Number(weightGrams),
+        })
+        // Schema (Photo.findingId) wspiera wiele zdjęć per znalezisko - kompresja/miniatury
+        // liczone równolegle, zapisy sekwencyjnie żeby zachować kolejność wyboru użytkownika.
+        for (const photo of photos) {
+          const [photoBlob, thumbnailBlob] = await Promise.all([compressPhoto(photo), createThumbnail(photo)])
+          await db.photos.add({ findingId, blob: photoBlob, thumbnailBlob })
+        }
       })
-      // Schema (Photo.findingId) wspiera wiele zdjęć per znalezisko - kompresja/miniatury
-      // liczone równolegle, zapisy sekwencyjnie żeby zachować kolejność wyboru użytkownika.
-      for (const photo of photos) {
-        const [photoBlob, thumbnailBlob] = await Promise.all([compressPhoto(photo), createThumbnail(photo)])
-        await db.photos.add({ findingId, blob: photoBlob, thumbnailBlob })
-      }
       // Potwierdzenie zapisu - dotąd formularz po prostu cicho się zamykał, bez żadnego
       // sygnału "udało się". Ten sam moment co w Dzienniku (pusty koszyk -> pierwszy wpis),
       // tylko odwrotnie - to jest "nagroda" za dodanie znaleziska w terenie.

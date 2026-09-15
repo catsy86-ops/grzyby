@@ -13,6 +13,99 @@ zakres i priorytet.
 
 ---
 
+## Faza 19 - Poważna refaktoryzacja i rozbudowa widoku Mapy (2026-09-15)
+
+Na wyraźną prośbę użytkownika ("zajmij się mapą na poważnie, zrób szczegółowy plan, użyj
+najlepszych praktyk") - trzy równoległe audyty w tle (jakość kodu `MapView.tsx`, infrastruktura
+GPS/baza/ROADMAP, wykonalność MapLibre GL JS) zsyntetyzowane w plan, zaakceptowany i
+zrealizowany. Zweryfikowano też propozycję użytkownika przejścia na stack chmurowy
+(MapTiler/PostGIS/Kindwise/Strapi/Vercel) - **odrzucona przez samego użytkownika** po pytaniu
+wprost: zostajemy przy 100% offline/zero kluczy API (patrz nagłówek tego pliku).
+
+- [x] **Decyzja: MapLibre GL JS NIE teraz** - dedykowany research (nie ogólniki): wektor w pełni
+      offline bez klucza to zmierzone (nie szacowane) **1,4 GB** dla samej Polski (Shortbread/
+      PMTiles, dane BBBike.org) + otwarty, znany bug przeglądarek z cache'owaniem Range requestów
+      do PMTiles (protomaps/PMTiles#272) - Workbox nie da offline "za darmo" jak dziś dla PNG.
+      Raster przez MapLibre (te same kafle) wymaga WebGL2 (obowiązkowe od MapLibre v6, lipiec
+      2026) - Android WebView (własny wrapper w `android/`, nie zwykła przeglądarka) ma
+      udokumentowaną historię poważnych bugów WebGL2 na GPU Mali/Adreno, dominujących w tanich
+      telefonach. Leaflet zostaje; wracamy do tematu tylko przy konkretnej potrzebie wektorowego
+      stylowania danych (nie "dla zasady").
+- [x] **Architektura `MapView.tsx`** - z 523-liniowego komponentu-boga (9 `useState`, 3
+      niezależne boolean-y widoczności arkuszy mogące teoretycznie kolidować) do kompozycji
+      ~200 linii: `useMapGeolocation`/`useReturnPointTracking` (hooki, zero JSX, testowalne bez
+      Leaflet), `MapLayers.tsx` (komponenty zależne od `useMap()`), `MapStatusBadges.tsx`/
+      `MapOverlayMessages.tsx`/`MapToolbar.tsx` (czysto prezentacyjne). 3 boolean-y zastąpione
+      jednym `type ActiveSheet = 'add-finding' | 'offline-download' | 'spots' | null`.
+- [x] **Wydajność** - naprawiony O(n²) przy renderze pojedynczych znalezisk (`Map<id,Finding>`
+      zamiast `findings.find()` w pętli klastrów), cache ikony klastra (analogicznie do już
+      istniejącego cache'u `findingMarkerIconFor`), stabilne referencje callbacków
+      (`MapInstanceCapture`), `React.memo` na `FindingMarkers`. Code-splitting: wszystkie 4
+      widoki (`App.tsx`) lazy-loadowane przez `React.lazy`/`Suspense` - główny bundle spadł z
+      ~1,5 MB do ~294 KB (94,64 KB gzip), Leaflet/Mapa ląduje tylko przy otwarciu zakładki.
+- [x] **Odporność na błędy** - `useMapGeolocation` oznacza pozycję jako nieaktualną
+      (`isPositionStale`) po >20s bez aktualizacji GPS (marker przygasza się zamiast milcząco
+      pokazywać starą pozycję jako aktualną); `tileLoadIssue` czyści się automatycznie po
+      udanym `tileload`, nie tylko ręcznym "Rozumiem"; `OfflineAreaDownload` dostał realne
+      anulowanie (`AbortController`, dotąd niepodłączony mimo wsparcia w
+      `offlineMapTiles.ts`) i "Ponów nieudane" (`downloadTilesForOfflineUse` zwraca teraz
+      konkretną listę `failedTiles`, nie tylko licznik); `AddFindingForm` zapisuje znalezisko +
+      zdjęcia w jednej transakcji Dexie (`db.transaction('rw', ...)`) - naprawia możliwe
+      "osierocone" znalezisko bez zdjęć przy błędzie w połowie zapisu.
+- [x] **Dostępność** - markery (`L.divIcon`) dostały `role="img"`/`aria-label` (opisy generyczne
+      wg jadalności/typu miejsca, nie per-gatunek - zachowuje istniejący cache ikon w całości).
+      Nowy przełącznik Mapa/Lista (`FindingsListView.tsx`) - alternatywa tekstowa dla osób
+      niekorzystających z mapy wzrokowo, przydatna też w pełnym słońcu w terenie. Korekta
+      wcześniejszej hipotezy: `Alert` już ma `role="alert"` (`components/ui/alert.tsx`) -
+      błędy GPS/kafli SĄ ogłaszane czytnikom ekranu, to nie była realna luka.
+- [x] **Testy** - `vitest.setup.ts` dostał mock `ResizeObserver` (Leaflet tego potrzebuje do
+      inicjalizacji `MapContainer` w jsdom) + polyfill `Element.prototype.animate`
+      (potrzebny pośrednio, auto-animate zaczęło go faktycznie wywoływać po dodaniu
+      ResizeObserver) - pierwszy raz w historii projektu możliwe stało się renderowanie
+      `<MapView />` w teście. Nowe testy: `useMapGeolocation`, `useReturnPointTracking`,
+      cache ikon (`mapMarkerIcons.test.ts`), priorytet komunikatów (`MapOverlayMessages.test.tsx`),
+      smoke test `MapView.test.tsx` - **ten ostatni złapał realny bug** (`mapRef` zostawał ze
+      zniszczoną instancją Leaflet po przełączeniu na widok-listę, crashując
+      `OfflineAreaDownload` przy odczycie środka mapy) naprawiony tym samym cyklem.
+- [x] **Eksport GPX** - zaplanowany w Fazie 9, dotąd niezrobiony. `utils/gpxExport.ts`,
+      generuje waypointy GPX 1.1 ze znalezisk z lokalizacją, nowy wpis w menu eksportu
+      `JournalView.tsx` obok PDF/JSON. Czysto lokalna funkcja, zero sieci.
+- `npx tsc -b`, `npx vitest run` (286/286), `npm run build` - zielone. Wizualnie w Chrome:
+  markery z kolorami jadalności, dark-mode kafli, przełącznik Mapa/Lista, menu narzędzi,
+  komunikat błędu lokalizacji z przyciskiem "Rozumiem" (bez nakładania na podpowiedź) -
+  potwierdzone na żywo.
+
+---
+
+## Faza 18 - Animowany nagłówek + pierwszy przebieg polish mapy (2026-09-15)
+
+Na prośbę "jak jeszcze odpicować UI" - animowany nagłówek z nazwą lokalizacji, plus pierwszy,
+lżejszy przebieg poprawek mapy (przed właściwą Fazą 19 "na poważnie" niżej).
+
+- [x] **Animowany nagłówek** - nowy `AnimatedHeaderTitle.tsx`: litery "Grzybobranie" wskakują
+      pojedynczo przy starcie (spring, stagger), pod spodem wjeżdża podpis lokalizacji
+      ("NIEBUSZEWO"), cykliczny subtelny połysk (gradient sweep) na tytule. Renderuje się raz
+      przy montowaniu `App.tsx`, nie przy każdej zmianie zakładki.
+- [x] **Tryb ciemny - paleta z domieszką zieleni** - `.dark` w `index.css` miało czysto
+      achromatyczne (chroma=0) tło/kartę/popover, identyczne z domyślnym motywem shadcn, zero
+      związku z tematem lasu. Dodano delikatny odcień (hue 155°, rodzina `--primary`) bez zmiany
+      jasności - kontrast WCAG bez zmian.
+- [x] **Markery znalezisk kolorowane wg jadalności** - `mapMarkerIconFor` w
+      `mapMarkerIcons.tsx` reużywa `edibilityChartColor` (ta sama skala co `EdibilityBadge`)
+      zamiast jednego stałego koloru pinezki.
+- [x] **Naprawa nakładania komunikatów na mapie** - błąd lokalizacji/kafli i podpowiedź
+      "Stuknij na mapie" mogły być widoczne jednocześnie w tym samym rogu - teraz błąd zawsze
+      wygrywa (podpowiedź wraca po jego ustąpieniu), dodany przycisk zamknięcia błędu lokalizacji.
+- [x] **Tint kafli mapy pod markę** - CSS `filter` na `.leaflet-tile-pane` (light + `.dark`,
+      ta druga jako klasyczny invert-trick) zamiast zmiany dostawcy kafli - zero wpływu na
+      Workbox runtime caching (cache'owany jest niezmieniony plik PNG).
+- [x] Widok "Rozpoznaj" (`IdentifyView.tsx`) - dodany `w-full` do kontenera, spójne z
+      responsywnym wzorcem reszty widoków z Fazy 17.
+- `npx tsc -b`, `npx vitest run`, `npm run build` - zielone. Zweryfikowane wizualnie w Chrome
+  (jasny/ciemny motyw) - w przeciwieństwie do Faz 13-17, live-test tym razem był dostępny.
+
+---
+
 ## Faza 17 - Plan layoutu + widoczniejsze Narzędzia (2026-09-14)
 
 Na wprost postawione pytanie użytkownika "jak jeszcze upiększyć layout" - audyt struktury (nie

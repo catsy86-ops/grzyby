@@ -1,498 +1,194 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Circle, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from 'react-leaflet'
+import { useRef, useState } from 'react'
+import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AnimatePresence, motion } from 'motion/react'
 import L from 'leaflet'
-import {
-  CarIcon,
-  CloudRainIcon,
-  CrosshairIcon,
-  DownloadIcon,
-  MapPinnedIcon,
-  MessageCircleIcon,
-  MoreVerticalIcon,
-  SunsetIcon,
-  XIcon,
-} from 'lucide-react'
-import {
-  candidateMarkerIcon,
-  carMarkerIcon,
-  findingMarkerIcon,
-  spotMarkerIcon,
-  userLocationIcon,
-} from '../../components/icons/mapMarkerIcons'
+import { candidateMarkerIcon, carMarkerIcon, spotMarkerIcon, userLocationIcon } from '../../components/icons/mapMarkerIcons'
 import { db } from '../../db/db'
-import type { Finding, Spot } from '../../db/schema'
-import { useAppStore } from '../../stores/appStore'
-import { clusterFindings } from '../../utils/clusterFindings'
-import { formatDistance, getBearingDegrees, getCardinalDirection, getDistanceMeters } from '../../utils/bearing'
-import { getCurrentPosition, watchPosition } from '../../utils/geolocation'
-import { buildLocationSmsUrl } from '../../utils/locationSms'
+import type { Spot } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
 import { useMushroomOutlook } from '../../hooks/useMushroomOutlook'
+import { useMapGeolocation } from '../../hooks/useMapGeolocation'
+import { useReturnPointTracking } from '../../hooks/useReturnPointTracking'
 import { AddFindingForm } from './AddFindingForm'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
 import { SpotManager } from './SpotManager'
-import { Alert, AlertDescription } from '../../components/ui/alert'
-import { Badge } from '../../components/ui/badge'
-import { Button } from '../../components/ui/button'
+import { FindingMarkers, MapClickHandler, MapInstanceCapture, RecenterOnLocate } from './MapLayers'
+import { MapStatusBadges } from './MapStatusBadges'
+import { MapOverlayMessages } from './MapOverlayMessages'
+import { MapToolbar } from './MapToolbar'
+import { FindingsListView } from './FindingsListView'
 import { Skeleton } from '../../components/ui/skeleton'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
 
 const DEFAULT_CENTER: [number, number] = [52.0693, 19.4803] // środek Polski
 
-// Promień grupowania znalezisk w piksele ekranu - stały wizualny sens niezależnie od zoomu
-// (patrz utils/clusterFindings.ts). Przy dużej historii zbiorów bez tego mapa renderowałaby
-// setki nakładających się pinezek.
-const CLUSTER_DISTANCE_PX = 48
-
-function createClusterIcon(count: number) {
-  return L.divIcon({
-    html: `<div class="flex size-9 items-center justify-center rounded-full border-2 border-white bg-primary text-xs font-bold text-primary-foreground shadow">${count}</div>`,
-    className: '',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-  })
-}
-
-function FindingMarkers({ findings }: { findings: Finding[] }) {
-  const map = useMap()
-  const [zoom, setZoom] = useState(() => map.getZoom())
-  useMapEvent('zoomend', () => setZoom(map.getZoom()))
-
-  const points = useMemo(
-    () =>
-      findings
-        .filter((f) => f.id != null && f.latitude != null && f.longitude != null)
-        .map((f) => ({ id: f.id!, lat: f.latitude!, lng: f.longitude! })),
-    [findings],
-  )
-
-  const clusters = useMemo(
-    () => clusterFindings(points, (lat, lng) => map.project([lat, lng], zoom), CLUSTER_DISTANCE_PX),
-    [points, map, zoom],
-  )
-
-  return (
-    <>
-      {clusters.map((cluster) => {
-        if (cluster.points.length === 1) {
-          const finding = findings.find((f) => f.id === cluster.points[0].id)
-          if (!finding) return null
-          return (
-            <Marker key={finding.id} position={[cluster.lat, cluster.lng]} icon={findingMarkerIcon}>
-              <Popup>
-                <div className="text-sm">
-                  <p className="font-semibold">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
-                  <p>{new Date(finding.createdAt).toLocaleDateString('pl-PL')}</p>
-                  {finding.notes && <p className="mt-1">{finding.notes}</p>}
-                </div>
-              </Popup>
-            </Marker>
-          )
-        }
-        const clusterKey = cluster.points
-          .map((p) => p.id)
-          .sort((a, b) => a - b)
-          .join('-')
-        return (
-          <Marker
-            key={`cluster-${clusterKey}`}
-            position={[cluster.lat, cluster.lng]}
-            icon={createClusterIcon(cluster.points.length)}
-            eventHandlers={{
-              click: () => map.setView([cluster.lat, cluster.lng], Math.min(zoom + 2, map.getMaxZoom() || zoom + 2)),
-            }}
-          />
-        )
-      })}
-    </>
-  )
-}
-
-function RecenterOnLocate({ position }: { position: [number, number] | null }) {
-  const map = useMap()
-  useEffect(() => {
-    if (position) {
-      map.setView(position, 14)
-    }
-  }, [position, map])
-  return null
-}
-
-function MapClickHandler({
-  enabled,
-  onPick,
-}: {
-  enabled: boolean
-  onPick: (position: [number, number]) => void
-}) {
-  useMapEvent('click', (event) => {
-    if (!enabled) return
-    onPick([event.latlng.lat, event.latlng.lng])
-  })
-  return null
-}
-
-function MapInstanceCapture({ onReady }: { onReady: (map: L.Map) => void }) {
-  const map = useMap()
-  useEffect(() => {
-    onReady(map)
-  }, [map, onReady])
-  return null
-}
+// Dokładnie jeden arkusz/drawer może być otwarty naraz - zastępuje 3 niezależne boolean-y
+// (`showAddForm`/`showOfflineDownload`/`showSpotManager`), które nic nie stało na przeszkodzie,
+// by były `true` jednocześnie (dwa nałożone Drawer/Sheet). Eksportowany, bo `MapToolbar`
+// przyjmuje callback otwierający konkretny arkusz.
+export type ActiveSheet = 'add-finding' | 'offline-download' | 'spots' | null
 
 export function MapView() {
-  const [userPosition, setUserPosition] = useState<[number, number] | null>(null)
-  const [userAccuracyMeters, setUserAccuracyMeters] = useState<number | null>(null)
-  // Cel ponownego wyśrodkowania mapy - celowo OSOBNY stan od `userPosition`: ten drugi aktualizuje
-  // się kilka razy na sekundę z ciągłego GPS (watchPosition) i przenoszenie widoku mapy przy
-  // każdym mikro-skoku współrzędnych byłoby irytujące, gdy użytkownik w tym czasie przegląda mapę.
-  const [recenterTarget, setRecenterTarget] = useState<[number, number] | null>(null)
+  const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null)
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [showOfflineDownload, setShowOfflineDownload] = useState(false)
-  const [showSpotManager, setShowSpotManager] = useState(false)
-  const [locateError, setLocateError] = useState<string | null>(null)
+  const [isListView, setIsListView] = useState(false)
   const [tileLoadIssue, setTileLoadIssue] = useState(false)
   const mapRef = useRef<L.Map | null>(null)
 
   const findings = useLiveQuery(() => db.findings.toArray(), [])
   const spots = useLiveQuery(() => db.spots.toArray(), [])
   const { activeTrip } = useActiveTrip()
+  const { userPosition, userAccuracyMeters, recenterTarget, locateError, isPositionStale, handleLocate, clearLocateError, reportError } =
+    useMapGeolocation()
   const sunsetCountdown = useSunsetCountdown(userPosition)
   const mushroomOutlook = useMushroomOutlook(userPosition)
-  const returnPoint = useAppStore((s) => s.returnPoint)
-  const setReturnPoint = useAppStore((s) => s.setReturnPoint)
-
-  // Ciągłe śledzenie GPS (watchPosition) zamiast jednorazowego odpytania - pierwszy odczyt z
-  // odbiornika bywa niedokładny, kolejne z tego samego strumienia szybko się poprawiają, a
-  // użytkownik w ruchu (np. wracając przez las) widzi aktualizującą się pozycję bez ręcznego
-  // odświeżania. Mapa centruje się automatycznie tylko przy pierwszym odczycie po wejściu na
-  // zakładkę - kolejne aktualizacje przesuwają tylko marker/koło dokładności.
-  useEffect(() => {
-    let hasCenteredOnFirstFix = false
-    const stopWatching = watchPosition(
-      (position) => {
-        const next: [number, number] = [position.latitude, position.longitude]
-        setUserPosition(next)
-        setUserAccuracyMeters(position.accuracyMeters)
-        setLocateError(null)
-        if (!hasCenteredOnFirstFix) {
-          hasCenteredOnFirstFix = true
-          setRecenterTarget(next)
-        }
-      },
-      (message) => setLocateError(message),
-    )
-    return stopWatching
-  }, [])
-
-  function handleLocate() {
-    setLocateError(null)
-    if (userPosition) setRecenterTarget([userPosition[0], userPosition[1]])
-  }
-
-  async function handleSaveReturnPoint() {
-    setLocateError(null)
-    try {
-      const coords = userPosition
-        ? { latitude: userPosition[0], longitude: userPosition[1] }
-        : await getCurrentPosition()
-      setReturnPoint({ latitude: coords.latitude, longitude: coords.longitude, savedAt: Date.now() })
-    } catch (error) {
-      setLocateError(error instanceof Error ? error.message : 'Nie udało się ustalić lokalizacji')
-    }
-  }
-
-  // Dystans/kierunek liczone wyłącznie z GPS (patrz utils/bearing.ts) - odświeżają się same przy
-  // każdej aktualizacji userPosition (np. po "Zlokalizuj mnie" w trakcie powrotu przez las).
-  const returnPointInfo = useMemo(() => {
-    if (!returnPoint || !userPosition) return null
-    const returnPosition: [number, number] = [returnPoint.latitude, returnPoint.longitude]
-    return {
-      distanceMeters: getDistanceMeters(userPosition, returnPosition),
-      bearingDegrees: getBearingDegrees(userPosition, returnPosition),
-    }
-  }, [returnPoint, userPosition])
+  // Błędy zapisu punktu powrotu (np. `getCurrentPosition()` w `handleSaveReturnPoint`) trafiają
+  // do tego samego stosu komunikatów co błędy GPS przez `reportError` - jeden priorytetowy
+  // komunikat w rogu mapy, nie dwa niezależne źródła prawdy.
+  const { returnPoint, returnPointInfo, handleSaveReturnPoint, clearReturnPoint } = useReturnPointTracking(
+    userPosition,
+    reportError,
+  )
 
   const findingPosition = pinPosition ?? userPosition
 
   return (
-    // z-0 tworzy nowy kontekst stackingu, żeby wewnętrzne z-[1000] (potrzebne, by przebić kontrolki
-    // Leaflet) nie "wyciekały" ponad elementy portalowane do body poza tym drzewem (Drawer/Dialog).
     <div className="relative z-0 h-full w-full">
-      <MapContainer center={DEFAULT_CENTER} zoom={6} className="h-full w-full">
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png"
-          maxZoom={19}
-          eventHandlers={{
-            tileerror: () => {
-              if (!navigator.onLine) setTileLoadIssue(true)
-            },
-          }}
-        />
-        <RecenterOnLocate position={recenterTarget} />
-        <MapClickHandler enabled={!showAddForm} onPick={setPinPosition} />
-        <MapInstanceCapture onReady={(map) => { mapRef.current = map }} />
-        {userPosition && (
-          <>
-            {userAccuracyMeters != null && (
-              <Circle
-                center={userPosition}
-                radius={userAccuracyMeters}
-                pathOptions={{ color: 'var(--color-primary)', weight: 1, fillOpacity: 0.1 }}
-              />
-            )}
-            <Marker position={userPosition} icon={userLocationIcon}>
+      {isListView ? (
+        <FindingsListView findings={findings ?? []} spots={spots ?? []} userPosition={userPosition} />
+      ) : (
+        <MapContainer center={DEFAULT_CENTER} zoom={6} className="h-full w-full">
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png"
+            maxZoom={19}
+            eventHandlers={{
+              tileerror: () => {
+                if (!navigator.onLine) setTileLoadIssue(true)
+              },
+              // Kafle mapy zaczęły znowu ładować się poprawnie (np. użytkownik wjechał w obszar
+              // z cache) - dotąd `tileLoadIssue` znikał tylko po ręcznym "Rozumiem", mimo że
+              // problem mógł już minąć.
+              tileload: () => setTileLoadIssue(false),
+            }}
+          />
+          <RecenterOnLocate position={recenterTarget} />
+          <MapClickHandler enabled={activeSheet === null} onPick={setPinPosition} />
+          <MapInstanceCapture
+            onReady={(map) => {
+              mapRef.current = map
+            }}
+          />
+          {userPosition && (
+            <>
+              {userAccuracyMeters != null && (
+                <Circle
+                  center={userPosition}
+                  radius={userAccuracyMeters}
+                  pathOptions={{ color: 'var(--color-primary)', weight: 1, fillOpacity: 0.1 }}
+                />
+              )}
+              <Marker
+                position={userPosition}
+                icon={userLocationIcon}
+                opacity={isPositionStale ? 0.45 : 1}
+              >
+                <Popup>
+                  Twoja pozycja
+                  {userAccuracyMeters != null && ` (dokładność ±${Math.round(userAccuracyMeters)} m)`}
+                  {isPositionStale && ' — sygnał GPS mógł zostać utracony, pozycja może być nieaktualna.'}
+                </Popup>
+              </Marker>
+            </>
+          )}
+          {pinPosition && (
+            <Marker position={pinPosition} icon={candidateMarkerIcon}>
+              <Popup>Wybrane miejsce znaleziska</Popup>
+            </Marker>
+          )}
+          {returnPoint && (
+            <Marker position={[returnPoint.latitude, returnPoint.longitude]} icon={carMarkerIcon}>
+              <Popup>Zapisana pozycja auta</Popup>
+            </Marker>
+          )}
+          {spots?.map((spot: Spot) => (
+            <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={spotMarkerIcon}>
               <Popup>
-                Twoja pozycja
-                {userAccuracyMeters != null && ` (dokładność ±${Math.round(userAccuracyMeters)} m)`}
+                <div className="text-sm">
+                  <p className="font-semibold">{spot.name}</p>
+                  {spot.notes && <p className="mt-1">{spot.notes}</p>}
+                </div>
               </Popup>
             </Marker>
-          </>
-        )}
-        {pinPosition && (
-          <Marker position={pinPosition} icon={candidateMarkerIcon}>
-            <Popup>Wybrane miejsce znaleziska</Popup>
-          </Marker>
-        )}
-        {returnPoint && (
-          <Marker position={[returnPoint.latitude, returnPoint.longitude]} icon={carMarkerIcon}>
-            <Popup>Zapisana pozycja auta</Popup>
-          </Marker>
-        )}
-        {spots?.map((spot: Spot) => (
-          <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={spotMarkerIcon}>
-            <Popup>
-              <div className="text-sm">
-                <p className="font-semibold">{spot.name}</p>
-                {spot.notes && <p className="mt-1">{spot.notes}</p>}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-        {findings && <FindingMarkers findings={findings} />}
-      </MapContainer>
+          ))}
+          {findings && <FindingMarkers findings={findings} />}
+        </MapContainer>
+      )}
 
-      {findings === undefined && (
+      {findings === undefined && !isListView && (
         <div className="absolute inset-0 z-[999] flex flex-col items-center justify-center gap-2 bg-background/80">
           <Skeleton className="h-10 w-10 rounded-full" />
           <Skeleton className="h-3 w-32" />
         </div>
       )}
 
-      <div className="absolute left-4 top-4 z-[1000] flex flex-col items-start gap-2">
-        <AnimatePresence>
-          {activeTrip && (
-            <motion.div
-              key="active-trip-badge"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
-              <Badge className="px-3 py-1.5 text-xs shadow">🥾 Aktywna wyprawa: {activeTrip.name}</Badge>
-            </motion.div>
-          )}
-          {sunsetCountdown && (
-            <motion.div
-              key="sunset-countdown-badge"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
-              <Badge
-                variant={sunsetCountdown.isUrgent ? 'destructive-solid' : 'secondary'}
-                className="gap-1.5 px-3 py-1.5 text-xs shadow"
-              >
-                <SunsetIcon className="size-3.5" />
-                Zmrok za {sunsetCountdown.label}
-              </Badge>
-            </motion.div>
-          )}
-          {mushroomOutlook && (
-            <motion.div
-              key="mushroom-outlook-badge"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
-              <Badge
-                variant={mushroomOutlook.score === 'dobry' ? 'secondary' : 'outline'}
-                className="gap-1.5 px-3 py-1.5 text-xs shadow"
-              >
-                <CloudRainIcon className="size-3.5" />
-                {mushroomOutlook.label}
-              </Badge>
-            </motion.div>
-          )}
-          {returnPoint && (
-            <motion.div
-              key="return-point-badge"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
-              <Badge variant="secondary" className="gap-1.5 py-1.5 pl-3 pr-1.5 text-xs shadow">
-                <CarIcon className="size-3.5" />
-                {returnPointInfo
-                  ? `Auto: ${formatDistance(returnPointInfo.distanceMeters)} ${getCardinalDirection(returnPointInfo.bearingDegrees)}`
-                  : 'Auto zapisane'}
-                <button
-                  type="button"
-                  onClick={() => setReturnPoint(null)}
-                  aria-label="Usuń zapisaną pozycję auta"
-                  className="ml-0.5 flex size-4 items-center justify-center rounded-full outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50"
-                >
-                  <XIcon className="size-3" />
-                </button>
-              </Badge>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {!isListView && (
+        <MapStatusBadges
+          activeTripName={activeTrip?.name ?? null}
+          sunsetCountdown={sunsetCountdown}
+          mushroomOutlook={mushroomOutlook}
+          returnPoint={returnPoint}
+          returnPointInfo={returnPointInfo}
+          onClearReturnPoint={clearReturnPoint}
+        />
+      )}
 
       <div className="absolute bottom-4 right-4 z-[1000] flex flex-col items-end gap-2">
-        <AnimatePresence>
-          {tileLoadIssue && (
-            <motion.div
-              key="tile-load-issue"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.18 }}
-            >
-              <Alert variant="destructive-soft" className="max-w-56 shadow">
-                <AlertDescription className="text-current">
-                  Brak zapisanych kafelków mapy dla tego obszaru offline. Pobierz obszar będąc online.
-                </AlertDescription>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-1 h-auto p-0 text-xs underline"
-                  onClick={() => setTileLoadIssue(false)}
-                >
-                  Rozumiem
-                </Button>
-              </Alert>
-            </motion.div>
-          )}
-          {locateError && (
-            <motion.div
-              key="locate-error"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.18 }}
-            >
-              <Alert variant="destructive-soft" className="max-w-56 shadow">
-                <AlertDescription className="text-current">{locateError}</AlertDescription>
-              </Alert>
-            </motion.div>
-          )}
-          {!pinPosition && (
-            <motion.p
-              key="pin-hint"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.18 }}
-              className="max-w-56 rounded bg-card/90 p-2 text-xs text-muted-foreground shadow"
-            >
-              Stuknij na mapie, aby wybrać dokładne miejsce znaleziska (domyślnie Twoja pozycja)
-            </motion.p>
-          )}
-        </AnimatePresence>
-        <div className="flex items-center gap-2">
-          {/* Menu narzędzi map - konsoliduje rzadziej używane akcje (offline, grzybowiska, auto,
-              SMS), żeby prawy dolny róg nie spuchł do sterty nakładających się przycisków przy
-              każdej kolejnej funkcji mapy (było ich już 6 obok siebie). Dwie najczęstsze akcje
-              ("Zlokalizuj mnie", "Dodaj znalezisko") zostają jako osobne, stałe przyciski - to one
-              są używane w każdej wyprawie, reszta okazjonalnie. */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="rounded-full shadow"
-                  aria-label="Więcej narzędzi mapy"
-                />
-              }
-            >
-              <MoreVerticalIcon className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setShowOfflineDownload(true)}>
-                <DownloadIcon />
-                Pobierz obszar offline
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowSpotManager(true)}>
-                <MapPinnedIcon />
-                Grzybowiska
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSaveReturnPoint}>
-                <CarIcon />
-                {returnPoint ? 'Zaktualizuj pozycję auta' : 'Zapisz pozycję auta'}
-              </DropdownMenuItem>
-              {userPosition && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    window.location.href = buildLocationSmsUrl(userPosition[0], userPosition[1])
-                  }}
-                >
-                  <MessageCircleIcon />
-                  Wyślij SMS z lokalizacją
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            variant="secondary"
-            size="icon"
-            className="rounded-full shadow"
-            aria-label="Zlokalizuj mnie"
-            onClick={handleLocate}
-          >
-            <CrosshairIcon className="size-4" />
-          </Button>
-        </div>
-        <Button className="rounded-full shadow" onClick={() => setShowAddForm(true)}>
-          + Dodaj znalezisko
-        </Button>
+        {!isListView && (
+          <MapOverlayMessages
+            tileLoadIssue={tileLoadIssue}
+            onDismissTileLoadIssue={() => setTileLoadIssue(false)}
+            locateError={locateError}
+            onDismissLocateError={clearLocateError}
+            showPinHint={!pinPosition}
+          />
+        )}
+        <MapToolbar
+          userPosition={userPosition}
+          hasReturnPoint={returnPoint != null}
+          isListView={isListView}
+          onToggleListView={() => setIsListView((v) => !v)}
+          onLocate={handleLocate}
+          onOpenSheet={setActiveSheet}
+          onSaveReturnPoint={handleSaveReturnPoint}
+          onAddFinding={() => setActiveSheet('add-finding')}
+        />
       </div>
 
-      {showAddForm && (
+      {activeSheet === 'add-finding' && (
         <AddFindingForm
           initialPosition={findingPosition}
           onClose={(saved) => {
-            setShowAddForm(false)
+            setActiveSheet(null)
             if (saved) setPinPosition(null)
           }}
         />
       )}
 
       <OfflineAreaDownload
-        open={showOfflineDownload}
-        onOpenChange={setShowOfflineDownload}
+        open={activeSheet === 'offline-download'}
+        onOpenChange={(open) => setActiveSheet(open ? 'offline-download' : null)}
         getCenter={() => {
           const center = mapRef.current?.getCenter()
           return center ? [center.lat, center.lng] : null
         }}
       />
 
-      <SpotManager open={showSpotManager} onOpenChange={setShowSpotManager} pinPosition={pinPosition} />
+      <SpotManager
+        open={activeSheet === 'spots'}
+        onOpenChange={(open) => setActiveSheet(open ? 'spots' : null)}
+        pinPosition={pinPosition}
+      />
     </div>
   )
 }
