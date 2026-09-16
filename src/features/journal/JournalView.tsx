@@ -4,7 +4,7 @@ import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
-import { DownloadIcon, FileTextIcon, MapIcon, MoreVerticalIcon, UploadIcon } from 'lucide-react'
+import { DownloadIcon, FileTextIcon, MapIcon, MoreVerticalIcon, TrophyIcon, UploadIcon } from 'lucide-react'
 import { EmptyBasketIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
@@ -49,6 +49,7 @@ import { Skeleton } from '../../components/ui/skeleton'
 import { Textarea } from '../../components/ui/textarea'
 import { FirstAidGuide } from '../tools/FirstAidGuide'
 import { NotificationPermissionBanner } from '../../components/NotificationPermissionBanner'
+import { AchievementsDrawer } from './AchievementsDrawer'
 import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
 import { SeasonSummary } from './SeasonSummary'
@@ -96,6 +97,7 @@ export function JournalView() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [pendingImport, setPendingImport] = useState<{ payload: ExportPayload; duplicateCount: number } | null>(null)
   const [showFirstAid, setShowFirstAid] = useState(false)
+  const [showAchievements, setShowAchievements] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [listRef] = useAutoAnimate()
 
@@ -289,6 +291,18 @@ export function JournalView() {
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
       <div className="flex items-center justify-between">
         <h1 className="text-heading-md font-semibold tracking-tight">Dziennik zbiorów</h1>
+        <div className="flex items-center gap-2">
+        {/* Trofeum osobno od menu eksportu - to coś do zaglądania "dla przyjemności" (patrz
+            gamifikacja w AchievementsDrawer.tsx), nie akcja zarządzania danymi, więc nie
+            powinno się chować w tym samym menu co eksport/import. */}
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Osiągnięcia"
+          onClick={() => setShowAchievements(true)}
+        >
+          <TrophyIcon className="size-4" />
+        </Button>
         {/* Trzy osobne przyciski (Eksportuj/Importuj/PDF) skonsolidowane w jedno menu - to akcje
             okazjonalne (backup, udostępnianie), nie codzienne, więc nie muszą zajmować stałego
             miejsca w nagłówku obok tytułu widoku. */}
@@ -324,6 +338,7 @@ export function JournalView() {
           onChange={handleImportFile}
           className="hidden"
         />
+        </div>
       </div>
 
       <NotificationPermissionBanner />
@@ -720,6 +735,7 @@ export function JournalView() {
       </AlertDialog>
 
       <FirstAidGuide open={showFirstAid} onOpenChange={setShowFirstAid} />
+      <AchievementsDrawer open={showAchievements} onOpenChange={setShowAchievements} />
     </div>
   )
 }

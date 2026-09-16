@@ -123,7 +123,10 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
       expect(finding?.weightGrams).toBe(250)
     })
 
-    expect(await screen.findByText(/250 g/)).toBeInTheDocument()
+    // Regex dopasowany do CAŁEJ linijki metadanych znaleziska (nie samo "250 g") - "250 g" samo
+    // w sobie pasuje też do StatTile podsumowania sezonu (SeasonSummary), gdy jedyne znalezisko
+    // sezonu waży dokładnie tyle, co powodowało niejednoznaczne dopasowanie (dwa elementy).
+    expect(await screen.findByText(/19\.5000 · 250 g/)).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Edytuj'))
     fireEvent.change(screen.getByLabelText('Waga (gramy)'), { target: { value: '' } })
