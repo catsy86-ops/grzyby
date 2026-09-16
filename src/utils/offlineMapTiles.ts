@@ -19,7 +19,7 @@ export const OFFLINE_RADIUS_PRESETS = [
   { label: '10 km', km: 10 },
 ] as const
 
-const TILE_URL = (z: number, x: number, y: number) => `https://maps.wikimedia.org/osm-intl/${z}/${x}/${y}.png`
+const TILE_URL = (z: number, x: number, y: number) => `https://a.tile.openstreetmap.org/${z}/${x}/${y}.png`
 const MAP_TILES_CACHE_NAME = 'map-tiles'
 // Największy preset (10 km, zoom 13-16) to ok. 3940 kafelków - limit z marginesem na nieregularne
 // kształty obszaru przy różnych szerokościach geograficznych.

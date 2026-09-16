@@ -60,7 +60,7 @@ export function MapView() {
         <MapContainer center={DEFAULT_CENTER} zoom={6} className="h-full w-full">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             maxZoom={19}
             eventHandlers={{
               tileerror: () => {
