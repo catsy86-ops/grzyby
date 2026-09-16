@@ -65,8 +65,11 @@ jest wymagane, ale trening będzie szybszy).
 1. Przygotuj `dataset/<species-id>/*.jpg` (jeden podkatalog na każdy `id` ze `species.json`, plus
    opcjonalnie `dataset/inne/*.jpg` dla klasy negatywnej) - patrz `scripts/prepare-dataset/README.md`.
    `scripts/prepare-dataset/sanity-filter.mjs` odrzuca uszkodzone/zbyt małe pliki i duplikaty z
-   `raw/` i kopiuje resztę do `dataset/` - to filtr techniczny, nie merytoryczny, wciąż nie
-   zastępuje ręcznego przeglądu opisanego w kroku 2 ścieżki A.
+   `raw/` i kopiuje resztę do `dataset/` - to filtr techniczny, nie merytoryczny.
+   **Obowiązkowo** uruchom potem `scripts/prepare-dataset/review-gate.mjs` - `train.py` (krok 3)
+   odmówi treningu, jeśli dla któregoś gatunku brakuje manifestu ręcznej recenzji
+   `scripts/prepare-dataset/reviewed/<id>.json` albo jest za mało zrecenzjonowanych zdjęć (patrz
+   sekcja "Bramka recenzji" w `scripts/prepare-dataset/README.md`).
 2. `pip install -r scripts/train-model/requirements.txt` (TensorFlow + tensorflowjs). Uwaga: na
    Windows z Pythonem 3.12 pakiet `tensorflow-decision-forests` (zależność `tensorflowjs`) nie ma
    koła binarnego zgodnego z żadną wersją TensorFlow dostępną dla 3.12 - użyj Pythona 3.10 lub

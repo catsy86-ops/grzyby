@@ -34,5 +34,31 @@ zdjęcie trzeba ręcznie obejrzeć** przed użyciem.
    tła i etapu rozwoju grzyba. Mniej niż ~30/gatunek prawdopodobnie da model zbyt niepewny, by był
    użyteczny.
 
-Gdy `dataset/` jest gotowy, uruchom `scripts/train-model/train.py` (patrz
-`docs/MODEL-TRAINING.md`).
+## Bramka recenzji (obowiązkowa, wymuszona narzędziem)
+
+`sanity-filter.mjs` powyżej to filtr **techniczny** (uszkodzone pliki, duplikaty) - sam w sobie
+NIE potwierdza, że zdjęcie faktycznie przedstawia zadeklarowany gatunek. Żeby krok ręcznego
+przeglądu (punkty 1-3 wyżej) nie dał się pominąć przez przeoczenie, `dataset/` musi dodatkowo
+przejść przez `review-gate.mjs`:
+
+```bash
+node scripts/prepare-dataset/review-gate.mjs
+```
+
+Dla KAŻDEGO gatunku w `dataset/` musi istnieć plik `scripts/prepare-dataset/reviewed/<species-id>.json`
+(commitowany do repo - to mały, wartościowy zapis "kto i kiedy to sprawdził", nie surowe dane):
+
+```json
+{
+  "reviewer": "twoje-imię-lub-nick",
+  "reviewedAt": "2026-09-16",
+  "acceptedFiles": ["001.jpg", "003.jpg", "007.jpg"]
+}
+```
+
+`review-gate.mjs` usuwa z `dataset/<id>/` każdy plik spoza `acceptedFiles` i kończy błędem, jeśli
+manifestu brakuje dla któregoś gatunku. `scripts/train-model/train.py` odmówi treningu bez tych
+manifestów (i przy zbyt małej liczbie zrecenzjonowanych zdjęć) - patrz `docs/MODEL-TRAINING.md`.
+
+Gdy `dataset/` przeszedł `review-gate.mjs` bez błędów, uruchom `scripts/train-model/train.py`
+(patrz `docs/MODEL-TRAINING.md`).

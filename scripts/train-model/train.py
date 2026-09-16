@@ -39,9 +39,38 @@ from tensorflow.keras import layers
 IMAGE_SIZE = (224, 224)
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPECIES_JSON = REPO_ROOT / "src" / "data" / "species.json"
+REVIEWED_DIR = REPO_ROOT / "scripts" / "prepare-dataset" / "reviewed"
 
+# Rekomendowane minimum ze scripts/prepare-dataset/README.md - poniżej tego prawdopodobnie
+# zbyt niepewny model. Trening wciąż można wymusić przez --allow-small-dataset, ale świadomie,
+# nie przez przeoczenie.
+MIN_IMAGES_PER_CLASS = 30
 
 NEGATIVE_CLASS = "inne"
+
+
+def check_review_gate(dataset_dir: pathlib.Path, class_names: list[str], allow_small_dataset: bool) -> list[str]:
+    """Odmawia treningu na klasie bez manifestu ręcznej recenzji (scripts/prepare-dataset/
+    review-gate.mjs) lub z podejrzanie małą liczbą zdjęć - to jest gate na dokładnie ten błąd,
+    który już raz się zdarzył w tym repo (model wytrenowany i wdrożony na zdjęciach, które przeszły
+    tylko przez sanity-filter.mjs, filtr czysto techniczny, bez jakiejkolwiek weryfikacji gatunku).
+    Zwraca listę komunikatów błędów (pusta = wszystko OK)."""
+    errors = []
+    for class_name in class_names:
+        manifest_path = REVIEWED_DIR / f"{class_name}.json"
+        if not manifest_path.is_file():
+            errors.append(
+                f"{class_name}: brak manifestu recenzji {manifest_path.relative_to(REPO_ROOT)} - "
+                "uruchom scripts/prepare-dataset/review-gate.mjs po ręcznym przejrzeniu zdjęć."
+            )
+            continue
+        count = len(list((dataset_dir / class_name).glob("*")))
+        if count < MIN_IMAGES_PER_CLASS and not allow_small_dataset:
+            errors.append(
+                f"{class_name}: tylko {count} zrecenzjonowanych zdjęć (minimum {MIN_IMAGES_PER_CLASS}) - "
+                "zbierz więcej albo uruchom z --allow-small-dataset, świadomie akceptując ryzyko."
+            )
+    return errors
 
 
 def load_class_order(dataset_dir: pathlib.Path) -> list[str]:
@@ -116,6 +145,11 @@ def main() -> int:
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--fine-tune-epochs", type=int, default=5)
     parser.add_argument("--val-split", type=float, default=0.2)
+    parser.add_argument(
+        "--allow-small-dataset",
+        action="store_true",
+        help="Pomija minimum MIN_IMAGES_PER_CLASS z check_review_gate (wciąż wymaga manifestu recenzji).",
+    )
     args = parser.parse_args()
 
     class_names = load_class_order(args.dataset)
@@ -123,6 +157,13 @@ def main() -> int:
     if missing:
         print(f"Brakuje katalogów w {args.dataset} dla gatunków: {missing}", file=sys.stderr)
         print("Każdy `id` ze species.json musi mieć swój podkatalog ze zdjęciami.", file=sys.stderr)
+        return 1
+
+    review_errors = check_review_gate(args.dataset, class_names, args.allow_small_dataset)
+    if review_errors:
+        print("Dataset nie przeszedł bramki recenzji - trening przerwany:", file=sys.stderr)
+        for error in review_errors:
+            print(f"  - {error}", file=sys.stderr)
         return 1
 
     train_ds, val_ds = build_datasets(args.dataset, class_names, args.batch_size, args.val_split)
