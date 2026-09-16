@@ -52,7 +52,7 @@ export function EncyclopediaView() {
     // szerokości telefonu nawet na desktopie, więc treść pływała wąską kolumną w pustej
     // przestrzeni. Lista kart niżej dostaje odpowiadającą siatkę 2/3 kolumn.
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
-      <h1 className="text-xl font-semibold tracking-tight">Baza wiedzy o gatunkach</h1>
+      <h1 className="text-heading-md font-semibold tracking-tight">Baza wiedzy o gatunkach</h1>
 
       {/* Sticky pasek wyszukiwania/filtrów - przy przewijaniu 19 gatunków w dół wracanie na
           górę tylko po to, żeby zmienić filtr, jest niewygodne na telefonie. Ujemny margines +
@@ -132,8 +132,11 @@ export function EncyclopediaView() {
               {/* flex-wrap - w wąskiej 2-kolumnowej karcie na mobile nazwa gatunku + odznaki
                   (chroniony/jadalność) obok siebie w jednym rzędzie by się ścieśniały; odznaki
                   schodzą do nowej linii zamiast obcinać nazwę. */}
+              {/* font-[550] (nie font-medium=500 ani font-semibold=600) - waga pośrednia
+                  dostępna dzięki @fontsource-variable/geist, subtelnie cięższa niż zwykły tekst
+                  karty, ale odróżnialna od wagi przycisków (font-semibold) w tym samym widoku. */}
               <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-                <p className="font-medium">{s.nameCommon}</p>
+                <p className="font-[550]">{s.nameCommon}</p>
                 <div className="flex shrink-0 gap-1.5">
                   {s.legalProtection && (
                     <Badge

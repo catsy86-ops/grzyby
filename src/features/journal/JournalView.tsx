@@ -288,7 +288,7 @@ export function JournalView() {
     // EncyclopediaView.tsx. Lista znalezisk niżej dostaje odpowiadającą siatkę 2/3 kolumn.
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Dziennik zbiorów</h1>
+        <h1 className="text-heading-md font-semibold tracking-tight">Dziennik zbiorów</h1>
         {/* Trzy osobne przyciski (Eksportuj/Importuj/PDF) skonsolidowane w jedno menu - to akcje
             okazjonalne (backup, udostępnianie), nie codzienne, więc nie muszą zajmować stałego
             miejsca w nagłówku obok tytułu widoku. */}
@@ -601,8 +601,10 @@ export function JournalView() {
                   {finding.id != null && <FindingThumbnail findingId={finding.id} />}
                   <div className="flex flex-1 items-start justify-between">
                     <div>
+                      {/* font-[550] (nie font-medium) - patrz ten sam wzorzec i uzasadnienie w
+                          EncyclopediaView.tsx. */}
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+                        <p className="font-[550]">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
                         {findingSpecies && <EdibilityBadge edibility={findingSpecies.edibility} />}
                       </div>
                       <p className="text-xs text-muted-foreground">

@@ -80,7 +80,7 @@ export function IdentifyView() {
 
   return (
     <div className="mx-auto flex h-full w-full max-w-md flex-col gap-4 overflow-y-auto p-4">
-      <h1 className="text-xl font-semibold tracking-tight">Rozpoznaj grzyb ze zdjęcia</h1>
+      <h1 className="text-heading-md font-semibold tracking-tight">Rozpoznaj grzyb ze zdjęcia</h1>
 
       {modelReady === false && (
         <Alert variant="warning">
