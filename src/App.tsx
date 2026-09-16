@@ -163,7 +163,7 @@ function App() {
           </motion.div>
         </AnimatePresence>
       </main>
-      <nav className="safe-area-bottom flex border-t border-border bg-card/95 px-1 pt-1 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <nav className="safe-area-bottom relative z-10 flex border-t border-border bg-card/95 px-1 pt-1 shadow-[0_-4px_16px_rgb(0,0,0,0.08)] backdrop-blur supports-[backdrop-filter]:bg-card/80 dark:shadow-[0_-4px_16px_rgb(0,0,0,0.35)]">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key
           const Icon = tab.icon

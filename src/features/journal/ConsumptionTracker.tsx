@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { db } from '../../db/db'
 import type { Finding, ReactionSeverity } from '../../db/schema'
 import { severityLabel } from '../../utils/reactionTracking'
+import { formatDateTime } from '../../utils/formatDate'
 import { Button } from '../../components/ui/button'
 import { Textarea } from '../../components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
@@ -48,7 +49,7 @@ export function ConsumptionTracker({ finding }: { finding: Finding }) {
     <div className="mt-2 rounded border border-border bg-muted/50 p-2 text-xs">
       <div className="flex items-center justify-between">
         <p className="font-medium text-muted-foreground">
-          Zjedzone {finding.consumedAt ? new Date(finding.consumedAt).toLocaleString('pl-PL') : ''}
+          Zjedzone {finding.consumedAt ? formatDateTime(finding.consumedAt) : ''}
         </p>
         <Button variant="link" size="sm" className="h-auto p-0 text-muted-foreground" onClick={unmarkConsumed}>
           Cofnij

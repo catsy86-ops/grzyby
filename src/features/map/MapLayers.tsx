@@ -7,6 +7,7 @@ import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
 import type { Position } from '../../utils/bearing'
 import { clusterFindings } from '../../utils/clusterFindings'
+import { formatDate } from '../../utils/formatDate'
 
 // Komponenty tego pliku to jedyna część feature'u Mapy realnie zależna od `useMap()`/
 // `MapContainer` (wydzielone z MapView.tsx, Faza 19) - oddzielenie ich od reszty stanu/logiki
@@ -63,7 +64,7 @@ function FindingMarkersImpl({ findings }: { findings: Finding[] }) {
                       <EdibilityBadge edibility={species.edibility} />
                     </div>
                   )}
-                  <p className="mt-1">{new Date(finding.createdAt).toLocaleDateString('pl-PL')}</p>
+                  <p className="mt-1">{formatDate(finding.createdAt)}</p>
                   {finding.notes && <p className="mt-1">{finding.notes}</p>}
                 </div>
               </Popup>

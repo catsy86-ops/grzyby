@@ -6,6 +6,7 @@ import { db } from '../../db/db'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { computeSpotStats } from '../../utils/spotStats'
+import { formatDate } from '../../utils/formatDate'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,7 +53,7 @@ function SpotRow({ spotId, name, notes }: { spotId: number; name: string; notes:
           <p className="mt-1 text-xs text-muted-foreground">
             {stats.findingCount} {stats.findingCount === 1 ? 'znalezisko' : 'znalezisk'}
             {stats.speciesDiversity > 0 && ` · ${stats.speciesDiversity} gatunków`}
-            {stats.lastVisitAt != null && ` · ostatnio ${new Date(stats.lastVisitAt).toLocaleDateString('pl-PL')}`}
+            {stats.lastVisitAt != null && ` · ostatnio ${formatDate(stats.lastVisitAt)}`}
           </p>
         </div>
         <button

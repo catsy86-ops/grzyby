@@ -5,6 +5,7 @@ import { useAppStore } from '../../stores/appStore'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { countSpeciesDiversity, formatDuration, formatWeight, isLongTrip, sumWeightGrams } from '../../utils/tripStats'
 import { showLocalNotification } from '../../utils/notifications'
+import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { StatTile, StatTileRow } from '../../components/StatTiles'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
@@ -47,7 +48,7 @@ export function TripManager() {
   }, [activeTripId, activeTrip])
 
   async function handleStartTrip() {
-    const name = newTripName.trim() || `Wyprawa ${new Date().toLocaleDateString('pl-PL')}`
+    const name = newTripName.trim() || `Wyprawa ${formatDate(new Date())}`
     const id = await db.trips.add({
       name,
       startedAt: Date.now(),
@@ -73,7 +74,7 @@ export function TripManager() {
             <div>
               <p className="text-sm font-semibold text-primary">🥾 Aktywna wyprawa: {activeTrip.name}</p>
               <p className="text-xs text-primary/80">
-                Rozpoczęta {new Date(activeTrip.startedAt).toLocaleString('pl-PL')} ·{' '}
+                Rozpoczęta {formatDateTime(activeTrip.startedAt)} ·{' '}
                 {formatDuration(activeTrip.startedAt, null)}
               </p>
             </div>

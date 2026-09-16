@@ -5,6 +5,7 @@ import speciesData from '../../data/species.json'
 import type { Finding, Spot, Species } from '../../db/schema'
 import type { Position } from '../../utils/bearing'
 import { formatDistance, getBearingDegrees, getCardinalDirection, getDistanceMeters } from '../../utils/bearing'
+import { formatDate } from '../../utils/formatDate'
 
 const speciesById = new Map((speciesData as Species[]).map((s) => [s.id, s]))
 
@@ -77,7 +78,7 @@ export function FindingsListView({ findings, spots, userPosition }: FindingsList
                 <div>
                   <p className="text-sm font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(finding.createdAt).toLocaleDateString('pl-PL')}
+                    {formatDate(finding.createdAt)}
                     {description && ` · ${description}`}
                   </p>
                 </div>

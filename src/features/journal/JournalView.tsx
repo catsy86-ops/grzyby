@@ -53,6 +53,8 @@ import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
 import { TripManager } from './TripManager'
 import { TripsHistory } from './TripsHistory'
+import { formatDateTime } from '../../utils/formatDate'
+import { shareFinding } from '../../utils/shareFinding'
 
 type TripFilter = number | 'wszystkie' | 'bez-wyprawy'
 const NONE_SPECIES = '__none__'
@@ -205,6 +207,15 @@ export function JournalView() {
     setConfirmDeleteId(null)
   }
 
+  async function handleShare(finding: Finding) {
+    try {
+      const result = await shareFinding(finding)
+      if (result === 'copied') toast.success('Skopiowano opis znaleziska do schowka.')
+    } catch {
+      toast.error('Nie udało się udostępnić znaleziska.')
+    }
+  }
+
   function handleStartEdit(finding: Finding) {
     setEditingId(finding.id ?? null)
     setEditSpeciesId(finding.speciesId ?? '')
@@ -331,7 +342,7 @@ export function JournalView() {
                 return (
                   <li key={f.id}>
                     {f.speciesNameGuess ?? 'Nieokreślony gatunek'} —{' '}
-                    {f.consumedAt ? new Date(f.consumedAt).toLocaleString('pl-PL') : ''}
+                    {f.consumedAt ? formatDateTime(f.consumedAt) : ''}
                     {overlapping.length > 0 && ` (inne zjedzone w tym czasie: ${overlapping.length})`}
                   </li>
                 )
@@ -366,8 +377,8 @@ export function JournalView() {
             <div>
               <p className="text-sm font-medium">{selectedTrip.name}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {new Date(selectedTrip.startedAt).toLocaleString('pl-PL')}
-                {selectedTrip.endedAt != null && ` – ${new Date(selectedTrip.endedAt).toLocaleString('pl-PL')}`}
+                {formatDateTime(selectedTrip.startedAt)}
+                {selectedTrip.endedAt != null && ` – ${formatDateTime(selectedTrip.endedAt)}`}
                 {' · '}
                 {formatDuration(selectedTrip.startedAt, selectedTrip.endedAt)}
               </p>
@@ -571,7 +582,7 @@ export function JournalView() {
                     <div>
                       <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(finding.createdAt).toLocaleString('pl-PL')}
+                        {formatDateTime(finding.createdAt)}
                         {finding.latitude != null && finding.longitude != null && (
                           <>
                             {' '}
@@ -584,6 +595,13 @@ export function JournalView() {
                       <ConsumptionTracker finding={finding} />
                     </div>
                     <div className="flex shrink-0 gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => handleShare(finding)}
+                        className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-muted-foreground hover:underline"
+                      >
+                        Udostępnij
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleStartEdit(finding)}
