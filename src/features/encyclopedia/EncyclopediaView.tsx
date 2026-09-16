@@ -97,7 +97,7 @@ export function EncyclopediaView() {
       </div>
 
       <div ref={listRef} className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((s) => (
+        {filtered.map((s, index) => (
           // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (filtrowanie/wyszukiwanie
           // animuje pozycję/usunięcie) - mikrointerakcja `whileTap` idzie na wewnętrzny `motion.div`,
           // nie na `Card`, żeby nie kolidować z transformacjami auto-animate.
@@ -106,7 +106,8 @@ export function EncyclopediaView() {
           <Card
             key={s.id}
             size="sm"
-            className={`border-l-4 transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15 ${edibilityCardAccentClass(s.edibility)}`}
+            style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
+            className={`stagger-item border-l-4 transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15 ${edibilityCardAccentClass(s.edibility)}`}
           >
             <CardContent>
             <motion.div whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>

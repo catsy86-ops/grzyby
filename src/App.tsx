@@ -38,18 +38,48 @@ const EncyclopediaView = lazy(() =>
   import('./features/encyclopedia/EncyclopediaView').then((m) => ({ default: m.EncyclopediaView })),
 )
 
-function ViewSkeleton() {
+// Skeleton dopasowany do kształtu realnego widoku zamiast jednego generycznego spinnera dla
+// wszystkich zakładek (Faza C nowecos.md) - karty-placeholdery w przybliżonym kształcie
+// prawdziwej treści dają wrażenie "zaraz się pojawi to samo", nie "coś się ładuje od zera".
+// Te komponenty muszą zostać w głównym bundlu (nie lazy) - renderują się ZANIM kod danego
+// widoku (i jego zależności, np. Leaflet dla mapy) zdąży się pobrać.
+function CardListSkeleton() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-2">
-      <Skeleton className="h-10 w-10 rounded-full" />
-      <Skeleton className="h-3 w-32" />
+    <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 p-4 md:max-w-4xl lg:max-w-6xl">
+      <Skeleton className="h-6 w-40" />
+      <Skeleton className="h-10 w-full rounded-lg" />
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-xl" />
+      </div>
+    </div>
+  )
+}
+
+function MapViewSkeleton() {
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-muted">
+      <Skeleton className="absolute inset-0 rounded-none" />
+      <Skeleton className="absolute bottom-4 right-4 h-10 w-40 rounded-full" />
+    </div>
+  )
+}
+
+function IdentifyViewSkeleton() {
+  return (
+    <div className="mx-auto flex h-full w-full max-w-md flex-col gap-4 p-4">
+      <Skeleton className="h-6 w-56" />
+      <Skeleton className="h-40 w-full rounded-lg" />
     </div>
   )
 }
 
 function ActiveView({ tab }: { tab: ActiveTab }) {
+  const fallback =
+    tab === 'mapa' ? <MapViewSkeleton /> : tab === 'rozpoznaj' ? <IdentifyViewSkeleton /> : <CardListSkeleton />
   return (
-    <Suspense fallback={<ViewSkeleton />}>
+    <Suspense fallback={fallback}>
       {(() => {
         switch (tab) {
           case 'mapa':

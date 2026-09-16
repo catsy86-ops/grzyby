@@ -286,6 +286,56 @@ body {
   }
 }
 
+/* Animowana ramka skanowania w widoku Rozpoznaj (Faza C nowecos.md) - podczas inferencji AI
+   pulsujący ring + przesuwający się pasek światła zamiast statycznego spinnera na przycisku,
+   to "wow moment" aplikacji. `prefers-reduced-motion` wyłącza obie animacje - bez nich zostaje
+   sam statyczny ring, nadal czytelny sygnał "trwa analiza". */
+@keyframes scan-pulse-ring {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes scan-line-sweep {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(300%);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scan-pulse-ring {
+    animation: scan-pulse-ring 1.4s ease-in-out infinite;
+  }
+  .scan-line-sweep {
+    animation: scan-line-sweep 1.8s ease-in-out infinite;
+  }
+}
+
+/* Stagger wejścia list (Dziennik, Encyklopedia) - Faza C nowecos.md. Czysty CSS (nie
+   motion/react) celowo: listy używają `useAutoAnimate`, które samo zarządza transformacjami
+   przy dodawaniu/usuwaniu elementów - druga, konkurencyjna biblioteka animacji na tych samych
+   węzłach mogłaby kolidować z jego transformacjami. Każda karta dostaje inline
+   `animation-delay` (index * 40ms) w miejscu użycia, ta klasa tylko definiuje sam efekt. */
+@keyframes stagger-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stagger-item {
+    animation: stagger-fade-in 0.3s ease-out both;
+  }
+}
+
 /* Tryb "W lesie" - większe cele dotyku i wyższy kontrast, dla użycia w terenie (mokre palce,
    rękawiczki, słońce na ekranie utrudniające odczyt). Skalowanie font-size na korzeniu podbija
    wszystkie rozmiary oparte na rem (Tailwind v4 domyślnie), a nie tylko wybrane komponenty. */

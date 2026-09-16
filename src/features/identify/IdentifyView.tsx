@@ -127,13 +127,25 @@ export function IdentifyView() {
             transition={{ duration: 0.18 }}
             className="flex flex-col items-center gap-3"
           >
-            <img
-              ref={imageRef}
-              src={imageUrl}
-              alt="Zdjęcie grzyba do rozpoznania"
-              className="max-h-72 rounded-lg shadow"
-              crossOrigin="anonymous"
-            />
+            {/* Ramka skanowania podczas inferencji zamiast samego spinnera na przycisku - to
+                "wow moment" apki (patrz nowecos.md), więc zasługuje na coś bardziej namacalnego
+                niż statyczny loader. Pasek światła przesuwa się w pętli przez zdjęcie, obwódka
+                pulsuje - `prefers-reduced-motion` wyłącza obie animacje (patrz index.css). */}
+            <div className="relative overflow-hidden rounded-lg">
+              <img
+                ref={imageRef}
+                src={imageUrl}
+                alt="Zdjęcie grzyba do rozpoznania"
+                className="max-h-72 rounded-lg shadow"
+                crossOrigin="anonymous"
+              />
+              {loading && (
+                <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg">
+                  <div className="absolute inset-0 rounded-lg ring-2 ring-primary/70 scan-pulse-ring" />
+                  <div className="absolute inset-x-0 h-1/3 bg-gradient-to-b from-transparent via-primary/35 to-transparent scan-line-sweep" />
+                </div>
+              )}
+            </div>
             <Button onClick={handleIdentify} disabled={loading || modelReady === false}>
               {loading && <Loader2Icon className="animate-spin" />}
               {loading ? 'Analizuję...' : 'Rozpoznaj gatunek'}

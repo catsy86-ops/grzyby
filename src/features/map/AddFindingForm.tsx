@@ -5,6 +5,7 @@ import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
+import { vibrateSuccess } from '../../utils/haptics'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
@@ -76,6 +77,7 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
       // sygnału "udało się". Ten sam moment co w Dzienniku (pusty koszyk -> pierwszy wpis),
       // tylko odwrotnie - to jest "nagroda" za dodanie znaleziska w terenie.
       toast.success(species ? `Dodano do dziennika: ${species.nameCommon}` : 'Dodano znalezisko do dziennika')
+      vibrateSuccess()
       onClose(true)
     } catch (err) {
       // Natywny DOMException (rzucany przez IndexedDB przy przekroczeniu limitu) NIE dziedziczy

@@ -448,7 +448,7 @@ export function JournalView() {
       )}
 
       <div ref={listRef} className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 lg:grid-cols-3">
-        {filteredFindings?.map((finding) => {
+        {filteredFindings?.map((finding, index) => {
           if (finding.id != null && editingId === finding.id) {
             // Karta w trybie edycji (formularz z kilkoma polami) rozpięta na całą szerokość
             // siatki, niezależnie od tego w której kolumnie by wypadła - ścieśniony formularz w
@@ -577,7 +577,12 @@ export function JournalView() {
             // hover:shadow (nie hover:-translate-y, celowo BEZ transform) - osobny transform z
             // hover kolidowałby z pozycjonowaniem useAutoAnimate (ten sam powód, dla którego
             // whileTap idzie na wewnętrzny motion.div, nie na Card - patrz komentarz wyżej).
-            <Card key={finding.id} size="sm" className="transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15">
+            <Card
+              key={finding.id}
+              size="sm"
+              style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
+              className="stagger-item transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15"
+            >
               <CardContent>
                 <motion.div
                   className="flex items-start gap-3"
