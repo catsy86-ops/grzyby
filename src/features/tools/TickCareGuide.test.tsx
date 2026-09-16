@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { TICK_REMOVAL_STEPS } from '../data/tickCare'
+import { TICK_REMOVAL_STEPS } from '../../data/tickCare'
 import { TickCareGuide } from './TickCareGuide'
 
 describe('TickCareGuide', () => {

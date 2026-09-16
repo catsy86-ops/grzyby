@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { GEAR_CHECKLIST } from '../data/gearChecklist'
+import { GEAR_CHECKLIST } from '../../data/gearChecklist'
 import { GearChecklist } from './GearChecklist'
 
 describe('GearChecklist', () => {

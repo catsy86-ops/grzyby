@@ -1,6 +1,6 @@
 import { BackpackIcon, BugOffIcon, CheckIcon, HardDriveIcon, PhoneCallIcon, TimerIcon, TreePineIcon } from 'lucide-react'
 import { motion } from 'motion/react'
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer'
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 
 const LIST_VARIANTS = {
   hidden: {},

@@ -9,11 +9,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from './ui/alert-dialog'
-import { Button } from './ui/button'
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from './ui/drawer'
-import { Progress } from './ui/progress'
-import { clearCache, formatStorageBytes, getCacheInfo, getStorageEstimate, type CacheInfo, type StorageEstimate } from '../utils/storageInfo'
+} from '../../components/ui/alert-dialog'
+import { Button } from '../../components/ui/button'
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
+import { Progress } from '../../components/ui/progress'
+import { clearCache, formatStorageBytes, getCacheInfo, getStorageEstimate, type CacheInfo, type StorageEstimate } from '../../utils/storageInfo'
 
 interface StorageInfoDrawerProps {
   open: boolean

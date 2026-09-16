@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { StorageInfoDrawer } from './StorageInfoDrawer'
-import { Toaster } from './ui/sonner'
-import * as storageInfo from '../utils/storageInfo'
+import { Toaster } from '../../components/ui/sonner'
+import * as storageInfo from '../../utils/storageInfo'
 
 function renderDrawer() {
   return render(
@@ -13,8 +13,8 @@ function renderDrawer() {
   )
 }
 
-vi.mock('../utils/storageInfo', async () => {
-  const actual = await vi.importActual<typeof import('../utils/storageInfo')>('../utils/storageInfo')
+vi.mock('../../utils/storageInfo', async () => {
+  const actual = await vi.importActual<typeof import('../../utils/storageInfo')>('../../utils/storageInfo')
   return {
     ...actual,
     getCacheInfo: vi.fn(),

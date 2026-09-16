@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { FIRST_AID_STEPS } from '../data/firstAid'
+import { FIRST_AID_STEPS } from '../../data/firstAid'
 import { FirstAidGuide } from './FirstAidGuide'
 
 describe('FirstAidGuide', () => {
