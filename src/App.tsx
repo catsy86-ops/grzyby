@@ -19,6 +19,7 @@ import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
+import { getCurrentSeason } from './utils/seasonFilter'
 
 const TABS: { key: ActiveTab; label: string; icon: typeof MapIcon }[] = [
   { key: 'mapa', label: 'Mapa', icon: MapIcon },
@@ -161,6 +162,12 @@ function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('forest-mode', forestMode)
   }, [forestMode])
+
+  // Sezonowy akcent koloru (`.season-*` w index.css) - liczony raz przy starcie apki, nie
+  // reaktywnie - pora roku realistycznie nie zmienia się w trakcie jednej sesji użytkownika.
+  useEffect(() => {
+    document.documentElement.classList.add(`season-${getCurrentSeason()}`)
+  }, [])
 
   function handleSelectTool(tool: ToolKey) {
     setShowToolsMenu(false)

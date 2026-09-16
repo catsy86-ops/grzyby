@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isInSeason, parseSeasonRange } from './seasonFilter'
+import { getCurrentSeason, isInSeason, parseSeasonRange } from './seasonFilter'
 import speciesData from '../data/species.json'
 
 describe('parseSeasonRange', () => {
@@ -45,5 +45,28 @@ describe('isInSeason', () => {
 
   it('domyślnie true (fail-open) dla nieparsowalnego formatu', () => {
     expect(isInSeason('cały rok', new Date(2026, 0, 1))).toBe(true)
+  })
+})
+
+describe('getCurrentSeason', () => {
+  it('rozpoznaje zimę (grudzień-luty)', () => {
+    expect(getCurrentSeason(new Date(2026, 11, 25))).toBe('zima')
+    expect(getCurrentSeason(new Date(2026, 0, 1))).toBe('zima')
+    expect(getCurrentSeason(new Date(2026, 1, 28))).toBe('zima')
+  })
+
+  it('rozpoznaje wiosnę (marzec-maj)', () => {
+    expect(getCurrentSeason(new Date(2026, 2, 1))).toBe('wiosna')
+    expect(getCurrentSeason(new Date(2026, 4, 31))).toBe('wiosna')
+  })
+
+  it('rozpoznaje lato (czerwiec-sierpień)', () => {
+    expect(getCurrentSeason(new Date(2026, 5, 1))).toBe('lato')
+    expect(getCurrentSeason(new Date(2026, 7, 31))).toBe('lato')
+  })
+
+  it('rozpoznaje jesień (wrzesień-listopad)', () => {
+    expect(getCurrentSeason(new Date(2026, 8, 1))).toBe('jesien')
+    expect(getCurrentSeason(new Date(2026, 10, 30))).toBe('jesien')
   })
 })

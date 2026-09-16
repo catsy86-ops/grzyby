@@ -51,6 +51,18 @@ export function getSeasonDotClass(season: string): string {
   return SEASON_DOT_CLASS[meteorologicalSeason]
 }
 
+export type MeteorologicalSeason = 'zima' | 'wiosna' | 'lato' | 'jesien'
+const METEOROLOGICAL_SEASONS: readonly MeteorologicalSeason[] = ['zima', 'wiosna', 'lato', 'jesien']
+
+// Aktualna pora roku kalendarzowa (wg miesiąca, nie faktycznego przesilenia) - do sezonowego
+// akcentu koloru marki (patrz `.season-*` w index.css, użycie w App.tsx). Ten sam podział
+// miesięcy co w getSeasonDotClass wyżej (0=zima grudzień-luty, 1=wiosna, 2=lato, 3=jesień),
+// wydzielony do osobnej funkcji, bo tu liczy się od aktualnej daty, nie od zakresu w species.json.
+export function getCurrentSeason(date: Date = new Date()): MeteorologicalSeason {
+  const month = date.getMonth() // 0 = styczeń
+  return METEOROLOGICAL_SEASONS[Math.floor(((month + 1) % 12) / 3)]
+}
+
 // Fail-open: nieparsowalny/nietypowy format sezonu nigdy nie ukrywa gatunku (bezpieczniej pokazać
 // za dużo niż przypadkiem odfiltrować coś, co akurat rośnie).
 export function isInSeason(season: string, date: Date = new Date()): boolean {

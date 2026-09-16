@@ -355,6 +355,32 @@ body {
   min-height: 2.75rem;
 }
 
+/* Sezonowy akcent marki - `--brand-accent` (dotąd stały bursztyn przez cały rok) subtelnie
+   przesuwa odcień wg pory roku kalendarzowego (patrz hooks/useSeason.ts, klasa `season-*` na
+   <html>, ustawiana tak samo jak `.forest-mode`). Lato zostaje przy oryginalnym bursztynie (to
+   szczyt sezonu grzybowego, "domyślny" nastrój apki) - reszta pór roku dostaje własny ton,
+   każdy z osobną wersją na tryb ciemny (ten sam wzorzec różnicowania co w :root/.dark wyżej).
+   Wpływa na wszystko, co już czyta `--brand-accent` (gradient nagłówka, plakietka "Chroniony"
+   itd.) - jedna zmiana tokenu, nie osobna ścieżka dla każdego miejsca użycia. */
+.season-wiosna {
+  --brand-accent: var(--color-lime-700);
+}
+.season-wiosna.dark {
+  --brand-accent: var(--color-lime-600);
+}
+.season-jesien {
+  --brand-accent: var(--color-orange-700);
+}
+.season-jesien.dark {
+  --brand-accent: var(--color-orange-600);
+}
+.season-zima {
+  --brand-accent: var(--color-slate-600);
+}
+.season-zima.dark {
+  --brand-accent: var(--color-slate-500);
+}
+
 /* Tint kafli mapy (Leaflet/OSM) pod zielono-bursztynową paletę marki - domyślna kolorystyka
    OSM (niebiesko-beżowa) gryzła się z resztą apki. Filtr działa na całą warstwę kafli naraz
    (nie per-<img>), więc jest tani, i nie dotyka źródła/URL kafli ani cache'u offline
