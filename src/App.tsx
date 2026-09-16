@@ -13,6 +13,7 @@ import { ToolsMenu, type ToolKey } from './features/tools/ToolsMenu'
 import { Logo } from './components/Logo'
 import { AnimatedHeaderTitle } from './components/AnimatedHeaderTitle'
 import { AppSplash } from './components/AppSplash'
+import { OnboardingOverlay } from './components/OnboardingOverlay'
 import { useTickReminders } from './hooks/useTickReminders'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -108,6 +109,7 @@ function App() {
   return (
     <div className="flex h-full flex-col bg-background">
       <AppSplash />
+      <OnboardingOverlay />
       {/* Gradient primary -> brand-accent (bursztyn) zamiast prawie niewidocznego primary ->
           primary/90 - nagłówek jako realna przestrzeń marki, wykorzystująca drugi akcent, który
           wcześniej żył tylko w logo/cieniach kart. Diagonalny kierunek + oba kolory tak samo
