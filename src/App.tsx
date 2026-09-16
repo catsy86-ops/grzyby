@@ -113,8 +113,19 @@ function App() {
       {/* Gradient primary -> brand-accent (bursztyn) zamiast prawie niewidocznego primary ->
           primary/90 - nagłówek jako realna przestrzeń marki, wykorzystująca drugi akcent, który
           wcześniej żył tylko w logo/cieniach kart. Diagonalny kierunek + oba kolory tak samo
-          ciemne w obu motywach (patrz index.css) utrzymują kontrast tekstu primary-foreground. */}
-      <header className="safe-area-top flex items-center gap-2 bg-gradient-to-br from-primary via-primary to-brand-accent/70 px-4 pb-3 pt-4 text-primary-foreground shadow-sm shadow-brand-accent/20">
+          ciemne w obu motywach (patrz index.css) utrzymują kontrast tekstu primary-foreground.
+          Faza A nowecos.md: Mapa i Rozpoznaj dostają subtelnie inny końcowy kolor gradientu
+          (leśna zieleń / bursztyn skanu) dla szybszej orientacji "w której jestem zakładce" -
+          Dziennik i Baza wiedzy zostają przy domyślnym primary->brand-accent. */}
+      <header
+        className={`safe-area-top flex items-center gap-2 bg-gradient-to-br from-primary via-primary px-4 pb-3 pt-4 text-primary-foreground shadow-[var(--shadow-card)] transition-colors duration-300 ${
+          activeTab === 'mapa'
+            ? 'to-header-accent-mapa/70'
+            : activeTab === 'rozpoznaj'
+              ? 'to-header-accent-rozpoznaj/70'
+              : 'to-brand-accent/70'
+        }`}
+      >
         <ThemeToggle />
         <div className="flex flex-1 items-center justify-center gap-1.5">
           <Logo className="size-5" />
@@ -165,7 +176,7 @@ function App() {
           </motion.div>
         </AnimatePresence>
       </main>
-      <nav className="safe-area-bottom relative z-10 flex border-t border-border bg-card/95 px-1 pt-1 shadow-[0_-4px_16px_rgb(0,0,0,0.08)] backdrop-blur supports-[backdrop-filter]:bg-card/80 dark:shadow-[0_-4px_16px_rgb(0,0,0,0.35)]">
+      <nav className="safe-area-bottom relative z-10 flex border-t border-border bg-card/95 px-1 pt-1 shadow-[var(--shadow-floating)] backdrop-blur supports-[backdrop-filter]:bg-card/80">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key
           const Icon = tab.icon
