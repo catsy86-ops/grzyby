@@ -52,7 +52,7 @@ export function EncyclopediaView() {
     // szerokości telefonu nawet na desktopie, więc treść pływała wąską kolumną w pustej
     // przestrzeni. Lista kart niżej dostaje odpowiadającą siatkę 2/3 kolumn.
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
-      <h1 className="text-xl font-semibold">Baza wiedzy o gatunkach</h1>
+      <h1 className="text-xl font-semibold tracking-tight">Baza wiedzy o gatunkach</h1>
 
       <div className="flex gap-2">
         <Input

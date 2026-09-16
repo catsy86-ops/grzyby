@@ -287,7 +287,7 @@ export function JournalView() {
     // EncyclopediaView.tsx. Lista znalezisk niżej dostaje odpowiadającą siatkę 2/3 kolumn.
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Dziennik zbiorów</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Dziennik zbiorów</h1>
         {/* Trzy osobne przyciski (Eksportuj/Importuj/PDF) skonsolidowane w jedno menu - to akcje
             okazjonalne (backup, udostępnianie), nie codzienne, więc nie muszą zajmować stałego
             miejsca w nagłówku obok tytułu widoku. */}

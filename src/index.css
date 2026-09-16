@@ -187,6 +187,16 @@ body {
   html {
     @apply font-sans;
   }
+  /* Zapobiega osieroconym pojedynczym słowom na końcu nagłówków/akapitów (np. "Baza wiedzy o /
+     gatunkach" łamiące się tak, że "gatunkach" zostaje samo w linii) - `balance` dla krótkich
+     nagłówków (rozkłada tekst równomiernie), `pretty` dla dłuższych akapitów opisów gatunków
+     (tańsze obliczeniowo, wspierane szerzej niż `balance` dla long-form tekstu). */
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
 }
 
 /* Bardzo subtelna tekstura tła (ziarno) - czysty SVG data-URI (bez plików graficznych, zero
