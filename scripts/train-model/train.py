@@ -291,7 +291,21 @@ def main() -> int:
     # jawna niezależnie od tego, czy klasa negatywna została użyta.
     metadata_path = args.output / "metadata.json"
     metadata_path.write_text(
-        json.dumps({"labels": class_names, "temperature": temperature}, ensure_ascii=False, indent=2),
+        json.dumps(
+            {
+                "labels": class_names,
+                "temperature": temperature,
+                # Zawsze true w tym miejscu - check_review_gate() wyżej już zablokowałby trening,
+                # gdyby dataset nie przeszedł scripts/prepare-dataset/review-gate.mjs. Pole czyta
+                # src/utils/mushroomModel.ts (loadDatasetReviewed) - jego BRAK w metadata.json
+                # (modele sprzed tego pola, albo eksport z Teachable Machine) traktowany jest jako
+                # "nie zrecenzjonowano", żeby UI (IdentifyView.tsx) pokazywał dodatkowe ostrzeżenie
+                # zamiast milcząco zakładać, że każdy model jest tak samo wiarygodny.
+                "datasetReviewed": True,
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
         encoding="utf-8",
     )
     print(f"Zapisano metadata.json: {metadata_path}")

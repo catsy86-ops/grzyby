@@ -5,7 +5,7 @@ import * as mushroomModel from '../../utils/mushroomModel'
 
 vi.mock('../../utils/mushroomModel', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../utils/mushroomModel')>()
-  return { ...actual, isModelAvailable: vi.fn() }
+  return { ...actual, isModelAvailable: vi.fn(), loadDatasetReviewed: vi.fn() }
 })
 
 function makeImageFile(name = 'grzyb.jpg') {
@@ -24,11 +24,15 @@ describe('IdentifyView', () => {
     // od czego zależy useAutoAnimate używany przez IdentifyView.
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-preview')
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    // Domyślnie "zrecenzjonowany" w testach niezwiązanych z tą flagą - patrz opisane niżej testy
+    // `datasetReviewed`, gdzie wartość jest jawnie nadpisywana.
+    vi.mocked(mushroomModel.loadDatasetReviewed).mockResolvedValue(true)
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
     vi.mocked(mushroomModel.isModelAvailable).mockReset()
+    vi.mocked(mushroomModel.loadDatasetReviewed).mockReset()
   })
 
   it('wybór pliku przez input ustawia podgląd zdjęcia', async () => {
@@ -85,5 +89,31 @@ describe('IdentifyView', () => {
 
     const button = await screen.findByRole('button', { name: /rozpoznaj gatunek/i })
     await waitFor(() => expect(button).toBeEnabled())
+  })
+
+  it('pokazuje ostrzeżenie o braku recenzji datasetu, gdy metadata.json tego nie potwierdza', async () => {
+    vi.mocked(mushroomModel.isModelAvailable).mockResolvedValue(true)
+    vi.mocked(mushroomModel.loadDatasetReviewed).mockResolvedValue(false)
+    render(<IdentifyView />)
+
+    expect(await screen.findByText(/nie przeszedł jeszcze formalnej, ręcznej recenzji/i)).toBeInTheDocument()
+  })
+
+  it('nie pokazuje ostrzeżenia o recenzji datasetu, gdy metadata.json ją potwierdza', async () => {
+    vi.mocked(mushroomModel.isModelAvailable).mockResolvedValue(true)
+    vi.mocked(mushroomModel.loadDatasetReviewed).mockResolvedValue(true)
+    render(<IdentifyView />)
+
+    await waitFor(() => expect(mushroomModel.loadDatasetReviewed).toHaveBeenCalled())
+    expect(screen.queryByText(/nie przeszedł jeszcze formalnej, ręcznej recenzji/i)).not.toBeInTheDocument()
+  })
+
+  it('nie pokazuje ostrzeżenia o recenzji datasetu, gdy model w ogóle nie jest zainstalowany', async () => {
+    vi.mocked(mushroomModel.isModelAvailable).mockResolvedValue(false)
+    vi.mocked(mushroomModel.loadDatasetReviewed).mockResolvedValue(false)
+    render(<IdentifyView />)
+
+    await waitFor(() => expect(mushroomModel.loadDatasetReviewed).toHaveBeenCalled())
+    expect(screen.queryByText(/nie przeszedł jeszcze formalnej, ręcznej recenzji/i)).not.toBeInTheDocument()
   })
 })

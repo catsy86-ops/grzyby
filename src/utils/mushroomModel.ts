@@ -23,6 +23,7 @@ const DEFAULT_CLASS_LABELS: string[] = speciesData.map((s) => s.id)
 interface ModelMetadata {
   labels?: unknown
   temperature?: unknown
+  datasetReviewed?: unknown
 }
 
 async function fetchMetadata(): Promise<ModelMetadata | null> {
@@ -61,6 +62,16 @@ export async function loadTemperature(): Promise<number> {
     return metadata.temperature
   }
   return 1
+}
+
+// `true` tylko gdy train.py (scripts/train-model/train.py) faktycznie przepuścił dataset przez
+// scripts/prepare-dataset/review-gate.mjs przed treningiem - patrz komentarz przy zapisie tego
+// pola w train.py. Brak pola w metadata.json (model wytrenowany starszą wersją skryptu, sprzed
+// dodania bramki recenzji, albo eksport z Teachable Machine) = `false`, nie `true` - domyślne
+// zaufanie byłoby dokładnie tym błędem, który ta flaga ma ujawniać w UI (patrz IdentifyView.tsx).
+export async function loadDatasetReviewed(): Promise<boolean> {
+  const metadata = await fetchMetadata()
+  return metadata?.datasetReviewed === true
 }
 
 // Przeskalowuje już znormalizowany (sumujący się do 1) wektor prawdopodobieństw softmax o

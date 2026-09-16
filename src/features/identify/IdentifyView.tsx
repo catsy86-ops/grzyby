@@ -3,7 +3,7 @@ import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { CameraIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
 import { CameraMushroomIllustration } from '../../components/icons/illustrations'
-import { isModelAvailable, type Prediction } from '../../utils/mushroomModel'
+import { isModelAvailable, loadDatasetReviewed, type Prediction } from '../../utils/mushroomModel'
 import { identifyMushroomInWorker } from '../../utils/mushroomWorkerClient'
 import { PredictionCard } from './PredictionCard'
 import { Alert, AlertDescription } from '../../components/ui/alert'
@@ -15,6 +15,9 @@ export function IdentifyView() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [modelReady, setModelReady] = useState<boolean | null>(null)
+  // Domyślnie false (nie true) - ten sam "domyślny brak zaufania" co loadDatasetReviewed() samo w
+  // sobie: krótkie okno przed rozstrzygnięciem fetcha ma pokazywać ostrzeżenie, nie je ukrywać.
+  const [datasetReviewed, setDatasetReviewed] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const imageRef = useRef<HTMLImageElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -22,6 +25,7 @@ export function IdentifyView() {
 
   useEffect(() => {
     isModelAvailable().then(setModelReady)
+    loadDatasetReviewed().then(setDatasetReviewed)
   }, [])
 
   // Sprząta poprzedni object URL przy każdej nowej selekcji zdjęcia i przy odmontowaniu komponentu.
@@ -85,6 +89,24 @@ export function IdentifyView() {
             Model rozpoznawania nie jest jeszcze zainstalowany w tej aplikacji (brak plików w{' '}
             <code>public/models</code>). Funkcja będzie działać po dodaniu wytrenowanego modelu
             TensorFlow.js.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Widoczne OD RAZU (nie dopiero po wyniku rozpoznania) - ktoś decydujący, czy w ogóle
+          zaufać tej funkcji, powinien to wiedzieć zanim zrobi zdjęcie, nie dopiero po analizie.
+          `datasetReviewed` pochodzi z metadata.json (patrz loadDatasetReviewed w
+          mushroomModel.ts) - `false` obejmuje zarówno model sprzed dodania bramki recenzji
+          danych (scripts/prepare-dataset/review-gate.mjs), jak i brak jakiegokolwiek pola (np.
+          eksport z Teachable Machine). */}
+      {modelReady && !datasetReviewed && (
+        <Alert variant="warning">
+          <TriangleAlertIcon />
+          <AlertDescription className="text-current">
+            Zainstalowany model NIE przeszedł jeszcze formalnej, ręcznej recenzji zdjęć
+            treningowych (patrz <code>docs/MODEL-TRAINING.md</code>) - jego wyniki mogą być mniej
+            wiarygodne niż zwykle. Traktuj je z jeszcze większą rezerwą niż standardowe ostrzeżenie
+            poniżej.
           </AlertDescription>
         </Alert>
       )}

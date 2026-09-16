@@ -143,6 +143,37 @@ describe('loadTemperature', () => {
   })
 })
 
+describe('loadDatasetReviewed', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  it('zwraca false, gdy metadata.json nie istnieje', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('not found', { status: 404 })))
+    const { loadDatasetReviewed } = await import('./mushroomModel')
+
+    await expect(loadDatasetReviewed()).resolves.toBe(false)
+  })
+
+  it('zwraca false, gdy pole datasetReviewed jest nieobecne (model sprzed bramki recenzji)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ temperature: 1.2 }), { status: 200 })))
+    const { loadDatasetReviewed } = await import('./mushroomModel')
+
+    await expect(loadDatasetReviewed()).resolves.toBe(false)
+  })
+
+  it('zwraca true tylko gdy datasetReviewed jest dosłownie true', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ datasetReviewed: true }), { status: 200 })),
+    )
+    const { loadDatasetReviewed } = await import('./mushroomModel')
+
+    await expect(loadDatasetReviewed()).resolves.toBe(true)
+  })
+})
+
 describe('isModelAvailable', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
