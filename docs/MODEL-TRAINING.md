@@ -97,6 +97,10 @@ jest wymagane, ale trening będzie szybszy).
 
 ## Po dostarczeniu modelu
 
+- Ścieżka B (`train.py`) zapisuje `model-export/eval-report.json` (precision/recall/F1 per gatunek
+  na zbiorze walidacyjnym) i `model-export/confusion-matrix.png` - przejrzyj oba PRZED wdrożeniem.
+  Niska precision/recall na gatunku trującym (fałszywie rozpoznany jako jadalny) jest poważniejszym
+  problemem niż niska ogólna accuracy, którą łatwo zawyżyć nierównomiernym rozkładem klas.
 - Zweryfikuj na kilku znanych zdjęciach z każdej klasy, czy top-1 wynik się zgadza - to podstawowy
   sanity check przed jakimkolwiek zaufaniem do modelu.
 - `src/utils/mushroomModel.test.ts` ma test strażniczy sprawdzający zgodność długości/kolejności

@@ -137,6 +137,52 @@ def build_model(num_classes: int) -> keras.Model:
     return model
 
 
+def evaluate_and_report(model: keras.Model, val_ds: tf.data.Dataset, class_names: list[str], output_dir: pathlib.Path) -> None:
+    """Zapisuje classification_report (precision/recall/F1 per klasa) i confusion matrix na
+    zbiorze walidacyjnym - bez tego jedynym sygnałem jakości modelu było "loss spadł podczas
+    treningu", co przy klasyfikatorze jadalny/trujący jest zdecydowanie za mało, żeby ktokolwiek
+    mógł ocenić, czy dany model nadaje się do wdrożenia."""
+    from sklearn.metrics import ConfusionMatrixDisplay, classification_report
+
+    y_true: list[int] = []
+    y_pred: list[int] = []
+    for batch_images, batch_labels in val_ds:
+        batch_pred = model.predict(batch_images, verbose=0)
+        y_true.extend(tf.argmax(batch_labels, axis=1).numpy().tolist())
+        y_pred.extend(tf.argmax(batch_pred, axis=1).tolist())
+
+    report = classification_report(
+        y_true, y_pred, labels=list(range(len(class_names))), target_names=class_names,
+        output_dict=True, zero_division=0,
+    )
+    report_path = output_dir / "eval-report.json"
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Zapisano raport ewaluacji: {report_path}")
+    print(f"  Dokładność ogólna (accuracy) na zbiorze walidacyjnym: {report['accuracy']:.2%}")
+
+    # matplotlib bez GUI (Agg) - skrypt uruchamiany z konsoli/CI, nie ma X serwera/okna.
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(max(6, len(class_names) * 0.5), max(6, len(class_names) * 0.5)))
+    ConfusionMatrixDisplay.from_predictions(
+        y_true, y_pred, labels=list(range(len(class_names))), display_labels=class_names, ax=ax,
+        xticks_rotation="vertical", colorbar=False,
+    )
+    fig.tight_layout()
+    matrix_path = output_dir / "confusion-matrix.png"
+    fig.savefig(matrix_path, dpi=150)
+    plt.close(fig)
+    print(f"Zapisano confusion matrix: {matrix_path}")
+    print(
+        "\nPrzed wdrożeniem modelu przejrzyj oba pliki - niska precision/recall na gatunku "
+        "trującym (fałszywie rozpoznany jako jadalny) jest dużo poważniejszym problemem niż niska "
+        "ogólna accuracy. Sam wynik accuracy łatwo zawyżyć nierównomiernym rozkładem klas."
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--dataset", type=pathlib.Path, default=REPO_ROOT / "dataset")
@@ -182,6 +228,10 @@ def main() -> int:
         model.fit(train_ds, validation_data=val_ds, epochs=args.fine_tune_epochs)
 
     args.output.mkdir(parents=True, exist_ok=True)
+
+    print("\nEwaluacja na zbiorze walidacyjnym...")
+    evaluate_and_report(model, val_ds, class_names, args.output)
+
     keras_path = args.output / "model.h5"
     model.save(keras_path)
     print(f"\nZapisano model Keras: {keras_path}")
