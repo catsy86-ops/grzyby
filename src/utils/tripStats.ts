@@ -20,6 +20,27 @@ export function formatWeight(grams: number): string {
   return `${(grams / 1000).toFixed(1)} kg`
 }
 
+// Grupowanie znalezisk wg roku kalendarzowego - uproszczenie "sezonu" (realny sezon grzybowy nie
+// pokrywa się dokładnie z rokiem kalendarzowym, ale to wystarczające przybliżenie dla
+// porównania "ten rok vs poprzedni" bez wprowadzania osobnego pojęcia sezonu w danych).
+export function groupFindingsByYear(findings: Finding[]): Map<number, Finding[]> {
+  const byYear = new Map<number, Finding[]>()
+  for (const finding of findings) {
+    const year = new Date(finding.createdAt).getFullYear()
+    const existing = byYear.get(year)
+    if (existing) existing.push(finding)
+    else byYear.set(year, [finding])
+  }
+  return byYear
+}
+
+// Zmiana procentowa względem poprzedniego roku - `null`, gdy brak danych z poprzedniego roku do
+// porównania (dzielenie przez zero byłoby mylące, nie "0% zmiany").
+export function yearOverYearDelta(current: number, previous: number): number | null {
+  if (previous === 0) return null
+  return Math.round(((current - previous) / previous) * 100)
+}
+
 export function formatDuration(startedAt: number, endedAt: number | null): string {
   const ms = Math.max(0, (endedAt ?? Date.now()) - startedAt)
   const totalMinutes = Math.floor(ms / 60000)

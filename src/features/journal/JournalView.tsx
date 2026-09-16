@@ -51,6 +51,7 @@ import { FirstAidGuide } from '../tools/FirstAidGuide'
 import { NotificationPermissionBanner } from '../../components/NotificationPermissionBanner'
 import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
+import { SeasonSummary } from './SeasonSummary'
 import { TripManager } from './TripManager'
 import { TripsHistory } from './TripsHistory'
 import { formatDateTime } from '../../utils/formatDate'
@@ -368,6 +369,7 @@ export function JournalView() {
         onChange={(e) => setSearchQuery(e.target.value)}
       />
 
+      <SeasonSummary />
       <TripManager />
       <TripsHistory selectedTripId={tripFilter} onSelectTrip={setTripFilter} />
 

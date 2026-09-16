@@ -4,9 +4,11 @@ import {
   countSpeciesDiversity,
   formatDuration,
   formatWeight,
+  groupFindingsByYear,
   isLongTrip,
   LONG_TRIP_THRESHOLD_MS,
   sumWeightGrams,
+  yearOverYearDelta,
 } from './tripStats'
 
 function makeFinding(overrides: Partial<Finding> = {}): Finding {
@@ -99,5 +101,30 @@ describe('isLongTrip', () => {
     const now = 1_000_000
     expect(isLongTrip(now - LONG_TRIP_THRESHOLD_MS, now)).toBe(true)
     expect(isLongTrip(now - LONG_TRIP_THRESHOLD_MS - 1, now)).toBe(true)
+  })
+})
+
+describe('groupFindingsByYear', () => {
+  it('grupuje znaleziska wg roku createdAt', () => {
+    const findings = [
+      makeFinding({ createdAt: new Date('2025-08-01').getTime() }),
+      makeFinding({ createdAt: new Date('2026-09-01').getTime() }),
+      makeFinding({ createdAt: new Date('2026-09-15').getTime() }),
+    ]
+    const byYear = groupFindingsByYear(findings)
+    expect(byYear.get(2025)?.length).toBe(1)
+    expect(byYear.get(2026)?.length).toBe(2)
+    expect(byYear.has(2024)).toBe(false)
+  })
+})
+
+describe('yearOverYearDelta', () => {
+  it('liczy procentową zmianę względem poprzedniego roku', () => {
+    expect(yearOverYearDelta(12, 10)).toBe(20)
+    expect(yearOverYearDelta(5, 10)).toBe(-50)
+  })
+
+  it('zwraca null, gdy brak danych z poprzedniego roku', () => {
+    expect(yearOverYearDelta(5, 0)).toBeNull()
   })
 })
