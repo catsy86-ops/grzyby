@@ -7,6 +7,7 @@ import {
   MapPinnedIcon,
   MessageCircleIcon,
   MoreVerticalIcon,
+  PlusIcon,
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import {
@@ -105,8 +106,17 @@ export function MapToolbar({
         <CrosshairIcon className="size-4" />
       </Button>
       </div>
-      <Button className="rounded-full shadow" onClick={onAddFinding}>
-        + Dodaj znalezisko
+      {/* Okrągły, ikonowy FAB zamiast pigułki z tekstem - konwencja map-appek (Google/Apple Maps,
+          OsmAnd) dla głównej akcji unoszącej się nad mapą. size-14 (56px, standardowy rozmiar
+          Material FAB) zamiast domyślnego rozmiaru przycisku - to najważniejsza akcja tego
+          widoku, ma być łatwa trafić kciukiem w terenie, w rękawiczkach czy biegu. */}
+      <Button
+        size="icon"
+        className="size-14 rounded-full shadow-[var(--shadow-floating)]"
+        aria-label="Dodaj znalezisko"
+        onClick={onAddFinding}
+      >
+        <PlusIcon className="size-6" />
       </Button>
     </div>
   )

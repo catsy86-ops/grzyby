@@ -9,7 +9,7 @@ import { EmptyBasketIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
-import { edibilityChartColor } from '../../components/EdibilityBadge'
+import { EdibilityBadge, edibilityCardAccentClass, edibilityChartColor } from '../../components/EdibilityBadge'
 import { StatTile, StatTileRow } from '../../components/StatTiles'
 import {
   countLikelyDuplicates,
@@ -570,6 +570,13 @@ export function JournalView() {
             )
           }
 
+          // Kolor lewego paska + delikatny odcień tła wg jadalności gatunku - ta sama skala co w
+          // EncyclopediaView.tsx, patrz uzasadnienie w komentarzu przy edibilityCardAccentClass.
+          // Bez rozpoznanego gatunku (speciesId null/nieznany) karta zostaje bez akcentu.
+          const findingSpecies = finding.speciesId
+            ? (speciesData as Species[]).find((sp) => sp.id === finding.speciesId)
+            : undefined
+
           return (
             // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (transform-based
             // pozycjonowanie przy sortowaniu/usuwaniu) - mikrointerakcja `whileTap` (motion) idzie
@@ -581,7 +588,9 @@ export function JournalView() {
               key={finding.id}
               size="sm"
               style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
-              className="stagger-item transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15"
+              className={`stagger-item border-l-4 transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15 ${
+                findingSpecies ? edibilityCardAccentClass(findingSpecies.edibility) : 'border-l-border'
+              }`}
             >
               <CardContent>
                 <motion.div
@@ -592,7 +601,10 @@ export function JournalView() {
                   {finding.id != null && <FindingThumbnail findingId={finding.id} />}
                   <div className="flex flex-1 items-start justify-between">
                     <div>
-                      <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <p className="font-medium">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+                        {findingSpecies && <EdibilityBadge edibility={findingSpecies.edibility} />}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {formatDateTime(finding.createdAt)}
                         {finding.latitude != null && finding.longitude != null && (

@@ -96,7 +96,10 @@ export function EncyclopediaView() {
         </ToggleGroup>
       </div>
 
-      <div ref={listRef} className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {/* Siatka 2-kolumnowa już na mobile (nie dopiero od md:) - z miniaturkami zdjęć lista 19
+          gatunków skanuje się szybciej niż jedna szeroka kolumna, a szczegóły opisowe i tak są
+          domyślnie zwinięte (patrz Collapsible niżej), więc węższa karta ich nie ścieśnia. */}
+      <div ref={listRef} className="grid grid-cols-2 items-start gap-3 md:grid-cols-3 lg:grid-cols-4">
         {filtered.map((s, index) => (
           // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (filtrowanie/wyszukiwanie
           // animuje pozycję/usunięcie) - mikrointerakcja `whileTap` idzie na wewnętrzny `motion.div`,
@@ -112,7 +115,7 @@ export function EncyclopediaView() {
             <CardContent>
             <motion.div whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
               {s.imageUrls[0] && (
-                <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg">
+                <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg">
                   <img src={s.imageUrls[0]} alt={s.nameCommon} loading="lazy" className="size-full object-cover" />
                   {/* Winieta u dołu zdjęcia, tonowana kolorem jadalności (ta sama skala co lewy
                       pasek karty) - łączy fotografię z systemem kolorów bezpieczeństwa zamiast
@@ -126,7 +129,10 @@ export function EncyclopediaView() {
                   />
                 </div>
               )}
-              <div className="flex items-center justify-between gap-2">
+              {/* flex-wrap - w wąskiej 2-kolumnowej karcie na mobile nazwa gatunku + odznaki
+                  (chroniony/jadalność) obok siebie w jednym rzędzie by się ścieśniały; odznaki
+                  schodzą do nowej linii zamiast obcinać nazwę. */}
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                 <p className="font-medium">{s.nameCommon}</p>
                 <div className="flex shrink-0 gap-1.5">
                   {s.legalProtection && (
@@ -204,7 +210,7 @@ export function EncyclopediaView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
-            className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground md:col-span-2 lg:col-span-3"
+            className="col-span-2 flex flex-col items-center gap-2 py-10 text-center text-muted-foreground md:col-span-3 lg:col-span-4"
           >
             <EmptySearchIllustration className="size-14 text-muted-foreground" />
             <p className="text-sm">Brak wyników dla podanych kryteriów.</p>

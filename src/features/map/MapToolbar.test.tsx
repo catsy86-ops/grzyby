@@ -38,11 +38,11 @@ describe('MapToolbar', () => {
     expect(onLocate).toHaveBeenCalledOnce()
   })
 
-  it('wywołuje onAddFinding po kliknięciu "+ Dodaj znalezisko"', () => {
+  it('wywołuje onAddFinding po kliknięciu FAB "Dodaj znalezisko"', () => {
     const onAddFinding = vi.fn()
     render(<MapToolbar {...baseProps} onAddFinding={onAddFinding} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '+ Dodaj znalezisko' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Dodaj znalezisko' }))
     expect(onAddFinding).toHaveBeenCalledOnce()
   })
 
