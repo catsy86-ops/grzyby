@@ -14,11 +14,26 @@ Pobiera z Wikimedia Commons kandydatów na zdjęcia treningowe dla każdego gatu
 `src/data/species.json`, do `scripts/prepare-dataset/raw/<species-id>/` (razem z `source.json` -
 licencja i link źródłowy każdego zdjęcia).
 
-**To NIE jest gotowy zbiór treningowy.** Zdjęcia z automatycznego wyszukiwania po nazwie łacińskiej
-bywają błędnie skategoryzowane, przedstawiają nie ten gatunek, nie ten etap rozwoju, albo są
-ilustracjami/rysunkami zamiast zdjęć. Przy grzybach trujących vs jadalnych pomyłka w danych
-treningowych to kwestia bezpieczeństwa użytkownika apki, nie tylko jakości modelu - **każde
-zdjęcie trzeba ręcznie obejrzeć** przed użyciem.
+## `fetch-inaturalist-images.mjs`
+
+```bash
+node scripts/prepare-dataset/fetch-inaturalist-images.mjs --limit 40 [--place-id 7800] [--skip-existing]
+```
+
+Drugie źródło kandydatów - obserwacje "research grade" (potwierdzone przez ≥2 niezależnych
+użytkowników) z iNaturalist, domyślnie ograniczone do Polski (`place_id=7800`, `--place-id 0`
+wyłącza filtr geograficzny), filtrowane licencją pozwalającą na trening modelu (CC0/CC-BY/CC-BY-NC/
+CC-BY-SA/CC-BY-NC-SA, bez wariantów `-ND`). W praktyce bliższe realnym zdjęciom robionym telefonem
+w terenie niż część fotografii z Commons - dobrze uzupełnia się z pierwszym źródłem, nie zastępuje
+go. Zapisuje do tego samego `raw/<species-id>/` co Commons, z prefiksem nazw plików `inat-` (żeby
+nie kolidować z numeracją `fetch-reference-images.mjs`) i osobnym `source-inaturalist.json`
+(licencje CC-BY/CC-BY-NC/CC-BY-SA wymagają zachowania pola `attribution` przy dalszym użyciu).
+
+**Żadne z powyższych nie jest gotowym zbiorem treningowym.** Zdjęcia z automatycznego wyszukiwania
+(po nazwie łacińskiej albo identyfikacji społeczności) bywają błędnie skategoryzowane, przedstawiają
+nie ten gatunek, nie ten etap rozwoju, albo są ilustracjami/rysunkami zamiast zdjęć. Przy grzybach
+trujących vs jadalnych pomyłka w danych treningowych to kwestia bezpieczeństwa użytkownika apki, nie
+tylko jakości modelu - **każde zdjęcie trzeba ręcznie obejrzeć** przed użyciem.
 
 ## Krok ręczny (obowiązkowy)
 

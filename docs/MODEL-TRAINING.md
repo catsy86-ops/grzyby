@@ -64,6 +64,9 @@ jest wymagane, ale trening będzie szybszy).
 
 1. Przygotuj `dataset/<species-id>/*.jpg` (jeden podkatalog na każdy `id` ze `species.json`, plus
    opcjonalnie `dataset/inne/*.jpg` dla klasy negatywnej) - patrz `scripts/prepare-dataset/README.md`.
+   Dwa źródła kandydatów do wyboru (albo oba naraz - uzupełniają się): `fetch-reference-images.mjs`
+   (Wikimedia Commons) i `fetch-inaturalist-images.mjs` (obserwacje "research grade" z
+   iNaturalist, domyślnie z Polski - bliższe realnym zdjęciom z terenu).
    `scripts/prepare-dataset/sanity-filter.mjs` odrzuca uszkodzone/zbyt małe pliki i duplikaty z
    `raw/` i kopiuje resztę do `dataset/` - to filtr techniczny, nie merytoryczny.
    **Obowiązkowo** uruchom potem `scripts/prepare-dataset/review-gate.mjs` - `train.py` (krok 3)
