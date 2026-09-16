@@ -23,11 +23,14 @@ function makePrediction(overrides: Partial<Prediction> = {}): Prediction {
 }
 
 describe('PredictionCard', () => {
-  it('renderuje wariant niskiej pewności, gdy confidence < 40%', () => {
+  it('renderuje wariant niskiej pewności, gdy confidence < 40%, bez ujawniania nazwy gatunku', () => {
     render(<PredictionCard prediction={makePrediction({ confidence: 0.39 })} rank={1} />)
 
     expect(screen.getByText(/zbyt niska pewność/i)).toBeInTheDocument()
     expect(screen.queryByText('Opis borowika.')).not.toBeInTheDocument()
+    // Twarde wstrzymanie wyniku (patrz komentarz w PredictionCard.tsx) - nawet podpisana jako
+    // "niepewna" sugestia gatunku to wciąż sugestia przy klasyfikatorze jadalny/trujący.
+    expect(screen.queryByText(/borowik szlachetny/i)).not.toBeInTheDocument()
   })
 
   it('renderuje pełną kartę, gdy confidence >= 40%', () => {

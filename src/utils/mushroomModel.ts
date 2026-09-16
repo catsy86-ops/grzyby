@@ -135,18 +135,21 @@ export async function identifyMushroom(imageElement: HTMLImageElement | ImageBit
   const tf = await import('@tensorflow/tfjs')
   const [model, labels, temperature] = await Promise.all([loadModel(), loadClassLabels(), loadTemperature()])
 
-  const predictions = tf.tidy(() => {
-    const tensor = tf.browser
-      .fromPixels(imageElement)
-      .resizeBilinear([INPUT_SIZE, INPUT_SIZE])
-      .toFloat()
-      .div(255)
-      .expandDims(0)
-    return model.predict(tensor) as TF.Tensor
+  // Test-time augmentation: uśrednia predykcję ze zdjęcia oryginalnego i jego lustrzanego odbicia
+  // (poziomego) zamiast pojedynczego przebiegu - kapelusz grzyba nie ma "właściwej" orientacji
+  // lewo-prawo, więc odbicie to darmowa druga próbka tego samego obiektu. Tani sposób (2x koszt
+  // inferencji, nie 4-8x) na zmniejszenie wariancji pojedynczego, niepewnego odczytu przy tak
+  // małym zbiorze treningowym - patrz docs/MODEL-TRAINING.md.
+  const averagedProbs = tf.tidy(() => {
+    const base = tf.browser.fromPixels(imageElement).resizeBilinear([INPUT_SIZE, INPUT_SIZE]).toFloat().div(255)
+    const flipped = base.reverse(1) // oś 1 = szerokość dla tensora [wysokość, szerokość, kanały]
+    const batch = tf.stack([base, flipped])
+    const predictions = model.predict(batch) as TF.Tensor
+    return tf.mean(predictions, 0)
   })
 
-  const scores = await predictions.data()
-  predictions.dispose()
+  const scores = await averagedProbs.data()
+  averagedProbs.dispose()
 
   const calibrated = applyTemperature(scores as Float32Array, temperature)
   return rankPredictions(calibrated, 3, labels)

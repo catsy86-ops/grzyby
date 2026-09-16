@@ -24,19 +24,19 @@ export function PredictionCard({ prediction, rank }: { prediction: Prediction; r
   const confidencePct = Math.round(confidence * 100)
   const isLowConfidence = confidence < LOW_CONFIDENCE_THRESHOLD
 
+  // Twarde wstrzymanie wyniku poniżej progu, nie samo złagodzenie tonu - nazwa gatunku (nawet
+  // podpisana jako "niepewna") to wciąż sugestia, którą przy klasyfikatorze jadalny/trujący łatwo
+  // machinalnie zapamiętać mimo zastrzeżenia. Cisza (brak wskazanej nazwy) jest tu bezpieczniejsza
+  // niż niepewna podpowiedź - patrz docs/MODEL-TRAINING.md.
   if (isLowConfidence) {
     return (
       <Card size="sm" className="opacity-70">
         <CardContent>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              #{rank} {displayName(species, labelRaw)} — zbyt niska pewność
-            </p>
-            <span className="text-sm text-muted-foreground">{confidencePct}%</span>
-          </div>
+          <p className="text-sm text-muted-foreground">#{rank} — model nie jest wystarczająco pewny</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Model nie jest wystarczająco pewny tego dopasowania. Traktuj to jako zgadywankę, nie
-            identyfikację.
+            Zbyt niska pewność, by pokazać sugestię gatunku. Zrób wyraźniejsze zdjęcie (bliżej,
+            lepsze światło, cały grzyb w kadrze) albo poproś o pomoc mikologa/punkt klasyfikacji
+            grzybów (Sanepid).
           </p>
         </CardContent>
       </Card>
