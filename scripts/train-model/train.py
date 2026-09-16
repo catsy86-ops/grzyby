@@ -119,6 +119,19 @@ def build_datasets(dataset_dir: pathlib.Path, class_names: list[str], batch_size
     return train_ds, val_ds
 
 
+def compute_class_weights(dataset_dir: pathlib.Path, class_names: list[str]) -> dict[int, float]:
+    """Wagi odwrotnie proporcjonalne do liczebności klasy (standardowy wzór
+    n_samples / (n_classes * n_samples_w_klasie)) - w tym repo klasa negatywna "inne" ma
+    historycznie ~3x więcej zdjęć niż pojedynczy gatunek (patrz fetch-negative-images.mjs), co bez
+    tej korekty ciągnie model w stronę nadmiernego rozpoznawania "to nie grzyb" kosztem rzadszych
+    klas - przy klasyfikatorze bezpieczeństwa niepożądane w obie strony (zarówno ukrywanie realnych
+    trafień, jak i odwrotnie)."""
+    counts = {name: len(list((dataset_dir / name).glob("*"))) for name in class_names}
+    total = sum(counts.values())
+    num_classes = len(class_names)
+    return {i: total / (num_classes * counts[name]) for i, name in enumerate(class_names) if counts[name] > 0}
+
+
 def build_model(num_classes: int) -> keras.Model:
     inputs = keras.Input(shape=(*IMAGE_SIZE, 3), name="image")
     # Wejście to [0,1], dokładnie jak preprocessing w mushroomModel.ts (fromPixels -> resize -> /255).
@@ -244,11 +257,16 @@ def main() -> int:
         return 1
 
     train_ds, val_ds = build_datasets(args.dataset, class_names, args.batch_size, args.val_split)
+    class_weight = compute_class_weights(args.dataset, class_names)
+    print("Wagi klas (korekta nierównomiernego rozkładu, patrz compute_class_weights):")
+    for name, weight in zip(class_names, (class_weight.get(i, 1.0) for i in range(len(class_names)))):
+        print(f"  {name}: {weight:.2f}")
+
     model = build_model(len(class_names))
     model.compile(optimizer=keras.optimizers.Adam(1e-3), loss="categorical_crossentropy", metrics=["accuracy"])
 
     print(f"Trening głowy klasyfikacyjnej ({args.epochs} epok, baza MobileNetV2 zamrożona)...")
-    model.fit(train_ds, validation_data=val_ds, epochs=args.epochs)
+    model.fit(train_ds, validation_data=val_ds, epochs=args.epochs, class_weight=class_weight)
 
     if args.fine_tune_epochs > 0:
         print(f"Fine-tuning ostatnich warstw MobileNetV2 ({args.fine_tune_epochs} epok)...")
@@ -256,7 +274,7 @@ def main() -> int:
         for layer in model.mushroom_base_model.layers[:-30]:
             layer.trainable = False
         model.compile(optimizer=keras.optimizers.Adam(1e-5), loss="categorical_crossentropy", metrics=["accuracy"])
-        model.fit(train_ds, validation_data=val_ds, epochs=args.fine_tune_epochs)
+        model.fit(train_ds, validation_data=val_ds, epochs=args.fine_tune_epochs, class_weight=class_weight)
 
     args.output.mkdir(parents=True, exist_ok=True)
 

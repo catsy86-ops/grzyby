@@ -78,7 +78,9 @@ jest wymagane, ale trening będzie szybszy).
    koła binarnego zgodnego z żadną wersją TensorFlow dostępną dla 3.12 - użyj Pythona 3.10 lub
    3.11 dla tego środowiska.
 3. `python scripts/train-model/train.py --epochs 15 --fine-tune-epochs 5` - transfer learning na
-   MobileNetV2, zamrożona baza w pierwszej fazie, częściowy fine-tuning ostatnich warstw w drugiej.
+   MobileNetV2, zamrożona baza w pierwszej fazie, częściowy fine-tuning ostatnich warstw w drugiej,
+   z wagami klas (`class_weight`) korygującymi nierównomierny rozkład liczby zdjęć per klasa (np.
+   "inne" ma historycznie ~3x więcej zdjęć niż pojedynczy gatunek).
    Skrypt sam wymusza kolejność klas = kolejność w `species.json` (+ `inne` na końcu, jeśli istnieje
    `dataset/inne/`) i wypisuje ją na końcu do weryfikacji. Wynikowy `model-export/model.h5` ma
    wbudowany preprocessing dopasowany do `mushroomModel.ts` (wejście `[0,1]`, przesunięcie do
