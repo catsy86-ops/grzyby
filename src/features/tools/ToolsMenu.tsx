@@ -1,6 +1,7 @@
 import { BackpackIcon, BugOffIcon, CheckIcon, HardDriveIcon, PhoneCallIcon, TimerIcon, TreePineIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 const LIST_VARIANTS = {
   hidden: {},
@@ -62,8 +63,12 @@ export function ToolsMenu({
   forestMode: boolean
   onToggleForestMode: () => void
 }) {
+  // Ten sam wzorzec i próg co w SpotManager.tsx/StorageInfoDrawer.tsx - na szerokim ekranie (lg:+)
+  // menu wysuwa się z prawej (bliżej przycisku "Narzędzia" w prawym rogu nagłówka) zamiast z dołu.
+  const isWidePanel = useMediaQuery('(min-width: 1024px)')
+
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} swipeDirection={isWidePanel ? 'right' : 'down'} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>Narzędzia</DrawerTitle>

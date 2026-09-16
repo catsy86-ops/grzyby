@@ -13,6 +13,7 @@ import {
 import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { Progress } from '../../components/ui/progress'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { clearCache, formatStorageBytes, getCacheInfo, getStorageEstimate, type CacheInfo, type StorageEstimate } from '../../utils/storageInfo'
 
 interface StorageInfoDrawerProps {
@@ -24,6 +25,10 @@ export function StorageInfoDrawer({ open, onOpenChange }: StorageInfoDrawerProps
   const [caches, setCaches] = useState<CacheInfo[] | null>(null)
   const [estimate, setEstimate] = useState<StorageEstimate | null>(null)
   const [pendingClear, setPendingClear] = useState<CacheInfo | null>(null)
+  // Na szerokim ekranie (lg:+) szuflada wysuwa się z prawej jako panel boczny zamiast arkusza z
+  // dołu - ten sam wzorzec i próg co w SpotManager.tsx (Faza D nowecos.md, "Drawer -> Dialog/Sheet
+  // na desktopie" - responsywny kierunek tego samego Drawera zamiast osobnego komponentu Dialog).
+  const isWidePanel = useMediaQuery('(min-width: 1024px)')
 
   async function refresh() {
     const [cacheInfo, storageEstimate] = await Promise.all([getCacheInfo(), getStorageEstimate()])
@@ -50,8 +55,8 @@ export function StorageInfoDrawer({ open, onOpenChange }: StorageInfoDrawerProps
 
   return (
     <>
-      <Drawer open={open} showSwipeHandle onOpenChange={onOpenChange}>
-        <DrawerContent className="mx-auto max-w-md">
+      <Drawer open={open} showSwipeHandle swipeDirection={isWidePanel ? 'right' : 'down'} onOpenChange={onOpenChange}>
+        <DrawerContent className={isWidePanel ? undefined : 'mx-auto max-w-md'}>
           <DrawerHeader>
             <DrawerTitle>Pamięć i dane</DrawerTitle>
             <DrawerDescription>

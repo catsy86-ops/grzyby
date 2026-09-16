@@ -8,6 +8,22 @@ describe('AddFindingForm', () => {
     await db.findings.clear()
     await db.photos.clear()
     await db.spots.clear()
+    // jsdom nie implementuje matchMedia - AddFindingForm używa go teraz przez useMediaQuery
+    // (responsywny kierunek Drawer). Re-stubowane w każdym teście (nie tylko raz w
+    // vitest.setup.ts), bo jeden z testów niżej wywołuje vi.unstubAllGlobals(), co usuwa też
+    // globalny mock z setupu dla wszystkich kolejnych testów w tym pliku - ten sam wzorzec co w
+    // StorageInfoDrawer.test.tsx.
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: false,
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    )
   })
 
   afterEach(() => {

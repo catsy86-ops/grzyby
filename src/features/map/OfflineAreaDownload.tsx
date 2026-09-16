@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerDescription } from '../../components/ui/drawer'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { Progress } from '../../components/ui/progress'
 import {
   computeTilesForArea,
@@ -23,6 +24,8 @@ interface OfflineAreaDownloadProps {
 export function OfflineAreaDownload({ open, onOpenChange, getCenter }: OfflineAreaDownloadProps) {
   const [radiusKm, setRadiusKm] = useState<number>(OFFLINE_RADIUS_PRESETS[1].km)
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
+  // Ten sam wzorzec i próg co w SpotManager.tsx/StorageInfoDrawer.tsx/ToolsMenu.tsx/AddFindingForm.tsx.
+  const isWidePanel = useMediaQuery('(min-width: 1024px)')
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Kafelki, które faktycznie nie zapisały się w poprzedniej próbie - pozwala na "Ponów nieudane"
@@ -85,12 +88,13 @@ export function OfflineAreaDownload({ open, onOpenChange, getCenter }: OfflineAr
   return (
     <Drawer
       open={open}
-      showSwipeHandle
+      showSwipeHandle={!isWidePanel}
+      swipeDirection={isWidePanel ? 'right' : 'down'}
       onOpenChange={(next) => {
         if (!downloading) onOpenChange(next)
       }}
     >
-      <DrawerContent className="mx-auto max-w-md">
+      <DrawerContent className={isWidePanel ? undefined : 'mx-auto max-w-md'}>
         <DrawerHeader>
           <DrawerTitle>Pobierz obszar offline</DrawerTitle>
           <DrawerDescription>

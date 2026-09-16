@@ -5,6 +5,7 @@ import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { vibrateSuccess } from '../../utils/haptics'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { Alert, AlertDescription } from '../../components/ui/alert'
@@ -31,6 +32,8 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { activeTripId, activeTrip } = useActiveTrip()
+  // Ten sam wzorzec i próg co w SpotManager.tsx/StorageInfoDrawer.tsx/ToolsMenu.tsx.
+  const isWidePanel = useMediaQuery('(min-width: 1024px)')
   const spots = useLiveQuery(() => db.spots.toArray(), [])
 
   async function handleSubmit(event: React.FormEvent) {
@@ -97,12 +100,13 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   return (
     <Drawer
       open
-      showSwipeHandle
+      showSwipeHandle={!isWidePanel}
+      swipeDirection={isWidePanel ? 'right' : 'down'}
       onOpenChange={(open) => {
         if (!open) onClose(false)
       }}
     >
-      <DrawerContent className="mx-auto max-w-md">
+      <DrawerContent className={isWidePanel ? undefined : 'mx-auto max-w-md'}>
         <DrawerHeader>
           <DrawerTitle>Nowe znalezisko</DrawerTitle>
           {activeTrip && (
