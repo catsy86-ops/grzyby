@@ -362,12 +362,17 @@ export function JournalView() {
         </Alert>
       )}
 
-      <Input
-        type="search"
-        placeholder="Szukaj po gatunku lub notatkach..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
+      {/* Sticky pasek wyszukiwania - patrz ten sam wzorzec i uzasadnienie w EncyclopediaView.tsx.
+          Tu zostaje samo wyszukiwanie (bez filtra wypraw z TripsHistory poniżej), żeby nie
+          przypinać zbyt dużej, rzadziej używanej sekcji nad długą listą znalezisk. */}
+      <div className="sticky top-0 z-10 -mx-4 bg-background/95 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+        <Input
+          type="search"
+          placeholder="Szukaj po gatunku lub notatkach..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
 
       <SeasonSummary />
       <TripManager />

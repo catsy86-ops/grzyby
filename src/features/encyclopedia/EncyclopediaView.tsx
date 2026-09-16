@@ -54,41 +54,47 @@ export function EncyclopediaView() {
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
       <h1 className="text-xl font-semibold tracking-tight">Baza wiedzy o gatunkach</h1>
 
-      <div className="flex gap-2">
-        <Input
-          type="search"
-          placeholder="Szukaj gatunku..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="flex-1"
-        />
-        <Toggle
-          variant="outline"
-          pressed={seasonOnly}
-          onPressedChange={setSeasonOnly}
-          aria-label="Pokaż tylko gatunki w sezonie teraz"
-          className="shrink-0 gap-1.5"
-        >
-          <LeafIcon />
-          W sezonie
-        </Toggle>
-      </div>
+      {/* Sticky pasek wyszukiwania/filtrów - przy przewijaniu 19 gatunków w dół wracanie na
+          górę tylko po to, żeby zmienić filtr, jest niewygodne na telefonie. Ujemny margines +
+          padding odtwarza szerokość kontenera (który ma własny `p-4`), a tło + blur sprawiają,
+          że treść listy znika POD paskiem zamiast prześwitywać zza niego przy scrollu. */}
+      <div className="sticky top-0 z-10 -mx-4 flex flex-col gap-2 bg-background/95 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+        <div className="flex gap-2">
+          <Input
+            type="search"
+            placeholder="Szukaj gatunku..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1"
+          />
+          <Toggle
+            variant="outline"
+            pressed={seasonOnly}
+            onPressedChange={setSeasonOnly}
+            aria-label="Pokaż tylko gatunki w sezonie teraz"
+            className="shrink-0 gap-1.5"
+          >
+            <LeafIcon />
+            W sezonie
+          </Toggle>
+        </div>
 
-      <ToggleGroup
-        variant="outline"
-        value={[filter]}
-        onValueChange={(values) => {
-          const [v] = values
-          if (v != null) setFilter(v as EdibilityStatus | 'wszystkie')
-        }}
-        className="w-full flex-wrap"
-      >
-        {FILTERS.map((f) => (
-          <ToggleGroupItem key={f.value} value={f.value} className="rounded-full">
-            {f.label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+        <ToggleGroup
+          variant="outline"
+          value={[filter]}
+          onValueChange={(values) => {
+            const [v] = values
+            if (v != null) setFilter(v as EdibilityStatus | 'wszystkie')
+          }}
+          className="w-full flex-wrap"
+        >
+          {FILTERS.map((f) => (
+            <ToggleGroupItem key={f.value} value={f.value} className="rounded-full">
+              {f.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </div>
 
       <div ref={listRef} className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((s) => (

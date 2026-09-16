@@ -66,6 +66,53 @@ function ActiveView({ tab }: { tab: ActiveTab }) {
   )
 }
 
+// Wspólny render przycisku zakładki dla dolnego nav (mobile) i side-rail (desktop, `md:` w
+// górę) - te same dane i logika aktywności, różni się tylko układ (poziomy pasek u dołu vs.
+// pionowa szyna z boku), więc zamiast dwóch kopii JSX jeden helper z parametrem orientacji.
+function NavButton({
+  tab,
+  isActive,
+  onSelect,
+  orientation,
+}: {
+  tab: (typeof TABS)[number]
+  isActive: boolean
+  onSelect: () => void
+  orientation: 'horizontal' | 'vertical'
+}) {
+  const Icon = tab.icon
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-current={isActive ? 'page' : undefined}
+      className={
+        orientation === 'horizontal'
+          ? 'flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50'
+          : 'flex w-full flex-col items-center gap-1 rounded-lg py-2.5 outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50'
+      }
+    >
+      <motion.span
+        className="relative flex h-8 w-14 items-center justify-center rounded-full"
+        whileTap={{ scale: 0.85 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+      >
+        {isActive && (
+          <motion.span
+            layoutId={`nav-pill-${orientation}`}
+            className="absolute inset-0 rounded-full bg-primary/10"
+            transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
+          />
+        )}
+        <Icon className={`relative size-[18px] transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+      </motion.span>
+      <span className={`text-[11px] leading-none transition-colors ${isActive ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
+        {tab.label}
+      </span>
+    </button>
+  )
+}
+
 function App() {
   const activeTab = useAppStore((s) => s.activeTab)
   const setActiveTab = useAppStore((s) => s.setActiveTab)
@@ -160,62 +207,50 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
-      <main className="relative z-0 min-h-0 flex-1 overflow-hidden">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="h-full"
-          >
-            <ErrorBoundary resetKey={activeTab}>
-              <ActiveView tab={activeTab} />
-            </ErrorBoundary>
-          </motion.div>
-        </AnimatePresence>
-      </main>
-      <nav className="safe-area-bottom relative z-10 flex border-t border-border bg-card/95 px-1 pt-1 shadow-[var(--shadow-floating)] backdrop-blur supports-[backdrop-filter]:bg-card/80">
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.key
-          const Icon = tab.icon
-          return (
-            <button
+      {/* `md:` w górę: dolny nav ustępuje pionowej szynie z boku (side-rail) - na szerszym
+          ekranie apka rozciągnięta na całą szerokość telefonu wygląda jak przeskalowany telefon,
+          nie jak natywna aplikacja desktopowa/tabletowa. Oba nav-y są zamontowane naraz (ukryte
+          przez CSS, nie unmount) - `key={activeTab}` w `AnimatePresence` i stan w appStore są
+          współdzielone, więc przełączenie breakpointu w locie (np. obrót tabletu) nic nie gubi. */}
+      <div className="flex min-h-0 flex-1 md:flex-row">
+        <aside className="hidden shrink-0 flex-col gap-1 border-r border-border bg-card/60 p-2 md:flex md:w-24">
+          {TABS.map((tab) => (
+            <NavButton
               key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key)}
-              aria-current={isActive ? 'page' : undefined}
-              className="flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50"
+              tab={tab}
+              isActive={activeTab === tab.key}
+              onSelect={() => setActiveTab(tab.key)}
+              orientation="vertical"
+            />
+          ))}
+        </aside>
+        <main className="relative z-0 min-h-0 flex-1 overflow-hidden">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="h-full"
             >
-              <motion.span
-                className="relative flex h-8 w-14 items-center justify-center rounded-full"
-                whileTap={{ scale: 0.85 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-              >
-                {isActive && (
-                  <motion.span
-                    layoutId="nav-pill"
-                    className="absolute inset-0 rounded-full bg-primary/10"
-                    transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
-                  />
-                )}
-                <Icon
-                  className={`relative size-[18px] transition-colors ${
-                    isActive ? 'text-primary' : 'text-muted-foreground'
-                  }`}
-                />
-              </motion.span>
-              <span
-                className={`text-[11px] leading-none transition-colors ${
-                  isActive ? 'font-semibold text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                {tab.label}
-              </span>
-            </button>
-          )
-        })}
+              <ErrorBoundary resetKey={activeTab}>
+                <ActiveView tab={activeTab} />
+              </ErrorBoundary>
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
+      <nav className="safe-area-bottom relative z-10 flex border-t border-border bg-card/95 px-1 pt-1 shadow-[var(--shadow-floating)] backdrop-blur supports-[backdrop-filter]:bg-card/80 md:hidden">
+        {TABS.map((tab) => (
+          <NavButton
+            key={tab.key}
+            tab={tab}
+            isActive={activeTab === tab.key}
+            onSelect={() => setActiveTab(tab.key)}
+            orientation="horizontal"
+          />
+        ))}
       </nav>
       <Toaster position="top-center" />
       <StorageInfoDrawer open={showStorageInfo} onOpenChange={setShowStorageInfo} />
