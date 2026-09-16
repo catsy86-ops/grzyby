@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import { useActiveTrip } from '../../stores/useActiveTrip'
@@ -12,6 +13,20 @@ import { Card, CardContent } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
 
 const LONG_TRIP_NOTIFIED_KEY = 'lysy-long-trip-notified-id'
+
+// Żartobliwe pożegnanie przy starcie wyprawy - czysto kosmetyczny "uśmiech" (patrz prośba
+// użytkownika), losowany za każdym razem. Piwko czeka PO powrocie, nie przed wyjściem w las -
+// żeby żart nie brzmiał jak sugestia czegokolwiek przed jazdą/wyprawą w teren.
+const TRIP_START_QUIPS = [
+  '🍺 Piwko na drogę poczeka do powrotu. Smacznej wyprawy!',
+  '🥾🍄 W las, w las! Piwko grzeje się w lodówce na Twój powrót.',
+  '🍺 Zimne piwko już czeka w domu - najpierw znajdź te grzyby!',
+  '🌲 Powodzenia w lesie! Piwko na powitanie odemierzone i gotowe.',
+]
+
+function randomTripStartQuip(): string {
+  return TRIP_START_QUIPS[Math.floor(Math.random() * TRIP_START_QUIPS.length)]
+}
 
 export function TripManager() {
   const { activeTripId, activeTrip } = useActiveTrip()
@@ -58,6 +73,7 @@ export function TripManager() {
     setActiveTripId(id)
     setNewTripName('')
     setShowNewTripInput(false)
+    toast(randomTripStartQuip())
   }
 
   async function handleEndTrip() {
