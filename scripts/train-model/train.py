@@ -32,6 +32,7 @@ import json
 import pathlib
 import sys
 
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -137,7 +138,31 @@ def build_model(num_classes: int) -> keras.Model:
     return model
 
 
-def evaluate_and_report(model: keras.Model, val_ds: tf.data.Dataset, class_names: list[str], output_dir: pathlib.Path) -> None:
+def fit_temperature(probs: "np.ndarray", y_true: "np.ndarray") -> float:
+    """Dopasowuje skalar T minimalizujący negative log-likelihood na zbiorze walidacyjnym -
+    standardowe "temperature scaling" (Guo i in., 2017) do kalibracji pewności sieci neuronowych.
+    Siatka + wybór minimum zamiast optymalizatora gradientowego - wystarczająco dokładne dla
+    jednego skalara, bez dodatkowej zależności od scipy.optimize. Ten sam wzór
+    softmax(log(p)/T) jest zaimplementowany w JS w src/utils/mushroomModel.ts (applyTemperature) -
+    zmiana jednego bez drugiego rozjeżdża kalibrację między treningiem a przeglądarką."""
+    log_probs = np.log(np.clip(probs, 1e-12, 1.0))
+    candidates = np.linspace(0.3, 5.0, 200)
+    best_t, best_nll = 1.0, float("inf")
+    for t in candidates:
+        scaled = log_probs / t
+        scaled -= scaled.max(axis=1, keepdims=True)
+        exp = np.exp(scaled)
+        softmax = exp / exp.sum(axis=1, keepdims=True)
+        true_probs = softmax[np.arange(len(y_true)), y_true]
+        nll = -np.mean(np.log(np.clip(true_probs, 1e-12, 1.0)))
+        if nll < best_nll:
+            best_t, best_nll = float(t), float(nll)
+    return best_t
+
+
+def evaluate_and_report(
+    model: keras.Model, val_ds: tf.data.Dataset, class_names: list[str], output_dir: pathlib.Path
+) -> float:
     """Zapisuje classification_report (precision/recall/F1 per klasa) i confusion matrix na
     zbiorze walidacyjnym - bez tego jedynym sygnałem jakości modelu było "loss spadł podczas
     treningu", co przy klasyfikatorze jadalny/trujący jest zdecydowanie za mało, żeby ktokolwiek
@@ -146,10 +171,12 @@ def evaluate_and_report(model: keras.Model, val_ds: tf.data.Dataset, class_names
 
     y_true: list[int] = []
     y_pred: list[int] = []
+    all_probs: list[np.ndarray] = []
     for batch_images, batch_labels in val_ds:
         batch_pred = model.predict(batch_images, verbose=0)
         y_true.extend(tf.argmax(batch_labels, axis=1).numpy().tolist())
         y_pred.extend(tf.argmax(batch_pred, axis=1).tolist())
+        all_probs.append(np.asarray(batch_pred))
 
     report = classification_report(
         y_true, y_pred, labels=list(range(len(class_names))), target_names=class_names,
@@ -181,6 +208,10 @@ def evaluate_and_report(model: keras.Model, val_ds: tf.data.Dataset, class_names
         "trującym (fałszywie rozpoznany jako jadalny) jest dużo poważniejszym problemem niż niska "
         "ogólna accuracy. Sam wynik accuracy łatwo zawyżyć nierównomiernym rozkładem klas."
     )
+
+    temperature = fit_temperature(np.concatenate(all_probs, axis=0), np.array(y_true))
+    print(f"Skalibrowana temperatura (temperature scaling): {temperature:.3f}")
+    return temperature
 
 
 def main() -> int:
@@ -230,7 +261,7 @@ def main() -> int:
     args.output.mkdir(parents=True, exist_ok=True)
 
     print("\nEwaluacja na zbiorze walidacyjnym...")
-    evaluate_and_report(model, val_ds, class_names, args.output)
+    temperature = evaluate_and_report(model, val_ds, class_names, args.output)
 
     keras_path = args.output / "model.h5"
     model.save(keras_path)
@@ -241,7 +272,10 @@ def main() -> int:
     # dodatkowej klasy "inne" pod indeksem 19. Zapisujemy go zawsze, żeby kolejność klas była
     # jawna niezależnie od tego, czy klasa negatywna została użyta.
     metadata_path = args.output / "metadata.json"
-    metadata_path.write_text(json.dumps({"labels": class_names}, ensure_ascii=False, indent=2), encoding="utf-8")
+    metadata_path.write_text(
+        json.dumps({"labels": class_names, "temperature": temperature}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
     print(f"Zapisano metadata.json: {metadata_path}")
 
     print("\nKolejny krok - konwersja do TensorFlow.js (patrz docs/MODEL-TRAINING.md):")

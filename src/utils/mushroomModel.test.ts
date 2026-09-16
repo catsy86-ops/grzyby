@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import speciesData from '../data/species.json'
-import { rankPredictions } from './mushroomModel'
+import { applyTemperature, rankPredictions } from './mushroomModel'
 
 describe('rankPredictions', () => {
   it('sortuje wyniki malejąco po pewności', () => {
@@ -49,6 +49,31 @@ describe('rankPredictions', () => {
   })
 })
 
+describe('applyTemperature', () => {
+  it('zwraca wektor bez zmian dla temperatury 1 (brak skalowania)', () => {
+    const probs = [0.7, 0.2, 0.1]
+    expect(applyTemperature(probs, 1)).toEqual(probs)
+  })
+
+  it('nadal sumuje się do ~1 po przeskalowaniu', () => {
+    const result = applyTemperature([0.9, 0.05, 0.05], 2)
+    const sum = result.reduce((a, b) => a + b, 0)
+    expect(sum).toBeCloseTo(1, 5)
+  })
+
+  it('temperatura > 1 spłaszcza rozkład (zmniejsza pewność dominującej klasy)', () => {
+    const original = [0.9, 0.05, 0.05]
+    const softened = applyTemperature(original, 2.5)
+    expect(softened[0]).toBeLessThan(original[0])
+  })
+
+  it('zachowuje ranking (najwyższe prawdopodobieństwo zostaje najwyższe)', () => {
+    const original = [0.5, 0.3, 0.2]
+    const scaled = applyTemperature(original, 3)
+    expect(scaled.indexOf(Math.max(...scaled))).toBe(0)
+  })
+})
+
 describe('loadClassLabels', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -81,6 +106,40 @@ describe('loadClassLabels', () => {
     const { loadClassLabels: loadLabels } = await import('./mushroomModel')
 
     await expect(loadLabels()).resolves.toEqual(speciesData.map((s) => s.id))
+  })
+})
+
+describe('loadTemperature', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  it('zwraca 1 (brak skalowania), gdy metadata.json nie istnieje', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('not found', { status: 404 })))
+    const { loadTemperature } = await import('./mushroomModel')
+
+    await expect(loadTemperature()).resolves.toBe(1)
+  })
+
+  it('zwraca temperaturę z metadata.json, gdy jest poprawną dodatnią liczbą', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ temperature: 2.3 }), { status: 200 })),
+    )
+    const { loadTemperature } = await import('./mushroomModel')
+
+    await expect(loadTemperature()).resolves.toBe(2.3)
+  })
+
+  it('ignoruje niepoprawną (ujemną/nie-liczbową) temperaturę i wraca do 1', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ temperature: -1 }), { status: 200 })),
+    )
+    const { loadTemperature } = await import('./mushroomModel')
+
+    await expect(loadTemperature()).resolves.toBe(1)
   })
 })
 

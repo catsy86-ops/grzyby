@@ -105,9 +105,14 @@ jest wymagane, ale trening będzie szybszy).
   sanity check przed jakimkolwiek zaufaniem do modelu.
 - `src/utils/mushroomModel.test.ts` ma test strażniczy sprawdzający zgodność długości/kolejności
   etykiet - uruchom `npm test` po podmianie modelu.
-- Próg pewności w `src/features/identify/PredictionCard.tsx` (`LOW_CONFIDENCE_THRESHOLD`) może
-  wymagać dostrojenia po zobaczeniu realnych wyników modelu (zbyt niski próg = fałszywa pewność
-  przy słabym modelu, zbyt wysoki = model prawie nigdy nie pokazuje wyniku).
+- Ścieżka B (`train.py`) dopasowuje też "temperature scaling" - skalar zapisywany jako
+  `temperature` w `metadata.json`, którym `src/utils/mushroomModel.ts` (`applyTemperature`) łagodzi
+  nadmierną pewność siebie surowego softmaxa małych, douczanych modeli. Dzięki temu próg
+  `LOW_CONFIDENCE_THRESHOLD` w `src/features/identify/PredictionCard.tsx` odnosi się do realnie
+  skalibrowanej pewności, nie surowego wyjścia sieci - wciąż może wymagać ręcznego dostrojenia po
+  zobaczeniu realnych wyników (zbyt niski próg = fałszywa pewność przy słabym modelu, zbyt wysoki =
+  model prawie nigdy nie pokazuje wyniku). Ścieżka A (Teachable Machine) nie generuje tego pola -
+  `loadTemperature()` domyślnie zwraca `1` (brak skalowania) w jego braku.
 - Zdjęcia referencyjne w `species.json` (`imageUrls`, obecnie puste) warto uzupełnić osobno dla
   bazy wiedzy (Encyklopedia) - mogą, po weryfikacji jakości, pochodzić z tego samego zbioru co
   dataset treningowy.
