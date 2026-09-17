@@ -1,12 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { MapPinIcon, NavigationIcon, TrashIcon } from 'lucide-react'
+import { ChevronDownIcon, CloudRainIcon, MapPinIcon, NavigationIcon, TrashIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { useSpotMushroomOutlook } from '../../hooks/useSpotMushroomOutlook'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { computeSpotStats } from '../../utils/spotStats'
 import { formatDate } from '../../utils/formatDate'
+import { Badge } from '../../components/ui/badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,18 +37,29 @@ function SpotRow({
   spotId,
   name,
   notes,
+  latitude,
+  longitude,
   isNavigationTarget,
   onToggleNavigationTarget,
 }: {
   spotId: number
   name: string
   notes: string
+  latitude: number
+  longitude: number
   isNavigationTarget: boolean
   onToggleNavigationTarget: () => void
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [outlookExpanded, setOutlookExpanded] = useState(false)
   const findings = useLiveQuery(() => db.findings.where('spotId').equals(spotId).toArray(), [spotId])
   const stats = computeSpotStats(findings ?? [])
+  const { outlook, isLoading: isOutlookLoading } = useSpotMushroomOutlook(
+    spotId,
+    latitude,
+    longitude,
+    outlookExpanded,
+  )
 
   async function handleDelete() {
     await db.transaction('rw', db.spots, db.findings, async () => {
@@ -91,8 +104,35 @@ function SpotRow({
           >
             <TrashIcon className="size-4" />
           </button>
+          <button
+            type="button"
+            aria-label={outlookExpanded ? `Ukryj prognozę grzybową: ${name}` : `Pokaż prognozę grzybową: ${name}`}
+            aria-expanded={outlookExpanded}
+            onClick={() => setOutlookExpanded((v) => !v)}
+            className="rounded p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <ChevronDownIcon className={`size-4 transition-transform ${outlookExpanded ? 'rotate-180' : ''}`} />
+          </button>
         </div>
       </CardContent>
+
+      {outlookExpanded && (
+        <CardContent className="pt-0">
+          {outlook ? (
+            <Badge
+              variant={outlook.score === 'dobry' ? 'secondary' : 'outline'}
+              className="gap-1.5 px-2.5 py-1 text-xs"
+            >
+              <CloudRainIcon className="size-3.5" />
+              {outlook.label}
+            </Badge>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {isOutlookLoading ? 'Sprawdzanie prognozy…' : 'Prognoza niedostępna (brak sieci lub danych).'}
+            </p>
+          )}
+        </CardContent>
+      )}
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
@@ -195,6 +235,8 @@ export function SpotManager({
                 spotId={spot.id!}
                 name={spot.name}
                 notes={spot.notes}
+                latitude={spot.latitude}
+                longitude={spot.longitude}
                 isNavigationTarget={navigationTargetSpotId === spot.id}
                 onToggleNavigationTarget={() =>
                   onSetNavigationTargetSpotId(navigationTargetSpotId === spot.id ? null : spot.id!)

@@ -15,6 +15,15 @@ describe('SpotManager', () => {
       await db.findings.clear()
     })
     vi.mocked(geolocation.getCurrentPosition).mockReset()
+    localStorage.clear()
+    Object.defineProperty(navigator, 'onLine', { value: true, configurable: true })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ daily: { precipitation_sum: [20], temperature_2m_mean: [15] } }),
+      }),
+    )
   })
 
   afterEach(() => cleanup())
@@ -150,6 +159,27 @@ describe('SpotManager', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Zakończ nawigację do: Cel' }))
     expect(onSetNavigationTargetSpotId).toHaveBeenCalledWith(null)
+  })
+
+  it('pobiera i pokazuje prognozę grzybową dopiero po rozwinięciu karty spotu', async () => {
+    await db.spots.add({ name: 'Prognozowany', latitude: 52.0, longitude: 19.0, notes: '', createdAt: 1 })
+
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
+
+    expect(fetch).not.toHaveBeenCalled()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Pokaż prognozę grzybową: Prognozowany' }))
+
+    expect(await screen.findByText('Dobry czas na grzyby')).toBeInTheDocument()
+    expect(fetch).toHaveBeenCalledOnce()
   })
 
   it('pokazuje pustą listę, gdy nie ma zapisanych grzybowisk', async () => {
