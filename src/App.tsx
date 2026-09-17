@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, WifiOffIcon, WrenchIcon } from 'lucide-react'
 import { useAppStore, type ActiveTab } from './stores/appStore'
@@ -27,6 +28,13 @@ const TABS: { key: ActiveTab; label: string; icon: typeof MapIcon }[] = [
   { key: 'dziennik', label: 'Dziennik', icon: NotebookTextIcon },
   { key: 'baza-wiedzy', label: 'Baza wiedzy', icon: BookOpenIcon },
 ]
+
+// View Transitions API (nowecos.md, pkt 5) - tylko Chromium ma `document.startViewTransition`,
+// więc to progresywne wzbogacenie: gdy dostępne, przełączenie taba owija się w natywny crossfade
+// (patrz `::view-transition-*(tab-content)` w index.css) i AnimatePresence poniżej przechodzi w
+// tryb "bez animacji" (duration 0), żeby nie nakładać dwóch konkurencyjnych przejść na siebie.
+// Gdy niedostępne (Firefox, starsze Safari), AnimatePresence działa dokładnie jak wcześniej.
+const supportsViewTransitions = typeof document !== 'undefined' && 'startViewTransition' in document
 
 // Każdy widok lazy-loadowany osobno - żaden z nich (zwłaszcza Mapa, ciągnąca za sobą
 // Leaflet/react-leaflet) nie musi lądować w głównym bundlu, jeśli użytkownik danej zakładki
@@ -160,6 +168,19 @@ function App() {
   useAndroidWidgetSync()
   useTickReminders()
 
+  function changeTab(tab: ActiveTab) {
+    if (!supportsViewTransitions) {
+      setActiveTab(tab)
+      return
+    }
+    // `flushSync` wymusza commit Reacta wewnątrz callbacku, zanim przeglądarka zrobi zrzut
+    // "po" stanu DOM - bez tego `startViewTransition` mógłby przechwycić stary widok, bo React
+    // batchowałby update poza tym tickiem.
+    document.startViewTransition(() => {
+      flushSync(() => setActiveTab(tab))
+    })
+  }
+
   useEffect(() => {
     document.documentElement.classList.toggle('forest-mode', forestMode)
   }, [forestMode])
@@ -257,19 +278,22 @@ function App() {
               key={tab.key}
               tab={tab}
               isActive={activeTab === tab.key}
-              onSelect={() => setActiveTab(tab.key)}
+              onSelect={() => changeTab(tab.key)}
               orientation="vertical"
             />
           ))}
         </aside>
-        <main className="relative z-0 min-h-0 flex-1 overflow-hidden">
+        <main
+          className="relative z-0 min-h-0 flex-1 overflow-hidden"
+          style={supportsViewTransitions ? { viewTransitionName: 'tab-content' } : undefined}
+        >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 8 }}
+              initial={supportsViewTransitions ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
+              exit={supportsViewTransitions ? undefined : { opacity: 0, y: -8 }}
+              transition={supportsViewTransitions ? { duration: 0 } : { duration: 0.18, ease: 'easeOut' }}
               className="h-full"
             >
               <ErrorBoundary resetKey={activeTab}>
@@ -285,7 +309,7 @@ function App() {
             key={tab.key}
             tab={tab}
             isActive={activeTab === tab.key}
-            onSelect={() => setActiveTab(tab.key)}
+            onSelect={() => changeTab(tab.key)}
             orientation="horizontal"
           />
         ))}

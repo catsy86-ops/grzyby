@@ -344,6 +344,46 @@ body {
   }
 }
 
+/* View Transitions API dla przejść między tabami (nowecos.md, pkt 5) - natywny crossfade w
+   przeglądarkach Chromium, tańszy i płynniejszy na mobile niż JS-owe AnimatePresence. Działa
+   OBOK (nie zamiast) AnimatePresence w App.tsx: gdy `document.startViewTransition` jest
+   dostępne, App.tsx pomija animację motion/react (duration 0) i cały crossfade robi przeglądarka;
+   gdy niedostępne (Firefox, starsze Safari), AnimatePresence działa jak dotychczas.
+   `::view-transition-group(root)` wyłączony, bo bez tego cały dokument (nagłówek, nav) też
+   dostawałby crossfade przy każdej zmianie taba, mimo że się nie zmienia. */
+::view-transition-group(root) {
+  animation: none;
+}
+::view-transition-old(tab-content),
+::view-transition-new(tab-content) {
+  animation-duration: 0.18s;
+  animation-timing-function: ease-out;
+}
+::view-transition-old(tab-content) {
+  animation-name: tab-content-out;
+}
+::view-transition-new(tab-content) {
+  animation-name: tab-content-in;
+}
+@keyframes tab-content-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes tab-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(tab-content),
+  ::view-transition-new(tab-content) {
+    animation: none;
+  }
+}
+
 /* Tryb "W lesie" - większe cele dotyku i wyższy kontrast, dla użycia w terenie (mokre palce,
    rękawiczki, słońce na ekranie utrudniające odczyt). Skalowanie font-size na korzeniu podbija
    wszystkie rozmiary oparte na rem (Tailwind v4 domyślnie), a nie tylko wybrane komponenty. */
