@@ -307,7 +307,7 @@ describe('JournalView - eksport PDF', () => {
     await screen.findByText('Do PDF')
 
     fireEvent.click(screen.getByRole('button', { name: 'Eksport i import danych' }))
-    fireEvent.click(await screen.findByText('Eksportuj (PDF)'))
+    fireEvent.click(await screen.findByText('PDF'))
 
     await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled())
     const blobArg = createObjectURLSpy.mock.calls[0][0] as Blob

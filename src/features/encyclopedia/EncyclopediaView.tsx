@@ -79,6 +79,11 @@ export function EncyclopediaView() {
           </Toggle>
         </div>
 
+        {/* Poziomy scroll zamiast flex-wrap (poprawka z audytu UI) - 6 filtrów, część z długimi
+            etykietami ("Śmiertelnie trujące"), łamało się na 2-3 linie w sticky pasku na wąskim
+            telefonie, zjadając pionową przestrzeń nad listą - ten sam problem co w plakietkach
+            stanu na mapie. -mx-4 px-4 bije do krawędzi względem paddingu paska sticky wyżej (ta
+            sama technika, co ten pasek stosuje wobec kontenera strony). */}
         <ToggleGroup
           variant="outline"
           value={[filter]}
@@ -86,10 +91,10 @@ export function EncyclopediaView() {
             const [v] = values
             if (v != null) setFilter(v as EdibilityStatus | 'wszystkie')
           }}
-          className="w-full flex-wrap"
+          className="w-full flex-nowrap overflow-x-auto -mx-4 px-4 pb-1"
         >
           {FILTERS.map((f) => (
-            <ToggleGroupItem key={f.value} value={f.value} className="rounded-full">
+            <ToggleGroupItem key={f.value} value={f.value} className="shrink-0 rounded-full">
               {f.label}
             </ToggleGroupItem>
           ))}

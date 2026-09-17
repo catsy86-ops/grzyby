@@ -50,7 +50,10 @@ import { Card, CardContent } from '../../components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu'
 import { Input } from '../../components/ui/input'
@@ -322,23 +325,34 @@ export function JournalView() {
           >
             <MoreVerticalIcon className="size-4" />
           </DropdownMenuTrigger>
+          {/* Podział eksport/import etykietami + separatorem (poprawka z audytu UI) - 4 pozycje
+              w płaskiej liście już dziś mieszają dwa różne kierunki działania (dane wychodzą z
+              apki / wchodzą do apki), a przy kolejnym formacie eksportu (np. CSV) byłoby to
+              jeszcze mniej czytelne bez podziału. */}
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleExport}>
-              <DownloadIcon />
-              Eksportuj (JSON)
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-              <UploadIcon />
-              Importuj
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportPdf}>
-              <FileTextIcon />
-              Eksportuj (PDF)
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportGpx}>
-              <MapIcon />
-              Eksportuj trasę (GPX)
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Eksportuj</DropdownMenuLabel>
+              <DropdownMenuItem onClick={handleExport}>
+                <DownloadIcon />
+                JSON
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportPdf}>
+                <FileTextIcon />
+                PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportGpx}>
+                <MapIcon />
+                Trasa (GPX)
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Importuj</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                <UploadIcon />
+                Z pliku JSON
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
         <input
