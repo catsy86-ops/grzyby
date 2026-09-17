@@ -9,6 +9,9 @@ const baseProps = {
   returnPoint: null,
   returnPointInfo: null,
   onClearReturnPoint: vi.fn(),
+  navigationTargetSpot: null,
+  navigationInfo: null,
+  onClearNavigationTarget: vi.fn(),
 }
 
 describe('MapStatusBadges', () => {
@@ -77,6 +80,41 @@ describe('MapStatusBadges', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Usuń zapisaną pozycję auta' }))
     expect(onClearReturnPoint).toHaveBeenCalledOnce()
+  })
+
+  it('pokazuje nazwę celu nawigacji bez dystansu, gdy brak navigationInfo', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        navigationTargetSpot={{ id: 1, name: 'Sosnowy zagajnik', latitude: 1, longitude: 2, notes: '', createdAt: 1 }}
+      />,
+    )
+    expect(screen.getByText('Sosnowy zagajnik')).toBeInTheDocument()
+  })
+
+  it('pokazuje dystans i kierunek do celu nawigacji, gdy navigationInfo jest dostępne', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        navigationTargetSpot={{ id: 1, name: 'Sosnowy zagajnik', latitude: 1, longitude: 2, notes: '', createdAt: 1 }}
+        navigationInfo={{ distanceMeters: 500, bearingDegrees: 0 }}
+      />,
+    )
+    expect(screen.getByText(/Sosnowy zagajnik: .*500 m.*N/)).toBeInTheDocument()
+  })
+
+  it('wywołuje onClearNavigationTarget po kliknięciu przycisku zakończenia nawigacji', () => {
+    const onClearNavigationTarget = vi.fn()
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        navigationTargetSpot={{ id: 1, name: 'Sosnowy zagajnik', latitude: 1, longitude: 2, notes: '', createdAt: 1 }}
+        onClearNavigationTarget={onClearNavigationTarget}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zakończ nawigację do grzybowiska' }))
+    expect(onClearNavigationTarget).toHaveBeenCalledOnce()
   })
 
   it('zwija plakietki za przełącznikiem, gdy aktywne są 2 lub więcej naraz, i rozwija po kliknięciu', () => {

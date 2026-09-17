@@ -20,7 +20,15 @@ describe('SpotManager', () => {
   afterEach(() => cleanup())
 
   it('zapisuje nowe grzybowisko na wybranej pinezce', async () => {
-    render(<SpotManager open onOpenChange={vi.fn()} pinPosition={[52.1, 19.5]} />)
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={[52.1, 19.5]}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
 
     fireEvent.change(screen.getByPlaceholderText(/Nazwa grzybowiska/), {
       target: { value: 'Sosnowy zagajnik' },
@@ -36,7 +44,15 @@ describe('SpotManager', () => {
 
   it('używa pozycji GPS, gdy brak wybranej pinezki', async () => {
     vi.mocked(geolocation.getCurrentPosition).mockResolvedValue({ latitude: 50.0, longitude: 20.0 })
-    render(<SpotManager open onOpenChange={vi.fn()} pinPosition={null} />)
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
 
     fireEvent.change(screen.getByPlaceholderText(/Nazwa grzybowiska/), { target: { value: 'GPS spot' } })
     fireEvent.click(screen.getByRole('button', { name: 'Zapisz grzybowisko' }))
@@ -59,7 +75,15 @@ describe('SpotManager', () => {
       spotId,
     })
 
-    render(<SpotManager open onOpenChange={vi.fn()} pinPosition={null} />)
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
 
     expect(await screen.findByText(/1 znalezisko/)).toBeInTheDocument()
     expect(screen.getByText(/1 gatunków/)).toBeInTheDocument()
@@ -77,7 +101,15 @@ describe('SpotManager', () => {
       spotId,
     })
 
-    render(<SpotManager open onOpenChange={vi.fn()} pinPosition={null} />)
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
 
     fireEvent.click(await screen.findByRole('button', { name: /Usuń grzybowisko/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Usuń' }))
@@ -88,8 +120,48 @@ describe('SpotManager', () => {
     expect(finding?.spotId).toBeUndefined()
   })
 
+  it('przełącza grzybowisko jako cel nawigacji i odznacza go po ponownym kliknięciu', async () => {
+    const spotId = await db.spots.add({ name: 'Cel', latitude: 1, longitude: 1, notes: '', createdAt: 1 })
+    const onSetNavigationTargetSpotId = vi.fn()
+
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={onSetNavigationTargetSpotId}
+      />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Nawiguj do: Cel' }))
+    expect(onSetNavigationTargetSpotId).toHaveBeenCalledWith(spotId)
+
+    cleanup()
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={spotId}
+        onSetNavigationTargetSpotId={onSetNavigationTargetSpotId}
+      />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Zakończ nawigację do: Cel' }))
+    expect(onSetNavigationTargetSpotId).toHaveBeenCalledWith(null)
+  })
+
   it('pokazuje pustą listę, gdy nie ma zapisanych grzybowisk', async () => {
-    render(<SpotManager open onOpenChange={vi.fn()} pinPosition={null} />)
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
 
     expect(await screen.findByText('Brak zapisanych grzybowisk.')).toBeInTheDocument()
   })

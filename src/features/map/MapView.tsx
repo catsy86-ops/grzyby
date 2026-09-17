@@ -17,6 +17,7 @@ import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
 import { useMushroomOutlook } from '../../hooks/useMushroomOutlook'
 import { useMapGeolocation } from '../../hooks/useMapGeolocation'
 import { useReturnPointTracking } from '../../hooks/useReturnPointTracking'
+import { useSpotNavigation } from '../../hooks/useSpotNavigation'
 import { AddFindingForm } from './AddFindingForm'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
 import { SpotManager } from './SpotManager'
@@ -98,6 +99,8 @@ export function MapView() {
     userPosition,
     reportError,
   )
+  const { navigationTargetSpot, navigationInfo, setNavigationTargetSpotId, clearNavigationTarget } =
+    useSpotNavigation(userPosition, spots)
 
   const findingPosition = pinPosition ?? userPosition
 
@@ -176,6 +179,13 @@ export function MapView() {
                 <div className="text-sm">
                   <p className="font-semibold">{spot.name}</p>
                   {spot.notes && <p className="mt-1">{spot.notes}</p>}
+                  <button
+                    type="button"
+                    onClick={() => setNavigationTargetSpotId(navigationTargetSpot?.id === spot.id ? null : spot.id!)}
+                    className="mt-1.5 text-xs font-medium text-primary underline underline-offset-2"
+                  >
+                    {navigationTargetSpot?.id === spot.id ? 'Zakończ nawigację' : 'Nawiguj tutaj'}
+                  </button>
                 </div>
               </Popup>
             </Marker>
@@ -215,6 +225,9 @@ export function MapView() {
           returnPoint={returnPoint}
           returnPointInfo={returnPointInfo}
           onClearReturnPoint={clearReturnPoint}
+          navigationTargetSpot={navigationTargetSpot}
+          navigationInfo={navigationInfo}
+          onClearNavigationTarget={clearNavigationTarget}
         />
       )}
 
@@ -273,6 +286,8 @@ export function MapView() {
         open={activeSheet === 'spots'}
         onOpenChange={(open) => setActiveSheet(open ? 'spots' : null)}
         pinPosition={pinPosition}
+        navigationTargetSpotId={navigationTargetSpot?.id ?? null}
+        onSetNavigationTargetSpotId={setNavigationTargetSpotId}
       />
 
       <SzczecinSpotsPanel

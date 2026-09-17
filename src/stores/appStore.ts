@@ -17,6 +17,8 @@ interface AppState {
   setActiveTripId: (id: number | null) => void
   returnPoint: ReturnPoint | null
   setReturnPoint: (point: ReturnPoint | null) => void
+  navigationTargetSpotId: number | null
+  setNavigationTargetSpotId: (id: number | null) => void
   forestMode: boolean
   setForestMode: (enabled: boolean) => void
 }
@@ -32,6 +34,8 @@ export const useAppStore = create<AppState>()(
       setActiveTripId: (id) => set({ activeTripId: id }),
       returnPoint: null,
       setReturnPoint: (point) => set({ returnPoint: point }),
+      navigationTargetSpotId: null,
+      setNavigationTargetSpotId: (id) => set({ navigationTargetSpotId: id }),
       forestMode: false,
       setForestMode: (enabled) => set({ forestMode: enabled }),
     }),
@@ -40,6 +44,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         activeTripId: state.activeTripId,
         returnPoint: state.returnPoint,
+        navigationTargetSpotId: state.navigationTargetSpotId,
         forestMode: state.forestMode,
       }),
       onRehydrateStorage: () => () => {

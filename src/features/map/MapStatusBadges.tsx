@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { CarIcon, ChevronDownIcon, CloudRainIcon, InfoIcon, SunsetIcon, XIcon } from 'lucide-react'
+import { CarIcon, ChevronDownIcon, CloudRainIcon, InfoIcon, NavigationIcon, SunsetIcon, XIcon } from 'lucide-react'
 import { Badge } from '../../components/ui/badge'
 import type { SunsetCountdown } from '../../hooks/useSunsetCountdown'
 import type { MushroomOutlook } from '../../utils/mushroomWeather'
 import type { ReturnPointInfo } from '../../hooks/useReturnPointTracking'
+import type { SpotNavigationInfo } from '../../hooks/useSpotNavigation'
 import type { ReturnPoint } from '../../stores/appStore'
+import type { Spot } from '../../db/schema'
 import { formatDistance, getCardinalDirection } from '../../utils/bearing'
 
 interface MapStatusBadgesProps {
@@ -15,6 +17,9 @@ interface MapStatusBadgesProps {
   returnPoint: ReturnPoint | null
   returnPointInfo: ReturnPointInfo | null
   onClearReturnPoint: () => void
+  navigationTargetSpot: Spot | null
+  navigationInfo: SpotNavigationInfo | null
+  onClearNavigationTarget: () => void
 }
 
 // Pasek plakietek stanu (lewy górny róg mapy) - czysto prezentacyjny, wydzielony z MapView
@@ -27,9 +32,14 @@ export function MapStatusBadges({
   returnPoint,
   returnPointInfo,
   onClearReturnPoint,
+  navigationTargetSpot,
+  navigationInfo,
+  onClearNavigationTarget,
 }: MapStatusBadgesProps) {
   const [expanded, setExpanded] = useState(false)
-  const activeCount = [activeTripName, sunsetCountdown, mushroomOutlook, returnPoint].filter(Boolean).length
+  const activeCount = [activeTripName, sunsetCountdown, mushroomOutlook, returnPoint, navigationTargetSpot].filter(
+    Boolean,
+  ).length
 
   if (activeCount === 0) return null
 
@@ -118,6 +128,30 @@ export function MapStatusBadges({
                   type="button"
                   onClick={onClearReturnPoint}
                   aria-label="Usuń zapisaną pozycję auta"
+                  className="ml-0.5 flex size-4 items-center justify-center rounded-full outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
+                  <XIcon className="size-3" />
+                </button>
+              </Badge>
+            </motion.div>
+          )}
+          {navigationTargetSpot && (
+            <motion.div
+              key="spot-navigation-badge"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              <Badge variant="secondary" className="gap-1.5 py-1.5 pl-3 pr-1.5 text-xs shadow">
+                <NavigationIcon className="size-3.5" />
+                {navigationInfo
+                  ? `${navigationTargetSpot.name}: ${formatDistance(navigationInfo.distanceMeters)} ${getCardinalDirection(navigationInfo.bearingDegrees)}`
+                  : navigationTargetSpot.name}
+                <button
+                  type="button"
+                  onClick={onClearNavigationTarget}
+                  aria-label="Zakończ nawigację do grzybowiska"
                   className="ml-0.5 flex size-4 items-center justify-center rounded-full outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   <XIcon className="size-3" />
