@@ -34,6 +34,17 @@ import { Skeleton } from '../../components/ui/skeleton'
 const DEFAULT_CENTER: [number, number] = [53.4285, 14.5528] // Szczecin
 const DEFAULT_ZOOM = 11
 
+// Apka jest wyłącznie dla Szczecina i okolic (patrz komentarz nad DEFAULT_CENTER) - reszta
+// Polski/świata na mapie nie ma tu żadnej wartości, tylko utrudnia trafienie z powrotem w swój
+// region po przypadkowym zbyt dalekim przewinięciu/oddaleniu. Granice z marginesem wokół woj.
+// zachodniopomorskiego (nie ostro po granicy administracyjnej), żeby grzybiarz blisko granicy
+// województwa nie odbijał się od ściany na terenie, w którym realnie może się poruszać.
+const REGION_BOUNDS: [[number, number], [number, number]] = [
+  [52.4, 13.9], // SW
+  [54.85, 17.1], // NE
+]
+const REGION_MIN_ZOOM = 8
+
 // Dokładnie jeden arkusz/drawer może być otwarty naraz - zastępuje 3 niezależne boolean-y
 // (`showAddForm`/`showOfflineDownload`/`showSpotManager`), które nic nie stało na przeszkodzie,
 // by były `true` jednocześnie (dwa nałożone Drawer/Sheet). Eksportowany, bo `MapToolbar`
@@ -82,7 +93,14 @@ export function MapView() {
       {isListView ? (
         <FindingsListView findings={findings ?? []} spots={spots ?? []} userPosition={userPosition} />
       ) : (
-        <MapContainer center={mapTarget.center} zoom={mapTarget.zoom} className="h-full w-full">
+        <MapContainer
+          center={mapTarget.center}
+          zoom={mapTarget.zoom}
+          className="h-full w-full"
+          maxBounds={REGION_BOUNDS}
+          maxBoundsViscosity={1}
+          minZoom={REGION_MIN_ZOOM}
+        >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
