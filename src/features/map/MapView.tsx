@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { Circle, MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
 import L from 'leaflet'
 import {
@@ -18,6 +18,7 @@ import { useMushroomOutlook } from '../../hooks/useMushroomOutlook'
 import { useMapGeolocation } from '../../hooks/useMapGeolocation'
 import { useReturnPointTracking } from '../../hooks/useReturnPointTracking'
 import { useSpotNavigation } from '../../hooks/useSpotNavigation'
+import { useTripTrail } from '../../hooks/useTripTrail'
 import { AddFindingForm } from './AddFindingForm'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
 import { SpotManager } from './SpotManager'
@@ -87,7 +88,7 @@ export function MapView() {
 
   const findings = useLiveQuery(() => db.findings.toArray(), [])
   const spots = useLiveQuery(() => db.spots.toArray(), [])
-  const { activeTrip } = useActiveTrip()
+  const { activeTripId, activeTrip } = useActiveTrip()
   const { userPosition, userAccuracyMeters, recenterTarget, locateError, isPositionStale, handleLocate, clearLocateError, reportError } =
     useMapGeolocation()
   const sunsetCountdown = useSunsetCountdown(userPosition)
@@ -101,6 +102,7 @@ export function MapView() {
   )
   const { navigationTargetSpot, navigationInfo, setNavigationTargetSpotId, clearNavigationTarget } =
     useSpotNavigation(userPosition, spots)
+  const { trailPoints } = useTripTrail(activeTripId, userPosition)
 
   const findingPosition = pinPosition ?? userPosition
 
@@ -141,6 +143,12 @@ export function MapView() {
               mapRef.current = map
             }}
           />
+          {trailPoints.length > 1 && (
+            <Polyline
+              positions={trailPoints}
+              pathOptions={{ color: 'var(--color-primary)', weight: 3, opacity: 0.7 }}
+            />
+          )}
           {userPosition && (
             <>
               {userAccuracyMeters != null && (

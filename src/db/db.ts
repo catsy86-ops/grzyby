@@ -1,11 +1,12 @@
 import Dexie, { type Table } from 'dexie'
-import type { Finding, Photo, Spot, Trip } from './schema'
+import type { Finding, Photo, Spot, Trip, TripTrailPoint } from './schema'
 
 export class GrzybyDatabase extends Dexie {
   findings!: Table<Finding, number>
   trips!: Table<Trip, number>
   photos!: Table<Photo, number>
   spots!: Table<Spot, number>
+  tripTrailPoints!: Table<TripTrailPoint, number>
 
   constructor() {
     super('lysy-db')
@@ -27,6 +28,10 @@ export class GrzybyDatabase extends Dexie {
     this.version(4).stores({
       findings: '++id, speciesId, createdAt, tripId, reactionSeverity, spotId',
       spots: '++id, createdAt',
+    })
+    // Ślad GPS z aktywnej wyprawy (trasa, nie tylko punkty start/powrót) - patrz schema.ts.
+    this.version(5).stores({
+      tripTrailPoints: '++id, tripId, createdAt',
     })
   }
 }

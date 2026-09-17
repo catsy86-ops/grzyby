@@ -73,3 +73,14 @@ export interface Spot {
   notes: string
   createdAt: number
 }
+
+// Punkt śladu GPS zebrany podczas aktywnej wyprawy (patrz hooks/useTripTrail.ts) - rysowany jako
+// trasa na mapie, nie tylko punkt startu/powrotu. Zapisywany throttlowany do ok. co 20m, nie co
+// tick GPS, żeby długa wyprawa nie zapchała bazy/pamięci tysiącami niemal identycznych punktów.
+export interface TripTrailPoint {
+  id?: number
+  tripId: number
+  latitude: number
+  longitude: number
+  createdAt: number
+}
