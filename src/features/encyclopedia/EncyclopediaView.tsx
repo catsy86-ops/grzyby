@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
-import { LeafIcon, ChefHatIcon, ChevronDownIcon, ScaleIcon } from 'lucide-react'
+import { LeafIcon, ChefHatIcon, ChevronDownIcon, CompassIcon, ScaleIcon } from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
@@ -9,6 +9,7 @@ import { EdibilityBadge, edibilityChartColor, speciesCardClassName } from '../..
 import { LookalikesWarning } from '../../components/LookalikesWarning'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
 import { Badge } from '../../components/ui/badge'
+import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../components/ui/collapsible'
 import { Input } from '../../components/ui/input'
@@ -17,6 +18,7 @@ import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
 import { getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'
 import { SHAPE_GROUP_LABEL, getSpeciesShapeGroup } from '../../utils/speciesShape'
 import { SpeciesShapeIcon } from '../../components/icons/speciesShapeIcons'
+import { ForestAssistant } from './ForestAssistant'
 
 const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
   { label: 'Wszystkie', value: 'wszystkie' },
@@ -31,6 +33,7 @@ export function EncyclopediaView() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<EdibilityStatus | 'wszystkie'>('wszystkie')
   const [seasonOnly, setSeasonOnly] = useState(false)
+  const [assistantOpen, setAssistantOpen] = useState(false)
   const [listRef] = useAutoAnimate()
 
   const species = speciesData as Species[]
@@ -52,7 +55,13 @@ export function EncyclopediaView() {
     // szerokości telefonu nawet na desktopie, więc treść pływała wąską kolumną w pustej
     // przestrzeni. Lista kart niżej dostaje odpowiadającą siatkę 2/3 kolumn.
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
-      <h1 className="text-heading-md font-semibold tracking-tight">Baza wiedzy o gatunkach</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-heading-md font-semibold tracking-tight">Baza wiedzy o gatunkach</h1>
+        <Button variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={() => setAssistantOpen(true)}>
+          <CompassIcon className="size-4" />
+          Leśny asystent
+        </Button>
+      </div>
 
       {/* Sticky pasek wyszukiwania/filtrów - przy przewijaniu 19 gatunków w dół wracanie na
           górę tylko po to, żeby zmienić filtr, jest niewygodne na telefonie. Ujemny margines +
@@ -225,6 +234,8 @@ export function EncyclopediaView() {
           </motion.div>
         )}
       </div>
+
+      <ForestAssistant open={assistantOpen} onOpenChange={setAssistantOpen} />
     </div>
   )
 }
