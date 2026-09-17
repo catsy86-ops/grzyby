@@ -78,4 +78,28 @@ describe('MapStatusBadges', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Usuń zapisaną pozycję auta' }))
     expect(onClearReturnPoint).toHaveBeenCalledOnce()
   })
+
+  it('zwija plakietki za przełącznikiem, gdy aktywne są 2 lub więcej naraz, i rozwija po kliknięciu', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        activeTripName="Las pod Niebuszewem"
+        sunsetCountdown={{ label: '32 min', isUrgent: false }}
+      />,
+    )
+
+    expect(screen.queryByText(/Aktywna wyprawa/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Zmrok za/)).not.toBeInTheDocument()
+    const toggle = screen.getByRole('button', { name: 'Pokaż 2 informacje o warunkach' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(toggle)
+
+    expect(screen.getByText(/Aktywna wyprawa: Las pod Niebuszewem/)).toBeInTheDocument()
+    expect(screen.getByText(/Zmrok za 32 min/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Zwiń informacje o warunkach' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+  })
 })
