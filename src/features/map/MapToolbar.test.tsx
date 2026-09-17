@@ -11,6 +11,8 @@ const baseProps = {
   onOpenSheet: vi.fn(),
   onSaveReturnPoint: vi.fn(),
   onAddFinding: vi.fn(),
+  mapLayerId: 'street' as const,
+  onChangeMapLayer: vi.fn(),
 }
 
 describe('MapToolbar', () => {
@@ -68,5 +70,15 @@ describe('MapToolbar', () => {
 
     expect(screen.getByText('Zaktualizuj pozycję auta')).toBeInTheDocument()
     expect(screen.getByText('Wyślij SMS z lokalizacją')).toBeInTheDocument()
+  })
+
+  it('menu narzędzi pozwala przełączyć warstwę mapy', () => {
+    const onChangeMapLayer = vi.fn()
+    render(<MapToolbar {...baseProps} onChangeMapLayer={onChangeMapLayer} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Więcej narzędzi mapy' }))
+    fireEvent.click(screen.getByText('Terenowa'))
+
+    expect(onChangeMapLayer).toHaveBeenCalledWith('topo')
   })
 })

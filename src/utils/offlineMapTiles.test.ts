@@ -126,4 +126,23 @@ describe('downloadTilesForOfflineUse', () => {
 
     await expect(downloadTilesForOfflineUse(tooMany)).rejects.toThrow(/Zbyt duży obszar/)
   })
+
+  it('domyślnie pobiera z kafelków OpenStreetMap', async () => {
+    mockCachesAndFetch()
+    await downloadTilesForOfflineUse([{ z: 14, x: 1, y: 2 }])
+
+    expect(fetch).toHaveBeenCalledWith('https://a.tile.openstreetmap.org/14/1/2.png', expect.anything())
+  })
+
+  it('pobiera z przekazanego szablonu URL innej warstwy (np. OpenTopoMap)', async () => {
+    mockCachesAndFetch()
+    await downloadTilesForOfflineUse(
+      [{ z: 14, x: 1, y: 2 }],
+      undefined,
+      undefined,
+      'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    )
+
+    expect(fetch).toHaveBeenCalledWith('https://a.tile.opentopomap.org/14/1/2.png', expect.anything())
+  })
 })

@@ -14,14 +14,18 @@ import {
   type DownloadProgress,
   type TileCoord,
 } from '../../utils/offlineMapTiles'
+import type { MapLayerDef } from '../../data/mapLayers'
 
 interface OfflineAreaDownloadProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   getCenter: () => [number, number] | null
+  // Kafle są pobierane z aktualnie wybranej warstwy mapy (patrz MapToolbar "Warstwa mapy") - kto
+  // przełączył się na widok terenowy przed wyprawą, dostaje offline dokładnie to, co widział.
+  activeLayer: MapLayerDef
 }
 
-export function OfflineAreaDownload({ open, onOpenChange, getCenter }: OfflineAreaDownloadProps) {
+export function OfflineAreaDownload({ open, onOpenChange, getCenter, activeLayer }: OfflineAreaDownloadProps) {
   const [radiusKm, setRadiusKm] = useState<number>(OFFLINE_RADIUS_PRESETS[1].km)
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
   // Ten sam wzorzec i próg co w SpotManager.tsx/StorageInfoDrawer.tsx/ToolsMenu.tsx/AddFindingForm.tsx.
@@ -47,7 +51,7 @@ export function OfflineAreaDownload({ open, onOpenChange, getCenter }: OfflineAr
     const controller = new AbortController()
     abortControllerRef.current = controller
     try {
-      const result = await downloadTilesForOfflineUse(tilesToDownload, setProgress, controller.signal)
+      const result = await downloadTilesForOfflineUse(tilesToDownload, setProgress, controller.signal, activeLayer.urlTemplate)
       if (controller.signal.aborted) {
         toast.info('Pobieranie anulowane - zapisane już kafelki zostają dostępne offline.')
         return
@@ -98,8 +102,8 @@ export function OfflineAreaDownload({ open, onOpenChange, getCenter }: OfflineAr
         <DrawerHeader>
           <DrawerTitle>Pobierz obszar offline</DrawerTitle>
           <DrawerDescription>
-            Zapisuje kafelki mapy wokół aktualnie widocznego miejsca, żeby były dostępne bez internetu na
-            wyprawie. Bądź teraz online.
+            Zapisuje kafelki mapy (warstwa: {activeLayer.label}) wokół aktualnie widocznego miejsca, żeby były
+            dostępne bez internetu na wyprawie. Bądź teraz online.
           </DrawerDescription>
         </DrawerHeader>
 

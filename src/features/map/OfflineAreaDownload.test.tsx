@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
 import * as offlineMapTiles from '../../utils/offlineMapTiles'
+import { MAP_LAYERS } from '../../data/mapLayers'
 
 vi.mock('../../utils/offlineMapTiles', async () => {
   const actual = await vi.importActual<typeof import('../../utils/offlineMapTiles')>('../../utils/offlineMapTiles')
@@ -12,6 +13,7 @@ vi.mock('../../utils/offlineMapTiles', async () => {
 })
 
 const CENTER: [number, number] = [53.4285, 14.5528]
+const STREET_LAYER = MAP_LAYERS[0]
 
 describe('OfflineAreaDownload', () => {
   beforeEach(() => {
@@ -22,21 +24,21 @@ describe('OfflineAreaDownload', () => {
   afterEach(() => cleanup())
 
   it('pokazuje szacowaną liczbę kafelków i rozmiar dla domyślnego promienia', async () => {
-    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} />)
+    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} activeLayer={STREET_LAYER} />)
 
     expect(await screen.findByText(/kafelków, ok\./)).toBeInTheDocument()
   })
 
   it('pokazuje ostrzeżenie offline i blokuje przycisk pobierania, gdy brak sieci', async () => {
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true })
-    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} />)
+    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} activeLayer={STREET_LAYER} />)
 
     expect(await screen.findByText(/Jesteś offline/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Pobierz' })).toBeDisabled()
   })
 
   it('pokazuje błąd, gdy nie udało się ustalić środka mapy', async () => {
-    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => null} />)
+    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => null} activeLayer={STREET_LAYER} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Pobierz' }))
 
@@ -54,7 +56,7 @@ describe('OfflineAreaDownload', () => {
         }),
     )
     const onOpenChange = vi.fn()
-    render(<OfflineAreaDownload open onOpenChange={onOpenChange} getCenter={() => CENTER} />)
+    render(<OfflineAreaDownload open onOpenChange={onOpenChange} getCenter={() => CENTER} activeLayer={STREET_LAYER} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Pobierz' }))
 
@@ -74,7 +76,7 @@ describe('OfflineAreaDownload', () => {
       failed: 1,
       failedTiles,
     })
-    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} />)
+    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} activeLayer={STREET_LAYER} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Pobierz' }))
 
@@ -93,6 +95,7 @@ describe('OfflineAreaDownload', () => {
         failedTiles,
         expect.any(Function),
         expect.anything(),
+        STREET_LAYER.urlTemplate,
       ),
     )
   })
@@ -104,7 +107,7 @@ describe('OfflineAreaDownload', () => {
       })
     })
     const onOpenChange = vi.fn()
-    render(<OfflineAreaDownload open onOpenChange={onOpenChange} getCenter={() => CENTER} />)
+    render(<OfflineAreaDownload open onOpenChange={onOpenChange} getCenter={() => CENTER} activeLayer={STREET_LAYER} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Pobierz' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Anuluj pobieranie' }))
@@ -115,7 +118,7 @@ describe('OfflineAreaDownload', () => {
 
   it('pokazuje błąd, gdy pobieranie rzuci wyjątek', async () => {
     vi.mocked(offlineMapTiles.downloadTilesForOfflineUse).mockRejectedValue(new Error('Sieć padła'))
-    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} />)
+    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} activeLayer={STREET_LAYER} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Pobierz' }))
 
@@ -124,7 +127,7 @@ describe('OfflineAreaDownload', () => {
 
   it('zmiana presetu promienia jest zablokowana w trakcie pobierania', async () => {
     vi.mocked(offlineMapTiles.downloadTilesForOfflineUse).mockImplementation(() => new Promise(() => {}))
-    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} />)
+    render(<OfflineAreaDownload open onOpenChange={vi.fn()} getCenter={() => CENTER} activeLayer={STREET_LAYER} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Pobierz' }))
 

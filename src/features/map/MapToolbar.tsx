@@ -2,6 +2,7 @@ import {
   CarIcon,
   CrosshairIcon,
   DownloadIcon,
+  LayersIcon,
   ListIcon,
   MapIcon,
   MapPinnedIcon,
@@ -14,11 +15,17 @@ import { Button } from '../../components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu'
 import { buildLocationSmsUrl } from '../../utils/locationSms'
 import type { Position } from '../../utils/bearing'
+import { MAP_LAYERS, type MapLayerId } from '../../data/mapLayers'
 import type { ActiveSheet } from './MapView'
 
 interface MapToolbarProps {
@@ -30,6 +37,8 @@ interface MapToolbarProps {
   onOpenSheet: (sheet: ActiveSheet) => void
   onSaveReturnPoint: () => void
   onAddFinding: () => void
+  mapLayerId: MapLayerId
+  onChangeMapLayer: (id: MapLayerId) => void
 }
 
 // Przyciski akcji + menu narzędzi (prawy dolny róg) - wydzielone z MapView (Faza 19). Menu
@@ -46,6 +55,8 @@ export function MapToolbar({
   onOpenSheet,
   onSaveReturnPoint,
   onAddFinding,
+  mapLayerId,
+  onChangeMapLayer,
 }: MapToolbarProps) {
   return (
     <div className="flex flex-col items-end gap-2">
@@ -73,6 +84,21 @@ export function MapToolbar({
           <MoreVerticalIcon className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="end" className="w-56">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Warstwa mapy</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={mapLayerId}
+              onValueChange={(value) => onChangeMapLayer(value as MapLayerId)}
+            >
+              {MAP_LAYERS.map((layer) => (
+                <DropdownMenuRadioItem key={layer.id} value={layer.id}>
+                  <LayersIcon />
+                  {layer.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onOpenSheet('szczecin-spots')}>
             <TreePineIcon />
             Szczecin i okolice

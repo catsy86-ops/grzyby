@@ -11,8 +11,10 @@ import {
 } from '../../components/icons/mapMarkerIcons'
 import { db } from '../../db/db'
 import { szczecinSpots } from '../../data/szczecinSpots'
+import { getMapLayer } from '../../data/mapLayers'
 import type { Spot } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
+import { useAppStore } from '../../stores/appStore'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
 import { useMushroomOutlook } from '../../hooks/useMushroomOutlook'
 import { useMapGeolocation } from '../../hooks/useMapGeolocation'
@@ -103,6 +105,9 @@ export function MapView() {
   const { navigationTargetSpot, navigationInfo, setNavigationTargetSpotId, clearNavigationTarget } =
     useSpotNavigation(userPosition, spots)
   const { trailPoints } = useTripTrail(activeTripId, userPosition)
+  const mapLayerId = useAppStore((s) => s.mapLayerId)
+  const setMapLayerId = useAppStore((s) => s.setMapLayerId)
+  const activeMapLayer = getMapLayer(mapLayerId)
 
   const findingPosition = pinPosition ?? userPosition
 
@@ -120,9 +125,10 @@ export function MapView() {
           minZoom={REGION_MIN_ZOOM}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maxZoom={19}
+            key={activeMapLayer.id}
+            attribution={activeMapLayer.attribution}
+            url={activeMapLayer.urlTemplate}
+            maxZoom={activeMapLayer.maxZoom}
             eventHandlers={{
               tileerror: () => {
                 if (!navigator.onLine) setTileLoadIssue(true)
@@ -268,6 +274,8 @@ export function MapView() {
           onOpenSheet={setActiveSheet}
           onSaveReturnPoint={handleSaveReturnPoint}
           onAddFinding={() => setActiveSheet('add-finding')}
+          mapLayerId={mapLayerId}
+          onChangeMapLayer={setMapLayerId}
         />
       </div>
 
@@ -288,6 +296,7 @@ export function MapView() {
           const center = mapRef.current?.getCenter()
           return center ? [center.lat, center.lng] : null
         }}
+        activeLayer={activeMapLayer}
       />
 
       <SpotManager

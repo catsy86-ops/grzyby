@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { db } from '../db/db'
+import { DEFAULT_MAP_LAYER_ID, type MapLayerId } from '../data/mapLayers'
 
 export type ActiveTab = 'mapa' | 'rozpoznaj' | 'dziennik' | 'baza-wiedzy'
 
@@ -21,6 +22,8 @@ interface AppState {
   setNavigationTargetSpotId: (id: number | null) => void
   forestMode: boolean
   setForestMode: (enabled: boolean) => void
+  mapLayerId: MapLayerId
+  setMapLayerId: (id: MapLayerId) => void
 }
 
 // activeTripId jest utrwalany, żeby zamknięcie/zabicie aplikacji w trakcie wyprawy w lesie
@@ -38,6 +41,8 @@ export const useAppStore = create<AppState>()(
       setNavigationTargetSpotId: (id) => set({ navigationTargetSpotId: id }),
       forestMode: false,
       setForestMode: (enabled) => set({ forestMode: enabled }),
+      mapLayerId: DEFAULT_MAP_LAYER_ID,
+      setMapLayerId: (id) => set({ mapLayerId: id }),
     }),
     {
       name: 'lysy-app-store',
@@ -46,6 +51,7 @@ export const useAppStore = create<AppState>()(
         returnPoint: state.returnPoint,
         navigationTargetSpotId: state.navigationTargetSpotId,
         forestMode: state.forestMode,
+        mapLayerId: state.mapLayerId,
       }),
       onRehydrateStorage: () => () => {
         // Odłożone do makrotaska: onRehydrateStorage jest wywoływane synchronicznie

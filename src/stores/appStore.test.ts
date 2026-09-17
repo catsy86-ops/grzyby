@@ -39,3 +39,18 @@ describe('useAppStore - forestMode', () => {
     expect(useAppStore.getState().forestMode).toBe(false)
   })
 })
+
+describe('useAppStore - mapLayerId', () => {
+  afterEach(() => {
+    useAppStore.setState({ mapLayerId: 'street' })
+  })
+
+  it('domyślnie warstwa standardowa (street)', () => {
+    expect(useAppStore.getState().mapLayerId).toBe('street')
+  })
+
+  it('przełącza warstwę mapy', () => {
+    useAppStore.getState().setMapLayerId('topo')
+    expect(useAppStore.getState().mapLayerId).toBe('topo')
+  })
+})

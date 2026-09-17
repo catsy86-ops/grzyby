@@ -47,7 +47,10 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
+            // Obejmuje oba warianty podkładu mapy (patrz src/data/mapLayers.ts) - standardowy OSM
+            // i terenowy OpenTopoMap - tym samym cache'em, żeby OfflineAreaDownload i Service
+            // Worker traktowały je spójnie niezależnie od wybranej warstwy.
+            urlPattern: /^https:\/\/[abc]\.tile\.(openstreetmap|opentopomap)\.org\/.*/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'map-tiles',

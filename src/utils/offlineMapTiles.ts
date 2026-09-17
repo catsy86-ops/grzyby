@@ -19,7 +19,13 @@ export const OFFLINE_RADIUS_PRESETS = [
   { label: '10 km', km: 10 },
 ] as const
 
-const TILE_URL = (z: number, x: number, y: number) => `https://a.tile.openstreetmap.org/${z}/${x}/${y}.png`
+// `urlTemplate` to ten sam format co w react-leaflet TileLayer ({s}/{z}/{x}/{y}) - patrz
+// data/mapLayers.ts. Subdomena {s} jest tu zawsze ustalona na 'a' (dowolna z rotacji wystarcza
+// do pobrania, kafel jest identyczny niezależnie od tego, przez którą subdomenę trafił).
+function buildTileUrl(urlTemplate: string, z: number, x: number, y: number): string {
+  return urlTemplate.replace('{s}', 'a').replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y))
+}
+const DEFAULT_TILE_URL_TEMPLATE = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const MAP_TILES_CACHE_NAME = 'map-tiles'
 // Największy preset (10 km, zoom 13-16) to ok. 3940 kafelków - limit z marginesem na nieregularne
 // kształty obszaru przy różnych szerokościach geograficznych.
@@ -97,6 +103,7 @@ export async function downloadTilesForOfflineUse(
   tiles: TileCoord[],
   onProgress?: (progress: DownloadProgress) => void,
   signal?: AbortSignal,
+  tileUrlTemplate: string = DEFAULT_TILE_URL_TEMPLATE,
 ): Promise<DownloadResult> {
   if (tiles.length > MAX_TILES_PER_DOWNLOAD) {
     throw new Error(
@@ -114,7 +121,7 @@ export async function downloadTilesForOfflineUse(
     while (nextIndex < tiles.length) {
       if (signal?.aborted) return
       const tile = tiles[nextIndex++]
-      const url = TILE_URL(tile.z, tile.x, tile.y)
+      const url = buildTileUrl(tileUrlTemplate, tile.z, tile.x, tile.y)
       try {
         const alreadyCached = await cache.match(url)
         if (!alreadyCached) {
