@@ -442,3 +442,87 @@ body {
 .dark .leaflet-tile-pane {
   filter: saturate(0.7) sepia(0.1) hue-rotate(-6deg) brightness(0.65) invert(1) hue-rotate(180deg) contrast(0.9);
 }
+
+/* Kontrolki Leaflet (zoom, popup, atrybucja) przeflancowane na tokeny motywu apki - to jedyne
+   elementy mapy, które wciąż wyglądały jak domyślny, generyczny widget biblioteki (białe
+   kwadraty, "Lucida Console" +/-, ostre rogi) wśród reszty UI zbudowanego na kartach/cieniach
+   OKLCH. W trybie ciemnym raziło to najbardziej - zostawały jaskrawo białe mimo przyciemnionych
+   kafli mapy tuż obok (patrz `.dark .leaflet-tile-pane` wyżej). Kolory idą przez te same
+   zmienne co reszta apki, więc jasny/ciemny motyw obsługuje się automatycznie, bez osobnych
+   `.dark`-reguł tutaj.
+   `!important` tam, gdzie domyślny leaflet.css ma wyższą lub równą specyficzność (np.
+   `.leaflet-touch .leaflet-bar a` na urządzeniach dotykowych) - jedyny pewny sposób, by
+   nadpisać bibliotekę bez kopiowania jej całych łańcuchów selektorów. */
+.leaflet-control-zoom {
+  border: none !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-card) !important;
+  overflow: hidden;
+}
+.leaflet-control-zoom a {
+  background: var(--color-card) !important;
+  color: var(--color-foreground) !important;
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid var(--color-border) !important;
+}
+.leaflet-control-zoom a:last-child {
+  border-bottom: none !important;
+}
+.leaflet-control-zoom a:hover,
+.leaflet-control-zoom a:focus {
+  background: var(--color-secondary) !important;
+}
+.leaflet-control-zoom a.leaflet-disabled {
+  background: var(--color-card) !important;
+  color: var(--color-muted-foreground) !important;
+  opacity: 0.5;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--color-popover) !important;
+  color: var(--color-popover-foreground) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-xl) !important;
+  border: 1px solid var(--color-border);
+}
+.leaflet-popup-content {
+  margin: 14px 16px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.leaflet-popup-content a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--color-muted-foreground) !important;
+  font-size: 18px !important;
+  line-height: 26px !important;
+  width: 26px !important;
+  height: 26px !important;
+  top: 2px !important;
+  right: 2px !important;
+}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+  color: var(--color-foreground) !important;
+}
+
+.leaflet-control-attribution {
+  background: var(--color-card) !important;
+  color: var(--color-muted-foreground) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-card);
+  padding: 2px 8px !important;
+  font-size: 0.6875rem;
+}
+.leaflet-control-attribution a {
+  color: var(--color-muted-foreground);
+}
