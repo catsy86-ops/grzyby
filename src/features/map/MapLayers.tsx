@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react'
 import type { MutableRefObject } from 'react'
-import { Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
+import { CircleMarker, Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
 import type L from 'leaflet'
 import { TrashIcon } from 'lucide-react'
 import { createClusterIcon, findingMarkerIconFor } from '../../components/icons/mapMarkerIcons'
@@ -11,6 +11,7 @@ import type { Finding, Species } from '../../db/schema'
 import type { Position } from '../../utils/bearing'
 import { clusterFindings } from '../../utils/clusterFindings'
 import { formatDate } from '../../utils/formatDate'
+import { heatmapStyleForCount } from '../../utils/heatmapStyle'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -157,6 +158,57 @@ function FindingMarkersImpl({ findings }: { findings: Finding[] }) {
 // komponent (i przeliczanie klastrów mimo `useMemo` w środku) re-renderowałby się przy każdym
 // ticku GPS rodzica (kilka razy/s) - React.memo ucina to przy niezmienionej referencji `findings`.
 export const FindingMarkers = memo(FindingMarkersImpl)
+
+// Grupowanie na potrzeby "mapy cieplnej" (patrz utils/heatmapStyle.ts) jest szersze niż
+// CLUSTER_DISTANCE_PX używane przez zwykłe pinezki - tu celem jest pokazanie "gorących obszarów",
+// nie osobnych, policzalnych skupisk pinezek.
+const HEATMAP_BUCKET_DISTANCE_PX = 70
+
+function FindingsHeatmapImpl({ findings }: { findings: Finding[] }) {
+  const map = useMap()
+  const [zoom, setZoom] = useState(() => map.getZoom())
+  useMapEvent('zoomend', () => setZoom(map.getZoom()))
+
+  const points = useMemo(
+    () =>
+      findings
+        .filter((f) => f.id != null && f.latitude != null && f.longitude != null)
+        .map((f) => ({ id: f.id!, lat: f.latitude!, lng: f.longitude! })),
+    [findings],
+  )
+
+  const clusters = useMemo(
+    () => clusterFindings(points, (lat, lng) => map.project([lat, lng], zoom), HEATMAP_BUCKET_DISTANCE_PX),
+    [points, map, zoom],
+  )
+
+  const maxCount = useMemo(() => clusters.reduce((max, c) => Math.max(max, c.points.length), 1), [clusters])
+
+  return (
+    <>
+      {clusters.map((cluster) => {
+        const { radius, fillOpacity } = heatmapStyleForCount(cluster.points.length, maxCount)
+        const key = cluster.points
+          .map((p) => p.id)
+          .sort((a, b) => a - b)
+          .join('-')
+        return (
+          <CircleMarker
+            key={key}
+            center={[cluster.lat, cluster.lng]}
+            radius={radius}
+            interactive={false}
+            pathOptions={{ stroke: false, fillColor: 'var(--color-destructive)', fillOpacity }}
+          />
+        )
+      })}
+    </>
+  )
+}
+
+// Ten sam powód co przy FindingMarkers - `findings` jest stabilną referencją z useLiveQuery
+// w MapView, memo ucina zbędne przeliczanie klastrów przy każdym ticku GPS rodzica.
+export const FindingsHeatmap = memo(FindingsHeatmapImpl)
 
 export function RecenterOnLocate({
   position,

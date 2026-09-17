@@ -2,6 +2,7 @@ import {
   CarIcon,
   CrosshairIcon,
   DownloadIcon,
+  FlameIcon,
   LayersIcon,
   ListIcon,
   MapIcon,
@@ -14,6 +15,7 @@ import {
 import { Button } from '../../components/ui/button'
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
@@ -26,6 +28,7 @@ import {
 import { buildLocationSmsUrl } from '../../utils/locationSms'
 import type { Position } from '../../utils/bearing'
 import { MAP_LAYERS, type MapLayerId } from '../../data/mapLayers'
+import { MIN_FINDINGS_FOR_HEATMAP } from '../../utils/heatmapStyle'
 import type { ActiveSheet } from './MapView'
 
 interface MapToolbarProps {
@@ -39,6 +42,9 @@ interface MapToolbarProps {
   onAddFinding: () => void
   mapLayerId: MapLayerId
   onChangeMapLayer: (id: MapLayerId) => void
+  findingsCount: number
+  isHeatmapView: boolean
+  onToggleHeatmapView: () => void
 }
 
 // Przyciski akcji + menu narzędzi (prawy dolny róg) - wydzielone z MapView (Faza 19). Menu
@@ -57,7 +63,11 @@ export function MapToolbar({
   onAddFinding,
   mapLayerId,
   onChangeMapLayer,
+  findingsCount,
+  isHeatmapView,
+  onToggleHeatmapView,
 }: MapToolbarProps) {
+  const heatmapDisabled = findingsCount < MIN_FINDINGS_FOR_HEATMAP
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex items-center gap-2">
@@ -98,6 +108,15 @@ export function MapToolbar({
               ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuCheckboxItem
+            checked={isHeatmapView}
+            disabled={heatmapDisabled}
+            onCheckedChange={onToggleHeatmapView}
+          >
+            <FlameIcon />
+            {heatmapDisabled ? `Mapa cieplna (min. ${MIN_FINDINGS_FOR_HEATMAP} znalezisk)` : 'Mapa cieplna znalezisk'}
+          </DropdownMenuCheckboxItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onOpenSheet('szczecin-spots')}>
             <TreePineIcon />

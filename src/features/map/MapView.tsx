@@ -25,7 +25,7 @@ import { AddFindingForm } from './AddFindingForm'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
 import { SpotManager } from './SpotManager'
 import { SzczecinSpotsPanel } from './SzczecinSpotsPanel'
-import { FindingMarkers, MapClickHandler, MapInstanceCapture, RecenterOnLocate } from './MapLayers'
+import { FindingMarkers, FindingsHeatmap, MapClickHandler, MapInstanceCapture, RecenterOnLocate } from './MapLayers'
 import { MapStatusBadges } from './MapStatusBadges'
 import { MapOverlayMessages } from './MapOverlayMessages'
 import { MapToolbar } from './MapToolbar'
@@ -72,6 +72,7 @@ export function MapView() {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null)
   const [isListView, setIsListView] = useState(false)
+  const [isHeatmapView, setIsHeatmapView] = useState(false)
   const [tileLoadIssue, setTileLoadIssue] = useState(false)
   const mapRef = useRef<L.Map | null>(null)
   // Cel startowej pozycji `MapContainer` - trzymany w stanie (nie tylko jako stała), bo
@@ -204,7 +205,7 @@ export function MapView() {
               </Popup>
             </Marker>
           ))}
-          {findings && <FindingMarkers findings={findings} />}
+          {findings && (isHeatmapView ? <FindingsHeatmap findings={findings} /> : <FindingMarkers findings={findings} />)}
           {/* Kuratorowane grzybowiska "Szczecin i okolice" - zawsze widoczne na mapie (nie tylko
               przy otwartym SzczecinSpotsPanel), tak jak spoty użytkownika wyżej - to statyczna,
               mała lista (6 pozycji), więc brak sensu chować ją za dodatkowym przełącznikiem. */}
@@ -276,6 +277,9 @@ export function MapView() {
           onAddFinding={() => setActiveSheet('add-finding')}
           mapLayerId={mapLayerId}
           onChangeMapLayer={setMapLayerId}
+          findingsCount={findings?.length ?? 0}
+          isHeatmapView={isHeatmapView}
+          onToggleHeatmapView={() => setIsHeatmapView((v) => !v)}
         />
       </div>
 

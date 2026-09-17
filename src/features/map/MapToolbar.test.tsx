@@ -13,6 +13,9 @@ const baseProps = {
   onAddFinding: vi.fn(),
   mapLayerId: 'street' as const,
   onChangeMapLayer: vi.fn(),
+  findingsCount: 0,
+  isHeatmapView: false,
+  onToggleHeatmapView: vi.fn(),
 }
 
 describe('MapToolbar', () => {
@@ -80,5 +83,26 @@ describe('MapToolbar', () => {
     fireEvent.click(screen.getByText('Terenowa'))
 
     expect(onChangeMapLayer).toHaveBeenCalledWith('topo')
+  })
+
+  it('blokuje przełącznik mapy cieplnej, gdy znalezisk jest mniej niż próg', () => {
+    render(<MapToolbar {...baseProps} findingsCount={3} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Więcej narzędzi mapy' }))
+
+    expect(screen.getByRole('menuitemcheckbox', { name: /Mapa cieplna \(min\./ })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+  })
+
+  it('pozwala przełączyć mapę cieplną, gdy znalezisk jest wystarczająco', () => {
+    const onToggleHeatmapView = vi.fn()
+    render(<MapToolbar {...baseProps} findingsCount={20} onToggleHeatmapView={onToggleHeatmapView} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Więcej narzędzi mapy' }))
+    fireEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Mapa cieplna znalezisk' }))
+
+    expect(onToggleHeatmapView).toHaveBeenCalledOnce()
   })
 })
