@@ -2,13 +2,24 @@ import { memo, useEffect, useMemo, useState } from 'react'
 import type { MutableRefObject } from 'react'
 import { Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
 import type L from 'leaflet'
+import { TrashIcon } from 'lucide-react'
 import { createClusterIcon, findingMarkerIconFor } from '../../components/icons/mapMarkerIcons'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
 import speciesData from '../../data/species.json'
+import { db } from '../../db/db'
 import type { Finding, Species } from '../../db/schema'
 import type { Position } from '../../utils/bearing'
 import { clusterFindings } from '../../utils/clusterFindings'
 import { formatDate } from '../../utils/formatDate'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog'
 
 // Komponenty tego pliku to jedyna część feature'u Mapy realnie zależna od `useMap()`/
 // `MapContainer` (wydzielone z MapView.tsx, Faza 19) - oddzielenie ich od reszty stanu/logiki
@@ -20,6 +31,74 @@ import { formatDate } from '../../utils/formatDate'
 const CLUSTER_DISTANCE_PX = 48
 
 const speciesById = new Map((speciesData as Species[]).map((s) => [s.id, s]))
+
+// Pinezka pojedynczego znaleziska + jego popup - wydzielona z `FindingMarkersImpl`, bo od teraz
+// nosi też własny stan potwierdzenia usunięcia (Faza "usuwanie pozycji z mapy"). Dotąd jedyną
+// drogą do usunięcia znaleziska był Dziennik - w terenie, stojąc przy konkretnym miejscu na
+// mapie, to nadmiarowy krok. Logika usuwania (transakcja findings+photos) lustrzana wobec
+// `JournalView.handleDelete` - to samo znalezisko, ten sam wymóg skasowania powiązanego zdjęcia.
+function FindingMarker({
+  finding,
+  species,
+  position,
+}: {
+  finding: Finding
+  species: Species | undefined
+  position: [number, number]
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  async function handleDelete() {
+    await db.transaction('rw', db.findings, db.photos, async () => {
+      await db.photos.where('findingId').equals(finding.id!).delete()
+      await db.findings.delete(finding.id!)
+    })
+    setConfirmDelete(false)
+  }
+
+  return (
+    <>
+      <Marker position={position} icon={findingMarkerIconFor(species?.edibility)}>
+        <Popup>
+          <div className="text-sm">
+            <p className="font-semibold">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
+            {species && (
+              <div className="mt-1">
+                <EdibilityBadge edibility={species.edibility} />
+              </div>
+            )}
+            <p className="mt-1">{formatDate(finding.createdAt)}</p>
+            {finding.notes && <p className="mt-1">{finding.notes}</p>}
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="mt-2 flex items-center gap-1 rounded text-xs text-destructive outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              <TrashIcon className="size-3.5" />
+              Usuń znalezisko
+            </button>
+          </div>
+        </Popup>
+      </Marker>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Usunąć znalezisko?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {finding.speciesNameGuess ?? 'To znalezisko'} zostanie trwale usunięte razem ze zdjęciem. Tej operacji
+            nie można cofnąć.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90" onClick={handleDelete}>
+              Tak, usuń
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
+}
 
 function FindingMarkersImpl({ findings }: { findings: Finding[] }) {
   const map = useMap()
@@ -52,24 +131,7 @@ function FindingMarkersImpl({ findings }: { findings: Finding[] }) {
           if (!finding) return null
           const species = finding.speciesId ? speciesById.get(finding.speciesId) : undefined
           return (
-            <Marker
-              key={finding.id}
-              position={[cluster.lat, cluster.lng]}
-              icon={findingMarkerIconFor(species?.edibility)}
-            >
-              <Popup>
-                <div className="text-sm">
-                  <p className="font-semibold">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
-                  {species && (
-                    <div className="mt-1">
-                      <EdibilityBadge edibility={species.edibility} />
-                    </div>
-                  )}
-                  <p className="mt-1">{formatDate(finding.createdAt)}</p>
-                  {finding.notes && <p className="mt-1">{finding.notes}</p>}
-                </div>
-              </Popup>
-            </Marker>
+            <FindingMarker key={finding.id} finding={finding} species={species} position={[cluster.lat, cluster.lng]} />
           )
         }
         const clusterKey = cluster.points
