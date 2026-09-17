@@ -135,7 +135,8 @@ function NavButton({
             transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
           />
         )}
-        <Icon className={`relative size-[18px] transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+        {/* size-4.5 (18px) - rozmiar ikon nawigacyjnych, patrz konwencja rozmiarów ikon w index.css */}
+        <Icon className={`relative size-4.5 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
       </motion.span>
       <span className={`text-[11px] leading-none transition-colors ${isActive ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
         {tab.label}

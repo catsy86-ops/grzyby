@@ -106,6 +106,14 @@ body {
   --color-header-accent-rozpoznaj: var(--header-accent-rozpoznaj);
 }
 
+/* Konwencja rozmiarów ikon (Faza A planu wizualnego) - jedna stała skala Tailwind per kontekst,
+   zamiast dowolnie mieszanych klas (size-4 vs size-4.5 vs size-[18px]) w różnych komponentach:
+   - size-3.5 (14px): ikony pomocnicze/inline - plakietki, metadane, tekst drugorzędny
+   - size-4   (16px): domyślne ikony UI - przyciski, pozycje list, menu
+   - size-4.5 (18px): ikony nawigacyjne i nagłówkowe - bottom nav, toolbar mapy, header
+   - size-5   (20px): ikony akcentujące - duże przyciski akcji, puste stany
+   - size-6   (24px): ikony dekoracyjne/duże - onboarding, splash, ilustracje */
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
