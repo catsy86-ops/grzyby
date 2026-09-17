@@ -45,6 +45,19 @@ const REGION_BOUNDS: [[number, number], [number, number]] = [
 ]
 const REGION_MIN_ZOOM = 8
 
+// GPS/geolokalizacja przeglądarki czasem zwraca pozycję daleko poza obszarem, którym w ogóle
+// zajmuje się apka (np. IP-based fallback zamiast realnego GPS-a, brak sygnału w budynku).
+// Wcześniej taka pozycja bezwarunkowo przesuwała mapę (RecenterOnLocate) - z aktywnym
+// `maxBounds` wyglądało to jak zawieszenie się na ścianie granicy regionu, myląco (użytkownik
+// widział mapę "skaczącą" w stronę np. Wrocławia, zamiast zostać na Szczecinie). Pozycja spoza
+// regionu jest teraz ignorowana przy auto-centrowaniu - mapa zostaje na dotychczasowym widoku
+// (domyślnie Szczecin/Niebuszewo), zamiast próbować pokazać miejsce, którego i tak nie umie
+// wyświetlić.
+function isInsideRegion([lat, lng]: [number, number]): boolean {
+  const [[swLat, swLng], [neLat, neLng]] = REGION_BOUNDS
+  return lat >= swLat && lat <= neLat && lng >= swLng && lng <= neLng
+}
+
 // Dokładnie jeden arkusz/drawer może być otwarty naraz - zastępuje 3 niezależne boolean-y
 // (`showAddForm`/`showOfflineDownload`/`showSpotManager`), które nic nie stało na przeszkodzie,
 // by były `true` jednocześnie (dwa nałożone Drawer/Sheet). Eksportowany, bo `MapToolbar`
@@ -115,7 +128,10 @@ export function MapView() {
               tileload: () => setTileLoadIssue(false),
             }}
           />
-          <RecenterOnLocate position={recenterTarget} suppressNextRef={suppressNextRecenterRef} />
+          <RecenterOnLocate
+            position={recenterTarget && isInsideRegion(recenterTarget) ? recenterTarget : null}
+            suppressNextRef={suppressNextRecenterRef}
+          />
           <MapClickHandler enabled={activeSheet === null} onPick={setPinPosition} />
           <MapInstanceCapture
             onReady={(map) => {
@@ -217,7 +233,17 @@ export function MapView() {
           hasReturnPoint={returnPoint != null}
           isListView={isListView}
           onToggleListView={() => setIsListView((v) => !v)}
-          onLocate={handleLocate}
+          onLocate={() => {
+            // "Zlokalizuj mnie" na pozycji spoza regionu apki cicho nic by nie zrobił (patrz
+            // `isInsideRegion` wyżej) - bez komunikatu wyglądałoby to jak zawieszony przycisk,
+            // więc tu jedyne miejsce, gdzie warto o tym jawnie poinformować (auto-recentrowanie
+            // przy GPS-owym ticku ma zostać ciche, żeby nie zasypywać komunikatami w terenie).
+            if (userPosition && !isInsideRegion(userPosition)) {
+              reportError('Twoja pozycja jest poza obszarem Szczecina i okolic - mapa pokazuje tylko ten region.')
+              return
+            }
+            handleLocate()
+          }}
           onOpenSheet={setActiveSheet}
           onSaveReturnPoint={handleSaveReturnPoint}
           onAddFinding={() => setActiveSheet('add-finding')}
