@@ -526,3 +526,37 @@ body {
 .leaflet-control-attribution a {
   color: var(--color-muted-foreground);
 }
+
+/* "Wjazd" pinezki/klastra przy zamontowaniu - odtąd markery po prostu pojawiały się bez
+   przejścia, teraz delikatnie "wskakują" na miejsce. Odtwarza się przy KAŻDYM mountcie danego
+   markera (nowe znalezisko, powrót z klastra do pojedynczej pinezki przy zoomie), co jest
+   pożądane - to samo zachowanie co w Google/Apple Maps przy rozpadaniu się klastra.
+   Dwie klasy zamiast jednej: pinezki (kropla) kotwiczą się w Leaflet za swój czubek na dole
+   (patrz `iconAnchor` w `pinDivIcon`), więc muszą skalować się od dołu, żeby czubek się nie
+   przesuwał - klaster (kółko) kotwiczy się na środku, więc skaluje się od środka. */
+@keyframes marker-pop-in {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .marker-pop-in {
+    transform-origin: center;
+    animation: marker-pop-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .marker-pop-in-pin {
+    transform-origin: bottom center;
+    animation: marker-pop-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+}

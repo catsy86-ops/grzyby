@@ -54,7 +54,7 @@ function pinDivIcon({
     <span
       role="img"
       aria-label={label}
-      className="relative block drop-shadow-md"
+      className="marker-pop-in-pin relative block drop-shadow-md"
       style={{ width: size, height }}
     >
       <svg viewBox={`0 0 ${PIN_VIEWBOX_W} ${PIN_VIEWBOX_H}`} width={size} height={height}>
@@ -167,15 +167,22 @@ export const userLocationIcon = L.divIcon({
 // `findingMarkerIconFor` powyżej.
 const clusterIconCache = new Map<number, L.DivIcon>()
 
+// Rozmiar rośnie skokowo z liczebnością (3 progi zamiast jednego stałego 36px) - większa grupa
+// znalezisk powinna "ważyć" więcej wizualnie na mapie, nie tylko nosić inną liczbę w środku.
+// Miękka "aureola" (box-shadow, nie kolejny border) wokół kółka odróżnia klaster od zwykłej
+// pinezki na pierwszy rzut oka, nawet zanim oko dotrze do liczby w środku.
+function clusterSizeFor(count: number): number {
+  if (count >= 50) return 48
+  if (count >= 10) return 42
+  return 36
+}
+
 export function createClusterIcon(count: number): L.DivIcon {
   const cached = clusterIconCache.get(count)
   if (cached) return cached
-  const icon = L.divIcon({
-    html: `<div role="img" aria-label="Grupa ${count} znalezisk" class="flex size-9 items-center justify-center rounded-full border-2 border-white bg-primary text-xs font-bold text-primary-foreground shadow">${count}</div>`,
-    className: '',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-  })
+  const size = clusterSizeFor(count)
+  const html = `<div role="img" aria-label="Grupa ${count} znalezisk" class="marker-pop-in flex items-center justify-center rounded-full border-2 border-background bg-primary font-bold text-primary-foreground" style="width:${size}px;height:${size}px;font-size:${count >= 100 ? 11 : 12}px;box-shadow:0 0 0 6px color-mix(in oklch, var(--color-primary) 16%, transparent), var(--shadow-card)">${count}</div>`
+  const icon = L.divIcon({ html, className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2] })
   clusterIconCache.set(count, icon)
   return icon
 }
