@@ -53,6 +53,12 @@ export function MapView() {
     center: DEFAULT_CENTER,
     zoom: DEFAULT_ZOOM,
   })
+  // Gdy "Pokaż na mapie" remountuje `MapContainer` (patrz `onShowOnMap` niżej), `RecenterOnLocate`
+  // remountuje się razem z nim i jego efekt odpaliłby się od nowa z ostatnią znaną pozycją GPS,
+  // po cichu nadpisując środek mapy właśnie ustawiony na wybrane grzybowisko - znaleziony przez
+  // /code-review po commicie f28ba90. Ta flaga każe mu pominąć dokładnie jedno, najbliższe
+  // odpalenie efektu po takim przejściu.
+  const suppressNextRecenterRef = useRef(false)
 
   const findings = useLiveQuery(() => db.findings.toArray(), [])
   const spots = useLiveQuery(() => db.spots.toArray(), [])
@@ -91,7 +97,7 @@ export function MapView() {
               tileload: () => setTileLoadIssue(false),
             }}
           />
-          <RecenterOnLocate position={recenterTarget} />
+          <RecenterOnLocate position={recenterTarget} suppressNextRef={suppressNextRecenterRef} />
           <MapClickHandler enabled={activeSheet === null} onPick={setPinPosition} />
           <MapInstanceCapture
             onReady={(map) => {
@@ -229,6 +235,12 @@ export function MapView() {
         open={activeSheet === 'szczecin-spots'}
         onOpenChange={(open) => setActiveSheet(open ? 'szczecin-spots' : null)}
         onShowOnMap={(position) => {
+          // Tylko z widoku listy MapContainer faktycznie remountuje się (i razem z nim
+          // RecenterOnLocate) - tylko wtedy grozi nadpisanie świeżo ustawionego celu ostatnią
+          // pozycją GPS, więc tylko wtedy zbrojona jest flaga tłumiąca to jedno odpalenie efektu.
+          // Gdy mapa już jest widoczna, MapContainer się nie remountuje (zmiana center/zoom w
+          // propsach po zamontowaniu nic nie robi w react-leaflet), więc efekt się nie odpali.
+          if (isListView) suppressNextRecenterRef.current = true
           setIsListView(false)
           // Z widoku listy MapContainer jest odmontowany, więc mapRef.current jest jeszcze `null`
           // w tej klatce - setView wtedy cicho by nic nie zrobił. mapTarget zapewnia poprawną

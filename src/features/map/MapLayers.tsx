@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react'
+import type { MutableRefObject } from 'react'
 import { Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
 import type L from 'leaflet'
 import { createClusterIcon, findingMarkerIconFor } from '../../components/icons/mapMarkerIcons'
@@ -95,13 +96,28 @@ function FindingMarkersImpl({ findings }: { findings: Finding[] }) {
 // ticku GPS rodzica (kilka razy/s) - React.memo ucina to przy niezmienionej referencji `findings`.
 export const FindingMarkers = memo(FindingMarkersImpl)
 
-export function RecenterOnLocate({ position }: { position: Position | null }) {
+export function RecenterOnLocate({
+  position,
+  suppressNextRef,
+}: {
+  position: Position | null
+  // Gdy `MapContainer` remountuje się po celowym przejściu w konkretne miejsce (np. "Pokaż na
+  // mapie" w SzczecinSpotsPanel, patrz MapView.tsx), ten efekt i tak odpala się na nowo (bo
+  // nowa instancja `map` w deps), i bez tej flagi cichcem nadpisywałby świeżo ustawiony środek
+  // mapy ostatnią znaną pozycją GPS. Flaga jest jednorazowa - konsumowana i czyszczona przy
+  // pierwszym starcie efektu, więc kolejne, prawdziwe aktualizacje `recenterTarget` (przycisk
+  // "namierz mnie", pierwszy odczyt GPS) działają jak dotychczas.
+  suppressNextRef?: MutableRefObject<boolean>
+}) {
   const map = useMap()
   useEffect(() => {
-    if (position) {
-      map.setView(position, 14)
+    if (!position) return
+    if (suppressNextRef?.current) {
+      suppressNextRef.current = false
+      return
     }
-  }, [position, map])
+    map.setView(position, 14)
+  }, [position, map, suppressNextRef])
   return null
 }
 
