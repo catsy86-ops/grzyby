@@ -216,20 +216,23 @@ function App() {
     <div className="flex h-full flex-col bg-background">
       <AppSplash />
       <OnboardingOverlay />
-      {/* Gradient primary -> brand-accent (bursztyn) zamiast prawie niewidocznego primary ->
-          primary/90 - nagłówek jako realna przestrzeń marki, wykorzystująca drugi akcent, który
-          wcześniej żył tylko w logo/cieniach kart. Diagonalny kierunek + oba kolory tak samo
-          ciemne w obu motywach (patrz index.css) utrzymują kontrast tekstu primary-foreground.
-          Faza A nowecos.md: Mapa i Rozpoznaj dostają subtelnie inny końcowy kolor gradientu
-          (leśna zieleń / bursztyn skanu) dla szybszej orientacji "w której jestem zakładce" -
-          Dziennik i Baza wiedzy zostają przy domyślnym primary->brand-accent. */}
+      {/* Gradient primary -> akcent per zakładka zamiast prawie niewidocznego primary ->
+          primary/90 - nagłówek jako realna przestrzeń marki. Diagonalny kierunek + oba kolory
+          tak samo ciemne w obu motywach (patrz index.css) utrzymują kontrast tekstu
+          primary-foreground. Faza A nowecos.md + poprawka z audytu UI: wszystkie 4 zakładki mają
+          teraz własny, subtelnie inny końcowy kolor gradientu (leśna zieleń / bursztyn skanu /
+          teal dziennika / błękit bazy wiedzy - patrz uzasadnienie doboru w index.css) dla
+          szybszej orientacji "w której jestem zakładce" - dotąd Dziennik i Baza wiedzy dzieliły
+          niemal identyczny domyślny ton z Rozpoznaj (amber-700 vs 600). */}
       <header
         className={`safe-area-top flex items-center gap-2 bg-gradient-to-br from-primary via-primary px-4 pb-3 pt-4 text-primary-foreground shadow-[var(--shadow-card)] transition-colors duration-300 ${
           activeTab === 'mapa'
             ? 'to-header-accent-mapa/70'
             : activeTab === 'rozpoznaj'
               ? 'to-header-accent-rozpoznaj/70'
-              : 'to-brand-accent/70'
+              : activeTab === 'dziennik'
+                ? 'to-header-accent-dziennik/70'
+                : 'to-header-accent-baza-wiedzy/70'
         }`}
       >
         <ThemeToggle />

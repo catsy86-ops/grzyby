@@ -104,6 +104,8 @@ body {
   --shadow-floating: var(--elevation-floating);
   --color-header-accent-mapa: var(--header-accent-mapa);
   --color-header-accent-rozpoznaj: var(--header-accent-rozpoznaj);
+  --color-header-accent-dziennik: var(--header-accent-dziennik);
+  --color-header-accent-baza-wiedzy: var(--header-accent-baza-wiedzy);
 }
 
 /* Konwencja rozmiarów ikon (Faza A planu wizualnego) - jedna stała skala Tailwind per kontekst,
@@ -161,12 +163,20 @@ body {
   --elevation-card: 0 1px 3px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.05);
   --elevation-sheet: 0 -2px 12px rgb(0 0 0 / 0.1), 0 -1px 4px rgb(0 0 0 / 0.06);
   --elevation-floating: 0 -4px 16px rgb(0 0 0 / 0.08);
-  /* Akcenty nagłówka per zakładka (Faza A nowecos.md) - subtelna wariacja tego samego
-     gradientu primary->brand-accent, nie osobna paleta: Mapa dostaje zielony leśny ton
-     (pokrewny --primary), Rozpoznaj bursztynowy/skan (pokrewny --brand-accent), Dziennik i
-     Baza wiedzy zostają przy domyślnym primary->brand-accent. */
+  /* Akcenty nagłówka per zakładka (Faza A nowecos.md + poprawka z audytu UI) - subtelna
+     wariacja tego samego gradientu primary->brand-accent, nie osobna paleta: Mapa zielony leśny
+     (pokrewny --primary), Rozpoznaj bursztynowy/skan (pokrewny --brand-accent). Dziennik i Baza
+     wiedzy dotąd zostawały przy identycznym domyślnym tonie co Rozpoznaj (amber-700 vs 600 -
+     ledwo odróżnialne), mimo że to dwa odrębne, rozbudowane widoki - dostają teraz własne tony
+     BEZ wychodzenia poza dwie już ugruntowane rodziny kolorów apki: Baza wiedzy dostaje
+     `sky-600`, ten sam niebieski co pinezki kuratorowanych grzybowisk (`szczecinSpotMarkerIcon`)
+     - tam też oznacza "zweryfikowana wiedza/rekomendacja apki", nie przypadkowy nowy kolor.
+     Dziennik (Twoje własne, osobiste zapisy) dostaje `teal-700` - trzeci ton w tej samej,
+     stonowanej rodzinie zielono-bursztynowej, nie czwarta niepowiązana barwa. */
   --header-accent-mapa: var(--color-green-700);
   --header-accent-rozpoznaj: var(--color-amber-600);
+  --header-accent-dziennik: var(--color-teal-700);
+  --header-accent-baza-wiedzy: var(--color-sky-600);
 }
 
 .dark {
@@ -212,6 +222,8 @@ body {
   --elevation-floating: 0 -4px 16px rgb(0 0 0 / 0.35);
   --header-accent-mapa: var(--color-green-600);
   --header-accent-rozpoznaj: var(--color-amber-500);
+  --header-accent-dziennik: var(--color-teal-600);
+  --header-accent-baza-wiedzy: var(--color-sky-500);
 }
 
 @layer base {
