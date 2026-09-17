@@ -2,8 +2,15 @@ import { useRef, useState } from 'react'
 import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
 import L from 'leaflet'
-import { candidateMarkerIcon, carMarkerIcon, spotMarkerIcon, userLocationIcon } from '../../components/icons/mapMarkerIcons'
+import {
+  candidateMarkerIcon,
+  carMarkerIcon,
+  spotMarkerIcon,
+  szczecinSpotMarkerIcon,
+  userLocationIcon,
+} from '../../components/icons/mapMarkerIcons'
 import { db } from '../../db/db'
+import { szczecinSpots } from '../../data/szczecinSpots'
 import type { Spot } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
@@ -13,6 +20,7 @@ import { useReturnPointTracking } from '../../hooks/useReturnPointTracking'
 import { AddFindingForm } from './AddFindingForm'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
 import { SpotManager } from './SpotManager'
+import { SzczecinSpotsPanel } from './SzczecinSpotsPanel'
 import { FindingMarkers, MapClickHandler, MapInstanceCapture, RecenterOnLocate } from './MapLayers'
 import { MapStatusBadges } from './MapStatusBadges'
 import { MapOverlayMessages } from './MapOverlayMessages'
@@ -20,13 +28,17 @@ import { MapToolbar } from './MapToolbar'
 import { FindingsListView } from './FindingsListView'
 import { Skeleton } from '../../components/ui/skeleton'
 
-const DEFAULT_CENTER: [number, number] = [52.0693, 19.4803] // środek Polski
+// Apka jest kierowana do mieszkańców Szczecina i okolic (nie ogólnopolska) - domyślny widok przy
+// pierwszym otwarciu (przed ustaleniem pozycji GPS) to od razu miasto, nie środek geograficzny
+// całej Polski w oddaleniu, w którym Szczecin jest ledwo widoczny.
+const DEFAULT_CENTER: [number, number] = [53.4285, 14.5528] // Szczecin
+const DEFAULT_ZOOM = 11
 
 // Dokładnie jeden arkusz/drawer może być otwarty naraz - zastępuje 3 niezależne boolean-y
 // (`showAddForm`/`showOfflineDownload`/`showSpotManager`), które nic nie stało na przeszkodzie,
 // by były `true` jednocześnie (dwa nałożone Drawer/Sheet). Eksportowany, bo `MapToolbar`
 // przyjmuje callback otwierający konkretny arkusz.
-export type ActiveSheet = 'add-finding' | 'offline-download' | 'spots' | null
+export type ActiveSheet = 'add-finding' | 'offline-download' | 'spots' | 'szczecin-spots' | null
 
 export function MapView() {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
@@ -57,7 +69,7 @@ export function MapView() {
       {isListView ? (
         <FindingsListView findings={findings ?? []} spots={spots ?? []} userPosition={userPosition} />
       ) : (
-        <MapContainer center={DEFAULT_CENTER} zoom={6} className="h-full w-full">
+        <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} className="h-full w-full">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -122,6 +134,22 @@ export function MapView() {
             </Marker>
           ))}
           {findings && <FindingMarkers findings={findings} />}
+          {/* Kuratorowane grzybowiska "Szczecin i okolice" - zawsze widoczne na mapie (nie tylko
+              przy otwartym SzczecinSpotsPanel), tak jak spoty użytkownika wyżej - to statyczna,
+              mała lista (6 pozycji), więc brak sensu chować ją za dodatkowym przełącznikiem. */}
+          {szczecinSpots.map((spot) => (
+            <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={szczecinSpotMarkerIcon}>
+              <Popup>
+                <div className="text-sm">
+                  <p className="font-semibold">{spot.name}</p>
+                  <p className="mt-1">{spot.description}</p>
+                  <a href={spot.sourceUrl} target="_blank" rel="noreferrer" className="mt-1 block text-xs underline">
+                    Źródło: {spot.sourceLabel}
+                  </a>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
         </MapContainer>
       )}
 
@@ -188,6 +216,15 @@ export function MapView() {
         open={activeSheet === 'spots'}
         onOpenChange={(open) => setActiveSheet(open ? 'spots' : null)}
         pinPosition={pinPosition}
+      />
+
+      <SzczecinSpotsPanel
+        open={activeSheet === 'szczecin-spots'}
+        onOpenChange={(open) => setActiveSheet(open ? 'szczecin-spots' : null)}
+        onShowOnMap={(position) => {
+          setIsListView(false)
+          mapRef.current?.setView(position, 13)
+        }}
       />
     </div>
   )

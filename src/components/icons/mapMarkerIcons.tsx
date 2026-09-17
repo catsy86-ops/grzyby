@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import L from 'leaflet'
 import type { ComponentType } from 'react'
-import { CarIcon, MapPinnedIcon, PlusIcon } from 'lucide-react'
+import { CarIcon, MapPinnedIcon, PlusIcon, TreePineIcon } from 'lucide-react'
 import { edibilityChartColor } from '../EdibilityBadge'
 import type { EdibilityStatus } from '../../db/schema'
 
@@ -89,6 +89,16 @@ export const spotMarkerIcon = pinDivIcon({
   Glyph: MapPinnedIcon,
   fill: 'var(--color-brand-accent)',
   label: 'Grzybowisko',
+})
+
+// Zweryfikowane, kuratorowane grzybowisko "Szczecin i Okolice" (patrz data/szczecinSpots.json) -
+// osobny kolor (niebieski, nieużywany przez żaden inny marker) i glif (sosna, nie MapPinnedIcon
+// jak przy prywatnych grzybowiskach użytkownika), żeby na pierwszy rzut oka odróżnić "polecane
+// przez apkę miejsce" od "Twoje własne, zapisane miejsce" - to dwa różne źródła zaufania.
+export const szczecinSpotMarkerIcon = pinDivIcon({
+  Glyph: TreePineIcon,
+  fill: 'var(--color-sky-600)',
+  label: 'Polecane grzybowisko w okolicach Szczecina',
 })
 
 // Zarejestrowane znalezisko - jedyna pinezka z glifem grzyba (nie generyczną ikoną), bo to

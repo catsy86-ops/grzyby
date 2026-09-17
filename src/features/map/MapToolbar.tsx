@@ -8,6 +8,7 @@ import {
   MessageCircleIcon,
   MoreVerticalIcon,
   PlusIcon,
+  TreePineIcon,
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import {
@@ -72,6 +73,10 @@ export function MapToolbar({
           <MoreVerticalIcon className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="end" className="w-56">
+          <DropdownMenuItem onClick={() => onOpenSheet('szczecin-spots')}>
+            <TreePineIcon />
+            Szczecin i okolice
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onOpenSheet('offline-download')}>
             <DownloadIcon />
             Pobierz obszar offline

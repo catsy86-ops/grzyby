@@ -1,0 +1,56 @@
+[
+  {
+    "id": "puszcza-bukowa",
+    "name": "Puszcza Bukowa",
+    "latitude": 53.335089,
+    "longitude": 14.686908,
+    "description": "Kompleks leśny na Wzgórzach Bukowych, kilka km na południowy wschód od Szczecina (dzielnice Zdroje/Płonia oraz gminy Stare Czarnowo i Gryfino). Bukowo-dębowo-sosnowe lasy, jedno z najczęściej polecanych miejsc na grzybobranie w regionie.",
+    "sourceLabel": "Wikipedia - Puszcza Bukowa",
+    "sourceUrl": "https://pl.wikipedia.org/wiki/Puszcza_Bukowa"
+  },
+  {
+    "id": "puszcza-wkrzanska",
+    "name": "Puszcza Wkrzańska",
+    "latitude": 53.626944,
+    "longitude": 14.355833,
+    "description": "Duży kompleks leśny na północny zachód od Szczecina, w stronę Polic i Dobieszczyna, sięgający granicy z Niemcami. Dobre warunki dla grzybów rurkowych.",
+    "sourceLabel": "Wikipedia - Puszcza Wkrzańska",
+    "sourceUrl": "https://pl.wikipedia.org/wiki/Puszcza_Wkrza%C5%84ska"
+  },
+  {
+    "id": "wzgorza-warszewskie",
+    "name": "Wzgórza Warszewskie (Wielecka Góra)",
+    "latitude": 53.495705,
+    "longitude": 14.53051,
+    "description": "Zalesiona część wzgórz morenowych w granicach Szczecina (dzielnice Północ/Zachód) i gminy Police - mniej zatłoczone niż Puszcza Bukowa, spotykane też gąski i kanie.",
+    "sourceLabel": "Serwis zeSzczecina.pl - Wielecka Góra",
+    "sourceUrl": "https://zeszczecina.pl/przewodnik/wielecka-gora"
+  },
+  {
+    "id": "jezioro-glebokie",
+    "name": "Jezioro Głębokie (Puszcza Wkrzańska)",
+    "latitude": 53.471861,
+    "longitude": 14.4855,
+    "description": "Rynna jeziorna w granicach Szczecina, u podnóża Wzgórz Warszewskich, otoczona lasem bukowym - kameralne miejsce blisko centrum miasta.",
+    "sourceLabel": "Wikipedia - Jezioro Głębokie (Puszcza Wkrzańska)",
+    "sourceUrl": "https://pl.wikipedia.org/wiki/Jezioro_G%C5%82%C4%99bokie_(Puszcza_Wkrza%C5%84ska)"
+  },
+  {
+    "id": "puszcza-goleniowska",
+    "name": "Puszcza Goleniowska (okolice Klinisk Wielkich)",
+    "latitude": 53.4617,
+    "longitude": 14.7733,
+    "description": "Rozległy kompleks leśny na wschód od Szczecina, w stronę Goleniowa - borowiki, kozaki, maślaki i kurki. Punkt orientacyjny: siedziba Nadleśnictwa w Klinisach Wielkich.",
+    "sourceLabel": "Wędruj z nami - Puszcza Goleniowska",
+    "sourceUrl": "https://wedrujznami.pl/puszczagoleniowska"
+  },
+  {
+    "id": "lasy-gryfinskie",
+    "name": "Lasy Gryfińskie",
+    "latitude": 53.25,
+    "longitude": 14.4833,
+    "description": "Lasy na południe od Szczecina, w okolicach Gryfina - jedno z miejsc regularnie polecanych lokalnie na grzybobranie.",
+    "sourceLabel": "Szczecin Portal - gdzie na grzyby",
+    "sourceUrl": "https://szczecinportal.pl/gdzie-na-grzyby-w-szczecinie-i-okolicach-najlepsze-miejsca/"
+  }
+]
