@@ -5,7 +5,7 @@ import { LeafIcon, ChefHatIcon, ChevronDownIcon, ScaleIcon } from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
-import { EdibilityBadge, edibilityCardAccentClass, edibilityChartColor } from '../../components/EdibilityBadge'
+import { EdibilityBadge, edibilityChartColor, speciesCardClassName } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
 import { Badge } from '../../components/ui/badge'
@@ -110,7 +110,7 @@ export function EncyclopediaView() {
             key={s.id}
             size="sm"
             style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
-            className={`stagger-item border-l-4 transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15 ${edibilityCardAccentClass(s.edibility)}`}
+            className={speciesCardClassName(s.edibility)}
           >
             <CardContent>
             <motion.div whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>

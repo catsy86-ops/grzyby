@@ -4,12 +4,22 @@ import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
-import { DownloadIcon, FileTextIcon, MapIcon, MoreVerticalIcon, TrophyIcon, UploadIcon } from 'lucide-react'
+import {
+  DownloadIcon,
+  FileTextIcon,
+  MapIcon,
+  MoreVerticalIcon,
+  PencilIcon,
+  Share2Icon,
+  TrashIcon,
+  TrophyIcon,
+  UploadIcon,
+} from 'lucide-react'
 import { EmptyBasketIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
-import { EdibilityBadge, edibilityCardAccentClass, edibilityChartColor } from '../../components/EdibilityBadge'
+import { EdibilityBadge, edibilityChartColor, speciesCardClassName } from '../../components/EdibilityBadge'
 import { StatTile, StatTileRow } from '../../components/StatTiles'
 import {
   countLikelyDuplicates,
@@ -419,7 +429,7 @@ export function JournalView() {
       )}
 
       {chartData.length > 0 && (
-        <div className="h-56 rounded border border-border p-2">
+        <div className="h-56 rounded-xl border border-border p-2">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
               <XAxis
@@ -603,9 +613,7 @@ export function JournalView() {
               key={finding.id}
               size="sm"
               style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
-              className={`stagger-item border-l-4 transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15 ${
-                findingSpecies ? edibilityCardAccentClass(findingSpecies.edibility) : 'border-l-border'
-              }`}
+              className={speciesCardClassName(findingSpecies?.edibility)}
             >
               <CardContent>
                 <motion.div
@@ -635,28 +643,36 @@ export function JournalView() {
                       {finding.notes && <p className="mt-1 text-sm text-foreground/80">{finding.notes}</p>}
                       <ConsumptionTracker finding={finding} />
                     </div>
-                    <div className="flex shrink-0 gap-2 text-xs">
-                      <button
-                        type="button"
+                    {/* Ikonowe przyciski zamiast podkreślonych linków tekstowych (poprawka z
+                        audytu UI) - realny cel dotyku (icon-sm, size-7) zamiast paska tekstu
+                        wysokości linii, spójne z ikonowymi akcjami reszty apki (np. TrashIcon w
+                        SpotManager.tsx). */}
+                    <div className="flex shrink-0 gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Udostępnij znalezisko"
                         onClick={() => handleShare(finding)}
-                        className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-muted-foreground hover:underline"
                       >
-                        Udostępnij
-                      </button>
-                      <button
-                        type="button"
+                        <Share2Icon className="size-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Edytuj znalezisko"
                         onClick={() => handleStartEdit(finding)}
-                        className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-muted-foreground hover:underline"
                       >
-                        Edytuj
-                      </button>
-                      <button
-                        type="button"
+                        <PencilIcon className="size-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Usuń znalezisko"
+                        className="text-destructive hover:text-destructive"
                         onClick={() => setConfirmDeleteId(finding.id ?? null)}
-                        className="rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50 text-destructive hover:underline"
                       >
-                        Usuń
-                      </button>
+                        <TrashIcon className="size-3.5" />
+                      </Button>
                     </div>
                   </div>
                 </motion.div>

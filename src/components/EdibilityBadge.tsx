@@ -37,6 +37,14 @@ export function edibilityCardAccentClass(edibility: EdibilityStatus) {
   return CARD_ACCENT[edibility]
 }
 
+// Bazowy className karty listy gatunku/znaleziska (stagger wejścia + obwódka jadalności + hover)
+// - ten sam literał był osobno wklejony w JournalView.tsx i EncyclopediaView.tsx (poprawka z
+// audytu UI); jedno miejsce do zmiany przy następnej korekcie tego wzorca zamiast dwóch.
+export function speciesCardClassName(edibility: EdibilityStatus | undefined) {
+  const accent = edibility ? edibilityCardAccentClass(edibility) : 'border-l-border'
+  return `stagger-item border-l-4 transition-shadow duration-200 hover:shadow-md hover:shadow-primary/15 ${accent}`
+}
+
 // Ten sam kod koloru, ale jako wartość CSS (nie klasa Tailwind) - do użycia w SVG/Recharts,
 // które przyjmują `fill` jako string koloru, nie `className`.
 const CHART_COLOR: Record<EdibilityStatus, string> = {

@@ -39,7 +39,7 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     vi.mocked(geolocation.getCurrentPosition).mockResolvedValue({ latitude: 53.4, longitude: 14.5 })
 
     render(<JournalView />)
-    fireEvent.click(await screen.findByText('Edytuj'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edytuj znalezisko' }))
 
     expect(screen.getByText('52.10000, 19.50000')).toBeInTheDocument()
 
@@ -60,7 +60,7 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     const id = await addFinding({ latitude: 52.1, longitude: 19.5 })
 
     render(<JournalView />)
-    fireEvent.click(await screen.findByText('Edytuj'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edytuj znalezisko' }))
 
     const locationRow = screen.getByText('52.10000, 19.50000').closest('div')!
     fireEvent.click(within(locationRow).getByRole('button', { name: 'Usuń' }))
@@ -85,7 +85,7 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     })
 
     render(<JournalView />)
-    fireEvent.click(await screen.findByText('Edytuj'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edytuj znalezisko' }))
 
     fireEvent.click(await screen.findByRole('button', { name: 'Usuń obecne zdjęcie' }))
     expect(screen.getByText('Zdjęcie zostanie usunięte po zapisaniu.')).toBeInTheDocument()
@@ -101,7 +101,7 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     await addFinding()
 
     render(<JournalView />)
-    fireEvent.click(await screen.findByText('Edytuj'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edytuj znalezisko' }))
 
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'Usuń obecne zdjęcie' })).not.toBeInTheDocument()
@@ -112,7 +112,7 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     const id = await addFinding({ notes: 'Z wagą' })
 
     render(<JournalView />)
-    fireEvent.click(await screen.findByText('Edytuj'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edytuj znalezisko' }))
 
     const weightInput = screen.getByLabelText('Waga (gramy)') as HTMLInputElement
     fireEvent.change(weightInput, { target: { value: '250' } })
@@ -128,7 +128,7 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     // sezonu waży dokładnie tyle, co powodowało niejednoznaczne dopasowanie (dwa elementy).
     expect(await screen.findByText(/19\.5000 · 250 g/)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('Edytuj'))
+    fireEvent.click(screen.getByRole('button', { name: 'Edytuj znalezisko' }))
     fireEvent.change(screen.getByLabelText('Waga (gramy)'), { target: { value: '' } })
     fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
 
@@ -143,7 +143,7 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     vi.mocked(geolocation.getCurrentPosition).mockRejectedValue(new Error('Brak sygnału GPS'))
 
     render(<JournalView />)
-    fireEvent.click(await screen.findByText('Edytuj'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edytuj znalezisko' }))
     fireEvent.click(screen.getByRole('button', { name: 'Użyj obecnej (GPS)' }))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Użyj obecnej (GPS)' })).not.toBeDisabled())
