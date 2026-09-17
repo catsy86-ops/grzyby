@@ -46,6 +46,13 @@ export function MapView() {
   const [isListView, setIsListView] = useState(false)
   const [tileLoadIssue, setTileLoadIssue] = useState(false)
   const mapRef = useRef<L.Map | null>(null)
+  // Cel startowej pozycji `MapContainer` - trzymany w stanie (nie tylko jako stała), bo
+  // "Pokaż na mapie" w SzczecinSpotsPanel musi też zadziałać z widoku listy, gdzie MapContainer
+  // jest odmontowany i `mapRef.current` to jeszcze `null` w chwili kliknięcia (patrz niżej).
+  const [mapTarget, setMapTarget] = useState<{ center: [number, number]; zoom: number }>({
+    center: DEFAULT_CENTER,
+    zoom: DEFAULT_ZOOM,
+  })
 
   const findings = useLiveQuery(() => db.findings.toArray(), [])
   const spots = useLiveQuery(() => db.spots.toArray(), [])
@@ -69,7 +76,7 @@ export function MapView() {
       {isListView ? (
         <FindingsListView findings={findings ?? []} spots={spots ?? []} userPosition={userPosition} />
       ) : (
-        <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} className="h-full w-full">
+        <MapContainer center={mapTarget.center} zoom={mapTarget.zoom} className="h-full w-full">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -223,6 +230,10 @@ export function MapView() {
         onOpenChange={(open) => setActiveSheet(open ? 'szczecin-spots' : null)}
         onShowOnMap={(position) => {
           setIsListView(false)
+          // Z widoku listy MapContainer jest odmontowany, więc mapRef.current jest jeszcze `null`
+          // w tej klatce - setView wtedy cicho by nic nie zrobił. mapTarget zapewnia poprawną
+          // pozycję startową przy (re)montowaniu; setView obsługuje przypadek gdy mapa już żyje.
+          setMapTarget({ center: position, zoom: 13 })
           mapRef.current?.setView(position, 13)
         }}
       />
