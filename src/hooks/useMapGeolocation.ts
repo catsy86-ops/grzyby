@@ -37,21 +37,43 @@ export function useMapGeolocation(): UseMapGeolocationResult {
 
   useEffect(() => {
     let hasCenteredOnFirstFix = false
-    const stopWatching = watchPosition(
-      (position) => {
-        const next: Position = [position.latitude, position.longitude]
-        lastUpdateAtRef.current = Date.now()
-        setUserPosition(next)
-        setUserAccuracyMeters(position.accuracyMeters)
-        setLocateError(null)
-        setIsPositionStale(false)
-        if (!hasCenteredOnFirstFix) {
-          hasCenteredOnFirstFix = true
-          setRecenterTarget(next)
-        }
-      },
-      (message) => setLocateError(message),
-    )
+    let stopWatching = () => {}
+
+    function startWatching() {
+      stopWatching = watchPosition(
+        (position) => {
+          const next: Position = [position.latitude, position.longitude]
+          lastUpdateAtRef.current = Date.now()
+          setUserPosition(next)
+          setUserAccuracyMeters(position.accuracyMeters)
+          setLocateError(null)
+          setIsPositionStale(false)
+          if (!hasCenteredOnFirstFix) {
+            hasCenteredOnFirstFix = true
+            setRecenterTarget(next)
+          }
+        },
+        (message) => setLocateError(message),
+      )
+    }
+
+    // GPS wysokiej dokładności (enableHighAccuracy w utils/geolocation.ts) ciągnięty non-stop
+    // przez cały czas życia zakładki Mapy to zauważalny drenaż baterii przy wielogodzinnym
+    // chodzeniu po lesie - dokładnie scenariusz tej apki. Karta w tle (telefon w kieszeni z
+    // zablokowanym ekranem, przełączenie na inną aplikację) nie potrzebuje ciągłych aktualizacji
+    // pozycji - GPS jest wstrzymywany na czas ukrycia karty i wznawiany po powrocie, zamiast
+    // pruć baterię śledzeniem pozycji, której i tak nikt teraz nie widzi.
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'hidden') {
+        stopWatching()
+        stopWatching = () => {}
+      } else {
+        startWatching()
+      }
+    }
+
+    startWatching()
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     // Sprawdzane niezależnie od tego, czy w ogóle nadejdzie kolejny błąd - watchPosition
     // z `maximumAge` potrafi po prostu przestać wołać `onUpdate` (np. telefon w kieszeni,
@@ -63,6 +85,7 @@ export function useMapGeolocation(): UseMapGeolocationResult {
 
     return () => {
       stopWatching()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       clearInterval(staleCheckInterval)
     }
   }, [])

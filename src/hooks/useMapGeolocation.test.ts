@@ -5,16 +5,24 @@ import { useMapGeolocation } from './useMapGeolocation'
 function mockWatchGeolocation(
   behavior: (success: PositionCallback, error: PositionErrorCallback | null | undefined) => void,
 ) {
+  const watchPositionSpy = vi.fn((success: PositionCallback, error: PositionErrorCallback | null | undefined) => {
+    behavior(success, error)
+    return 1
+  })
+  const clearWatchSpy = vi.fn()
   vi.stubGlobal('navigator', {
     ...navigator,
     geolocation: {
-      watchPosition: vi.fn((success, error) => {
-        behavior(success, error)
-        return 1
-      }),
-      clearWatch: vi.fn(),
+      watchPosition: watchPositionSpy,
+      clearWatch: clearWatchSpy,
     },
   })
+  return { watchPositionSpy, clearWatchSpy }
+}
+
+function setDocumentVisibility(state: DocumentVisibilityState) {
+  Object.defineProperty(document, 'visibilityState', { value: state, configurable: true })
+  document.dispatchEvent(new Event('visibilitychange'))
 }
 
 describe('useMapGeolocation', () => {
@@ -26,6 +34,7 @@ describe('useMapGeolocation', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.useRealTimers()
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true })
   })
 
   it('zaczyna bez pozycji i bez błędu', () => {
@@ -110,6 +119,35 @@ describe('useMapGeolocation', () => {
     // Kolejny odczyt z GPS natychmiast czyści flagę nieaktualności.
     act(() => emit({ coords: { latitude: 1, longitude: 2, accuracy: 5 } } as GeolocationPosition))
     expect(result.current.isPositionStale).toBe(false)
+    unmount()
+  })
+
+  it('wstrzymuje watchPosition, gdy karta przechodzi w tło, i wznawia po powrocie', () => {
+    const { clearWatchSpy, watchPositionSpy } = mockWatchGeolocation(() => {})
+    const { unmount } = renderHook(() => useMapGeolocation())
+
+    expect(watchPositionSpy).toHaveBeenCalledOnce()
+
+    act(() => setDocumentVisibility('hidden'))
+    expect(clearWatchSpy).toHaveBeenCalledOnce()
+
+    act(() => setDocumentVisibility('visible'))
+    expect(watchPositionSpy).toHaveBeenCalledTimes(2)
+
+    unmount()
+  })
+
+  it('nie gubi ostatniej pozycji podczas wstrzymania GPS w tle', () => {
+    let emit: PositionCallback = () => {}
+    mockWatchGeolocation((success) => {
+      emit = success
+    })
+    const { result, unmount } = renderHook(() => useMapGeolocation())
+
+    act(() => emit({ coords: { latitude: 1, longitude: 2, accuracy: 5 } } as GeolocationPosition))
+    act(() => setDocumentVisibility('hidden'))
+
+    expect(result.current.userPosition).toEqual([1, 2])
     unmount()
   })
 })
