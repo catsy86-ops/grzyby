@@ -13,6 +13,47 @@ zakres i priorytet.
 
 ---
 
+## Faza 21 - Wizualny polish mapy/UI + plan rozbudowy mapy (2026-09-17)
+
+Na prośbę "popraw wizualnie mapę" + "co zostało do zrobienia" + "uruchom agentów i zaproponuj
+plan rozbudowy mapy". Duża sesja polish + jeden `/code-review high` + trzy równoległe eksploracje
+agentów (audyt reszty UI, plan funkcji mapy, plan techniczny mapy).
+
+- [x] **Kontrolki Leaflet (zoom/popup/atrybucja) przeflancowane na tokeny motywu** - jedyne
+      elementy mapy wyglądające jak domyślny widget biblioteki, jaskrawo białe w trybie ciemnym.
+- [x] **Animacja wjazdu markerów/klastra** (CSS keyframe, `prefers-reduced-motion`-safe) + progi
+      rozmiaru ikony klastra wg liczebności.
+- [x] **Usuwanie znaleziska bezpośrednio z popupu na mapie** (jedyny typ "pozycji" bez usuwania -
+      grzybowiska i punkt powrotu już to miały).
+- [x] **Mapa ograniczona do Szczecina + woj. zachodniopomorskiego** (`maxBounds`/`minZoom`) -
+      reszta Polski/świata nie ma tu wartości.
+- [x] **Zwijalny pasek plakietek stanu** (aktywna wyprawa/zmrok/warunki/auto) - od 2 aktywnych w
+      górę chowają się za przełącznik, więcej widocznej mapy.
+- [x] **`/code-review high` na `f28ba90`** znalazł realny bug: `RecenterOnLocate` remountował się
+      razem z `MapContainer` po "Pokaż na mapie" z listy i nadpisywał świeżo ustawiony środek
+      mapy ostatnią pozycją GPS - naprawione jednorazową flagą tłumiącą.
+- [x] **Pozycja GPS spoza regionu apki (np. błędny fallback geolokalizacji na Wrocław) już nie
+      przesuwa mapy** - z aktywnym `maxBounds` wyglądało to jak zawieszenie się na ścianie
+      granicy. Auto-centrowanie ignoruje pozycje spoza regionu, ręczne "Zlokalizuj mnie" na takiej
+      pozycji pokazuje jasny komunikat.
+- [x] **Fork-owy audyt reszty UI** (menu/przyciski/motywy/typografia, poza mapą) - 8-punktowy
+      punch-list, wszystkie 8 zrobione: ikonowe przyciski akcji w Dzienniku, `rounded-xl` na
+      wykresie, token cienia w dropdown/select, wspólny `speciesCardClassName`, sekcje w menu
+      eksportu, poziomy scroll filtra jadalności w Encyklopedii, własne kolory nagłówka dla
+      Dziennika (teal-700) i Bazy wiedzy (sky-600, reużyty z pinezek kuratorowanych grzybowisk).
+- [x] **View Transitions API między tabami** (progresywne wzbogacenie - natywny crossfade w
+      Chrome/Chromium, AnimatePresence bez zmian jako fallback).
+- [ ] **Plan rozbudowy mapy (funkcje + strona techniczna) spisany, NIEZAIMPLEMENTOWANY** -
+      dwóch równoległych agentów (UX grzybiarza w terenie / architektura i wydajność) dało
+      pełną listę propozycji, zapisaną w **`docs/MAP-ROADMAP.md`**. Do podjęcia po powrocie
+      użytkownika - żaden punkt stamtąd nie jest pilny.
+
+*(Sesja z 2026-09-17, po `/clear`. Rozszerzenie Chrome (`claude-in-chrome`) było rozłączone przez
+większość sesji - część zmian nie została zweryfikowana wizualnie na żywo, tylko kodem/testami;
+gdy się połączyło pod koniec, spot-check kolorów nagłówka i ograniczenia mapy wypadł dobrze.)*
+
+---
+
 ## Faza 20 - Pierwszy prawdziwy model skanera + porządki Android/Mapa (2026-09-15)
 
 Na prośbę użytkownika "zajmij się mapą i dodaj prawdziwy, 100% sprawny skaner" - dwa agenty
