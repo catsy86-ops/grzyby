@@ -1,8 +1,9 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, WifiOffIcon, WrenchIcon } from 'lucide-react'
 import { useAppStore, type ActiveTab } from './stores/appStore'
+import { lazyRetry } from './utils/lazyRetry'
 import { Toaster } from './components/ui/sonner'
 import { Skeleton } from './components/ui/skeleton'
 import { StorageInfoDrawer } from './features/tools/StorageInfoDrawer'
@@ -43,10 +44,12 @@ const supportsViewTransitions = typeof document !== 'undefined' && 'startViewTra
 // Leaflet/react-leaflet) nie musi lądować w głównym bundlu, jeśli użytkownik danej zakładki
 // nigdy nie otworzy. `Suspense` fallback to prosty skeleton - przejście jest praktycznie
 // niezauważalne po pierwszym załadowaniu (moduł zostaje w cache przeglądarki/Service Workera).
-const MapView = lazy(() => import('./features/map/MapView').then((m) => ({ default: m.MapView })))
-const IdentifyView = lazy(() => import('./features/identify/IdentifyView').then((m) => ({ default: m.IdentifyView })))
-const JournalView = lazy(() => import('./features/journal/JournalView').then((m) => ({ default: m.JournalView })))
-const EncyclopediaView = lazy(() =>
+const MapView = lazyRetry(() => import('./features/map/MapView').then((m) => ({ default: m.MapView })))
+const IdentifyView = lazyRetry(() =>
+  import('./features/identify/IdentifyView').then((m) => ({ default: m.IdentifyView })),
+)
+const JournalView = lazyRetry(() => import('./features/journal/JournalView').then((m) => ({ default: m.JournalView })))
+const EncyclopediaView = lazyRetry(() =>
   import('./features/encyclopedia/EncyclopediaView').then((m) => ({ default: m.EncyclopediaView })),
 )
 

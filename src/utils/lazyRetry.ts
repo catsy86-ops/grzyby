@@ -10,7 +10,18 @@ const RELOAD_FLAG_KEY = 'lysy-chunk-reload-attempted'
 // sessionStorage (nie licznik) chroni przed pętlą przeładowań, gdyby błąd był realny (np. brak
 // sieci) - drugi błąd po jednej próbie leci dalej do ErrorBoundary jak dotąd. Czyszczona po
 // udanym imporcie, żeby błąd innego widoku później w tej samej sesji dostał własną, świeżą próbę.
-export function lazyRetry<T extends ComponentType<unknown>>(factory: () => Promise<{ default: T }>) {
+// Promise, która nigdy się nie rozwiązuje - przeglądarka i tak zaraz przeładuje kartę (patrz
+// niżej), więc React nie zdąży wyrenderować stanu błędu w tej ułamkowej chwili przed
+// przeładowaniem. Wydzielone z osobną adnotacją typu - inline `new Promise(() => {})` wewnątrz
+// `async` funkcji myli wnioskowanie typów TS przy zwracaniu unii z sukcesem. `T extends
+// ComponentType<any>` (nie `<object>`/`<unknown>`) z tego samego powodu - węższe granice tu
+// zwężały wywnioskowany typ propsów bezpropsowych widoków do `never` w wywołaniach niżej.
+function hangForever<T>(): Promise<T> {
+  return new Promise<T>(() => {})
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- patrz uzasadnienie nad `hangForever`
+export function lazyRetry<T extends ComponentType<any>>(factory: () => Promise<{ default: T }>) {
   return lazy(async () => {
     try {
       const result = await factory()
@@ -21,10 +32,7 @@ export function lazyRetry<T extends ComponentType<unknown>>(factory: () => Promi
       if (alreadyAttempted) throw error
       sessionStorage.setItem(RELOAD_FLAG_KEY, '1')
       window.location.reload()
-      // Przeglądarka i tak zaraz przeładuje kartę - zwracamy Promise, która nigdy się nie
-      // rozwiąże, żeby React nie zdążył wyrenderować stanu błędu w tej ułamkowej chwili przed
-      // przeładowaniem.
-      return new Promise<{ default: T }>(() => {})
+      return hangForever<{ default: T }>()
     }
   })
 }
