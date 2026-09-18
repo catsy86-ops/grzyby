@@ -255,7 +255,7 @@ function App() {
             type="button"
             onClick={() => setShowToolsMenu(true)}
             aria-label="Narzędzia"
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground outline-none ring-1 ring-primary-foreground/25 transition-colors hover:bg-primary-foreground/25 focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground outline-none ring-1 ring-primary-foreground/25 transition-[background-color,transform] hover:bg-primary-foreground/25 focus-visible:ring-3 focus-visible:ring-primary-foreground/50 active:translate-y-px"
           >
             <WrenchIcon className="size-4.5" />
           </button>

@@ -86,7 +86,7 @@ export function MapHeaderActions({
 }: MapHeaderActionsProps) {
   const heatmapDisabled = findingsCount < MIN_FINDINGS_FOR_HEATMAP
   const headerButtonClass =
-    'flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50'
+    'flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-[color,background-color,transform] hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50 active:translate-y-px'
 
   return (
     <>

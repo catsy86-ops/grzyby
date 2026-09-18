@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { toast } from 'sonner'
-import { MicIcon } from 'lucide-react'
+import { CheckIcon, MicIcon } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
@@ -32,6 +33,11 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   const [notes, setNotes] = useState('')
   const [photos, setPhotos] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
+  // Krótki checkmark-moment na przycisku "Zapisz" tuż przed zamknięciem szuflady - potwierdzenie
+  // zapisu dotąd żyło wyłącznie w toaście, z dala od miejsca, gdzie kciuk faktycznie nacisnął.
+  // `onClose(true)` jest opóźnione o czas animacji (patrz handleSubmit), żeby użytkownik zdążył
+  // ją zobaczyć zanim szuflada zacznie się zsuwać.
+  const [justSaved, setJustSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { activeTripId, activeTrip } = useActiveTrip()
   // Ten sam wzorzec i próg co w SpotManager.tsx/StorageInfoDrawer.tsx/ToolsMenu.tsx.
@@ -90,7 +96,9 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
       // tylko odwrotnie - to jest "nagroda" za dodanie znaleziska w terenie.
       toast.success(species ? `Dodano do dziennika: ${species.nameCommon}` : 'Dodano znalezisko do dziennika')
       vibrateSuccess()
-      onClose(true)
+      setJustSaved(true)
+      setTimeout(() => onClose(true), 380)
+      return
     } catch (err) {
       // Natywny DOMException (rzucany przez IndexedDB przy przekroczeniu limitu) NIE dziedziczy
       // po Error, więc sprawdzamy `name` bezpośrednio zamiast polegać na `instanceof Error`.
@@ -233,8 +241,25 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
             <Button type="button" variant="ghost" onClick={() => onClose(false)}>
               Anuluj
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Zapisywanie...' : 'Zapisz'}
+            <Button type="submit" disabled={saving || justSaved}>
+              <AnimatePresence mode="wait" initial={false}>
+                {justSaved ? (
+                  <motion.span
+                    key="saved"
+                    className="flex items-center gap-1.5"
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                  >
+                    <CheckIcon className="size-4" />
+                    Zapisano
+                  </motion.span>
+                ) : (
+                  <motion.span key="label" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    {saving ? 'Zapisywanie...' : 'Zapisz'}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Button>
           </div>
         </form>

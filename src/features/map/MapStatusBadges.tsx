@@ -86,7 +86,7 @@ export function MapStatusBadges({
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
           aria-label={expanded ? 'Zwiń informacje o warunkach' : `Pokaż ${activeCount} informacje o warunkach`}
-          className="flex items-center gap-1.5 rounded-full bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] outline-none backdrop-blur supports-[backdrop-filter]:bg-card/80 focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex items-center gap-1.5 rounded-full bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] outline-none backdrop-blur transition-transform supports-[backdrop-filter]:bg-card/80 focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px"
         >
           <InfoIcon className="size-3.5 text-muted-foreground" />
           {activeCount}
@@ -177,7 +177,7 @@ export function MapStatusBadges({
                   type="button"
                   onClick={onClearReturnPoint}
                   aria-label="Usuń zapisaną pozycję auta"
-                  className="ml-0.5 flex size-4 items-center justify-center rounded-full outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50"
+                  className="ml-0.5 flex size-4 items-center justify-center rounded-full outline-none transition-transform hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px"
                 >
                   <XIcon className="size-3" />
                 </button>
@@ -207,7 +207,7 @@ export function MapStatusBadges({
                   type="button"
                   onClick={onClearNavigationTarget}
                   aria-label="Zakończ nawigację do grzybowiska"
-                  className="ml-0.5 flex size-4 items-center justify-center rounded-full outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50"
+                  className="ml-0.5 flex size-4 items-center justify-center rounded-full outline-none transition-transform hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px"
                 >
                   <XIcon className="size-3" />
                 </button>

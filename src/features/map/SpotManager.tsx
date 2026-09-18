@@ -111,7 +111,7 @@ function SpotRow({
             aria-label={isNavigationTarget ? `Zakończ nawigację do: ${name}` : `Nawiguj do: ${name}`}
             aria-pressed={isNavigationTarget}
             onClick={onToggleNavigationTarget}
-            className={`rounded p-1 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+            className={`rounded p-1 outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px ${
               isNavigationTarget ? 'text-primary' : 'text-muted-foreground hover:text-primary'
             }`}
           >
@@ -124,7 +124,7 @@ function SpotRow({
             }
             aria-expanded={revisitPickerOpen}
             onClick={() => setRevisitPickerOpen((v) => !v)}
-            className={`rounded p-1 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+            className={`rounded p-1 outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px ${
               revisitMonth != null ? 'text-primary' : 'text-muted-foreground hover:text-primary'
             }`}
           >
@@ -134,7 +134,7 @@ function SpotRow({
             type="button"
             aria-label={`Usuń grzybowisko: ${name}`}
             onClick={() => setConfirmDelete(true)}
-            className="rounded p-1 text-muted-foreground outline-none hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="rounded p-1 text-muted-foreground outline-none transition-transform hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px"
           >
             <TrashIcon className="size-4" />
           </button>
@@ -143,7 +143,7 @@ function SpotRow({
             aria-label={outlookExpanded ? `Ukryj prognozę grzybową: ${name}` : `Pokaż prognozę grzybową: ${name}`}
             aria-expanded={outlookExpanded}
             onClick={() => setOutlookExpanded((v) => !v)}
-            className="rounded p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="rounded p-1 text-muted-foreground outline-none transition-transform hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px"
           >
             <ChevronDownIcon className={`size-4 transition-transform ${outlookExpanded ? 'rotate-180' : ''}`} />
           </button>

@@ -26,6 +26,11 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Rejestracja ręczna (src/registerServiceWorker.ts) zamiast domyślnego wstrzykiwanego
+      // skryptu - ten drugi rejestrował SW bez obsługi aktualizacji, więc karta otwarta podczas
+      // nowego wdrożenia nigdy się nie odświeżała i kończyła na "error loading dynamically
+      // imported module" przy leniwie ładowanym widoku (patrz uzasadnienie w tamtym pliku).
+      injectRegister: false,
       includeAssets: ['icons/*.png'],
       manifest: {
         name: 'Grzybobranie - dziennik grzybiarza',

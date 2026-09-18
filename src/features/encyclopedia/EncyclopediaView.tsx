@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { LeafIcon, ChefHatIcon, ChevronDownIcon, CompassIcon, ScaleIcon } from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
@@ -121,6 +121,25 @@ export function EncyclopediaView() {
           ))}
         </ToggleGroup>
       </div>
+
+      {/* Liczba wyników reaguje na każdą zmianę filtra/wyszukiwania animowanym "odbiciem" liczby
+          (AnimatePresence po kluczu = wartości) - bez tego zmiana filtra byłaby czytelna tylko po
+          policzeniu kart w siatce, nie od razu, jednym spojrzeniem. */}
+      <p className="-mt-1 flex items-baseline gap-1 text-xs text-muted-foreground">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={filtered.length}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6, position: 'absolute' }}
+            transition={{ duration: 0.16 }}
+            className="font-medium tabular-nums text-foreground"
+          >
+            {filtered.length}
+          </motion.span>
+        </AnimatePresence>
+        {filtered.length === 1 ? 'gatunek' : 'gatunków'}
+      </p>
 
       {/* Siatka 2-kolumnowa już na mobile (nie dopiero od md:) - z miniaturkami zdjęć lista 19
           gatunków skanuje się szybciej niż jedna szeroka kolumna, a szczegóły opisowe i tak są
