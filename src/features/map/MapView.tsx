@@ -277,6 +277,7 @@ export function MapView() {
           onClearNavigationTarget={clearNavigationTarget}
           powerSaveActive={powerSaveActive}
           batteryLevel={batteryStatus?.level ?? null}
+          isPositionStale={isPositionStale}
         />
       )}
 
@@ -381,6 +382,7 @@ export function MapView() {
       <CompassPanel
         open={activeSheet === 'compass'}
         onOpenChange={(open) => setActiveSheet(open ? 'compass' : null)}
+        isPositionStale={isPositionStale}
         targets={[
           ...(returnPointInfo ? [{ label: 'Auto', ...returnPointInfo }] : []),
           ...(navigationTargetSpot && navigationInfo

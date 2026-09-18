@@ -1,4 +1,4 @@
-import { CompassIcon, NavigationIcon } from 'lucide-react'
+import { CompassIcon, NavigationIcon, TriangleAlertIcon } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
@@ -15,6 +15,9 @@ interface CompassPanelProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   targets: CompassTarget[]
+  // Patrz uzasadnienie w MapStatusBadges.tsx - dystans/kierunek do celów liczone są z tego
+  // samego `userPosition`, więc "nieaktualność" GPS-a dotyczy ich identycznie.
+  isPositionStale: boolean
 }
 
 const TICKS = Array.from({ length: 12 }, (_, i) => i * 30)
@@ -26,7 +29,7 @@ const CARDINAL_LABELS: Record<number, string> = { 0: 'N', 90: 'E', 180: 'S', 270
 // telefon przed sobą i czyta, w którą stronę fizycznie skierowana jest górna krawędź ekranu.
 // Aktywne cele nawigacji (auto/grzybowisko z MapView) nakładają się jako osobne znaczniki na
 // tarczy, obracające się razem z nią wg własnego azymutu względem użytkownika.
-export function CompassPanel({ open, onOpenChange, targets }: CompassPanelProps) {
+export function CompassPanel({ open, onOpenChange, targets, isPositionStale }: CompassPanelProps) {
   const isWidePanel = useMediaQuery('(min-width: 1024px)')
   const { headingDegrees, permissionState, requestPermission } = useDeviceHeading()
 
@@ -140,6 +143,13 @@ export function CompassPanel({ open, onOpenChange, targets }: CompassPanelProps)
 
               {targets.length > 0 && (
                 <div className="flex w-full flex-col gap-1.5">
+                  {isPositionStale && (
+                    <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-500">
+                      <TriangleAlertIcon className="size-3.5 shrink-0" />
+                      Sygnał GPS mógł zostać utracony - dystans i kierunek poniżej mogą być
+                      nieaktualne.
+                    </p>
+                  )}
                   {targets.map((target) => (
                     <div
                       key={target.label}

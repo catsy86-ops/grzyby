@@ -1,6 +1,16 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { BatteryLowIcon, CarIcon, ChevronDownIcon, CloudRainIcon, InfoIcon, NavigationIcon, SunsetIcon, XIcon } from 'lucide-react'
+import {
+  BatteryLowIcon,
+  CarIcon,
+  ChevronDownIcon,
+  CloudRainIcon,
+  InfoIcon,
+  NavigationIcon,
+  SunsetIcon,
+  TriangleAlertIcon,
+  XIcon,
+} from 'lucide-react'
 import { Badge } from '../../components/ui/badge'
 import type { SunsetCountdown } from '../../hooks/useSunsetCountdown'
 import type { MushroomOutlook } from '../../utils/mushroomWeather'
@@ -22,6 +32,12 @@ interface MapStatusBadgesProps {
   onClearNavigationTarget: () => void
   powerSaveActive: boolean
   batteryLevel: number | null
+  // Dystans/kierunek do auta i celu nawigacji liczone są z `userPosition` (patrz
+  // useMapGeolocation) - gdy ten sam GPS nie odświeżył się od dłuższego czasu (zgubiony sygnał
+  // pod gęstym listowiem), strzałka i dystans na plakietkach są tak samo "nieaktualne", nawet
+  // jeśli liczbowo wyglądają normalnie. Bez tego ostrzeżenia użytkownik ufałby staremu
+  // wskazaniu jak świeżemu.
+  isPositionStale: boolean
 }
 
 // Pasek plakietek stanu (lewy górny róg mapy) - czysto prezentacyjny, wydzielony z MapView
@@ -39,6 +55,7 @@ export function MapStatusBadges({
   onClearNavigationTarget,
   powerSaveActive,
   batteryLevel,
+  isPositionStale,
 }: MapStatusBadgesProps) {
   const [expanded, setExpanded] = useState(false)
   const activeCount = [
@@ -147,6 +164,12 @@ export function MapStatusBadges({
                 {returnPointInfo
                   ? `Auto: ${formatDistance(returnPointInfo.distanceMeters)} ${getCardinalDirection(returnPointInfo.bearingDegrees)}`
                   : 'Auto zapisane'}
+                {returnPointInfo && isPositionStale && (
+                  <TriangleAlertIcon
+                    className="size-3.5 text-amber-500"
+                    aria-label="Sygnał GPS mógł zostać utracony - dystans/kierunek do auta mogą być nieaktualne"
+                  />
+                )}
                 <button
                   type="button"
                   onClick={onClearReturnPoint}
@@ -171,6 +194,12 @@ export function MapStatusBadges({
                 {navigationInfo
                   ? `${navigationTargetSpot.name}: ${formatDistance(navigationInfo.distanceMeters)} ${getCardinalDirection(navigationInfo.bearingDegrees)}`
                   : navigationTargetSpot.name}
+                {navigationInfo && isPositionStale && (
+                  <TriangleAlertIcon
+                    className="size-3.5 text-amber-500"
+                    aria-label="Sygnał GPS mógł zostać utracony - dystans/kierunek do celu mogą być nieaktualne"
+                  />
+                )}
                 <button
                   type="button"
                   onClick={onClearNavigationTarget}

@@ -14,6 +14,7 @@ const baseProps = {
   onClearNavigationTarget: vi.fn(),
   powerSaveActive: false,
   batteryLevel: null,
+  isPositionStale: false,
 }
 
 describe('MapStatusBadges', () => {
@@ -117,6 +118,42 @@ describe('MapStatusBadges', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Zakończ nawigację do grzybowiska' }))
     expect(onClearNavigationTarget).toHaveBeenCalledOnce()
+  })
+
+  it('pokazuje ostrzeżenie o nieaktualnej pozycji przy plakietce auta, gdy GPS jest nieaktualny', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        returnPoint={{ latitude: 1, longitude: 2, savedAt: Date.now() }}
+        returnPointInfo={{ distanceMeters: 250, bearingDegrees: 0 }}
+        isPositionStale
+      />,
+    )
+    expect(screen.getByLabelText(/Sygnał GPS mógł zostać utracony.*do auta/)).toBeInTheDocument()
+  })
+
+  it('nie pokazuje ostrzeżenia o nieaktualnej pozycji przy plakietce auta, gdy GPS jest świeży', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        returnPoint={{ latitude: 1, longitude: 2, savedAt: Date.now() }}
+        returnPointInfo={{ distanceMeters: 250, bearingDegrees: 0 }}
+        isPositionStale={false}
+      />,
+    )
+    expect(screen.queryByLabelText(/Sygnał GPS mógł zostać utracony/)).not.toBeInTheDocument()
+  })
+
+  it('pokazuje ostrzeżenie o nieaktualnej pozycji przy plakietce nawigacji do celu', () => {
+    render(
+      <MapStatusBadges
+        {...baseProps}
+        navigationTargetSpot={{ id: 1, name: 'Sosnowy zagajnik', latitude: 1, longitude: 2, notes: '', createdAt: 1 }}
+        navigationInfo={{ distanceMeters: 500, bearingDegrees: 0 }}
+        isPositionStale
+      />,
+    )
+    expect(screen.getByLabelText(/Sygnał GPS mógł zostać utracony.*do celu/)).toBeInTheDocument()
   })
 
   it('pokazuje plakietkę oszczędzania baterii z procentem, gdy aktywne', () => {
