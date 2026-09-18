@@ -26,6 +26,19 @@ interface AppState {
   setMapLayerId: (id: MapLayerId) => void
   powerSaveMode: PowerSaveMode
   setPowerSaveMode: (mode: PowerSaveMode) => void
+  emergencyInfo: EmergencyInfo
+  setEmergencyInfo: (info: EmergencyInfo) => void
+}
+
+// Dane karty awaryjnej (patrz features/tools/EmergencyCard.tsx) - czysto lokalne (localStorage,
+// jak reszta appStore), nigdy nie opuszczają urządzenia inaczej niż przez jawną akcję
+// użytkownika (SMS/telefon). Puste stringi domyślnie, nie `undefined` - prostsze bindowanie do
+// kontrolowanych <Input> bez `?? ''` w każdym miejscu użycia.
+export interface EmergencyInfo {
+  bloodType: string
+  allergies: string
+  contactName: string
+  contactPhone: string
 }
 
 // 'auto' włącza oszczędzanie baterii samodzielnie poniżej progu z useBatteryStatus (patrz
@@ -52,6 +65,8 @@ export const useAppStore = create<AppState>()(
       setMapLayerId: (id) => set({ mapLayerId: id }),
       powerSaveMode: 'auto',
       setPowerSaveMode: (mode) => set({ powerSaveMode: mode }),
+      emergencyInfo: { bloodType: '', allergies: '', contactName: '', contactPhone: '' },
+      setEmergencyInfo: (info) => set({ emergencyInfo: info }),
     }),
     {
       name: 'lysy-app-store',
@@ -62,6 +77,7 @@ export const useAppStore = create<AppState>()(
         forestMode: state.forestMode,
         mapLayerId: state.mapLayerId,
         powerSaveMode: state.powerSaveMode,
+        emergencyInfo: state.emergencyInfo,
       }),
       onRehydrateStorage: () => () => {
         // Odłożone do makrotaska: onRehydrateStorage jest wywoływane synchronicznie

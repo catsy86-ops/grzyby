@@ -10,6 +10,7 @@ import { FirstAidGuide } from './features/tools/FirstAidGuide'
 import { GearChecklist } from './features/tools/GearChecklist'
 import { TickCareGuide } from './features/tools/TickCareGuide'
 import { CookingTimer } from './features/tools/CookingTimer'
+import { EmergencyCard } from './features/tools/EmergencyCard'
 import { ToolsMenu, type ToolKey } from './features/tools/ToolsMenu'
 import { Logo } from './components/Logo'
 import { AnimatedHeaderTitle } from './components/AnimatedHeaderTitle'
@@ -164,6 +165,7 @@ function App() {
   const [showGearChecklist, setShowGearChecklist] = useState(false)
   const [showTickCare, setShowTickCare] = useState(false)
   const [showCookingTimer, setShowCookingTimer] = useState(false)
+  const [showEmergencyCard, setShowEmergencyCard] = useState(false)
   const [showToolsMenu, setShowToolsMenu] = useState(false)
   const forestMode = useAppStore((s) => s.forestMode)
   const setForestMode = useAppStore((s) => s.setForestMode)
@@ -211,6 +213,9 @@ function App() {
         break
       case 'storage-info':
         setShowStorageInfo(true)
+        break
+      case 'emergency-card':
+        setShowEmergencyCard(true)
         break
     }
   }
@@ -316,6 +321,7 @@ function App() {
       <GearChecklist open={showGearChecklist} onOpenChange={setShowGearChecklist} />
       <TickCareGuide open={showTickCare} onOpenChange={setShowTickCare} />
       <CookingTimer open={showCookingTimer} onOpenChange={setShowCookingTimer} />
+      <EmergencyCard open={showEmergencyCard} onOpenChange={setShowEmergencyCard} />
       <ToolsMenu
         open={showToolsMenu}
         onOpenChange={setShowToolsMenu}

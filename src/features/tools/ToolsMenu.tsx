@@ -1,4 +1,4 @@
-import { BackpackIcon, BugOffIcon, CheckIcon, HardDriveIcon, PhoneCallIcon, TimerIcon, TreePineIcon } from 'lucide-react'
+import { BackpackIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, PhoneCallIcon, TimerIcon, TreePineIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
@@ -13,7 +13,7 @@ const ITEM_VARIANTS = {
   visible: { opacity: 1, x: 0 },
 }
 
-export type ToolKey = 'first-aid' | 'gear-checklist' | 'tick-care' | 'cooking-timer' | 'storage-info'
+export type ToolKey = 'first-aid' | 'gear-checklist' | 'tick-care' | 'cooking-timer' | 'storage-info' | 'emergency-card'
 
 // Krótki tytuł + osobny podtytuł (zamiast jednego długiego zdania jako etykiety) czyta się
 // szybciej przy skanowaniu menu wzrokiem. `badge` grupuje narzędzia wizualnie wg charakteru
@@ -29,6 +29,7 @@ const TOOLS: {
 }[] = [
   { key: 'first-aid', title: 'Pierwsza pomoc', subtitle: 'Przy podejrzeniu zatrucia', icon: PhoneCallIcon, badge: 'destructive' },
   { key: 'tick-care', title: 'Kleszcze', subtitle: 'Ochrona i bezpieczne usuwanie', icon: BugOffIcon, badge: 'destructive' },
+  { key: 'emergency-card', title: 'Karta awaryjna', subtitle: 'Dane medyczne i kontakt', icon: HeartPulseIcon, badge: 'destructive' },
   { key: 'gear-checklist', title: 'Checklista sprzętu', subtitle: 'Przed wyjściem w teren', icon: BackpackIcon, badge: 'primary' },
   { key: 'cooking-timer', title: 'Timer kuchenny', subtitle: 'Blanszowanie, gotowanie', icon: TimerIcon, badge: 'accent' },
   { key: 'storage-info', title: 'Pamięć i dane', subtitle: 'Miejsce zajęte przez apkę', icon: HardDriveIcon, badge: 'neutral' },
@@ -42,7 +43,7 @@ const BADGE_CLASS: Record<(typeof TOOLS)[number]['badge'], string> = {
 }
 
 const SECTIONS: { label: string; tools: ToolKey[] }[] = [
-  { label: 'Bezpieczeństwo w terenie', tools: ['first-aid', 'tick-care'] },
+  { label: 'Bezpieczeństwo w terenie', tools: ['first-aid', 'tick-care', 'emergency-card'] },
   { label: 'Przygotowanie', tools: ['gear-checklist', 'cooking-timer'] },
   { label: 'Aplikacja', tools: ['storage-info'] },
 ]
