@@ -2,6 +2,7 @@ import { BackpackIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, Pho
 import { motion } from 'motion/react'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { AmbientPlayer } from './AmbientPlayer'
 
 const LIST_VARIANTS = {
   hidden: {},
@@ -74,6 +75,7 @@ export function ToolsMenu({
         <DrawerHeader>
           <DrawerTitle>Narzędzia</DrawerTitle>
         </DrawerHeader>
+        <AmbientPlayer />
         <div className="flex flex-col gap-1 px-4 pb-2">
           <button
             type="button"

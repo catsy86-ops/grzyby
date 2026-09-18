@@ -28,6 +28,16 @@ interface AppState {
   setPowerSaveMode: (mode: PowerSaveMode) => void
   emergencyInfo: EmergencyInfo
   setEmergencyInfo: (info: EmergencyInfo) => void
+  // Celowo NIE persystowane jako "włączone" między sesjami (patrz partialize niżej) - polityka
+  // autoplay przeglądarek wymaga gestu użytkownika przy KAŻDYM ładowaniu strony, nie tylko przy
+  // pierwszym włączeniu kiedykolwiek. Gdyby to przetrwało reload, przełącznik pokazywałby "gra",
+  // a AudioContext cicho utknąłby zawieszony bez dźwięku aż do następnego kliknięcia gdziekolwiek.
+  ambientAudioEnabled: boolean
+  setAmbientAudioEnabled: (enabled: boolean) => void
+  // Głośność za to persystowana - to preferencja, nie stan odtwarzania, i nie ma z autoplay nic
+  // wspólnego.
+  ambientAudioVolume: number
+  setAmbientAudioVolume: (volume: number) => void
 }
 
 // Dane karty awaryjnej (patrz features/tools/EmergencyCard.tsx) - czysto lokalne (localStorage,
@@ -67,6 +77,12 @@ export const useAppStore = create<AppState>()(
       setPowerSaveMode: (mode) => set({ powerSaveMode: mode }),
       emergencyInfo: { bloodType: '', allergies: '', contactName: '', contactPhone: '' },
       setEmergencyInfo: (info) => set({ emergencyInfo: info }),
+      ambientAudioEnabled: false,
+      setAmbientAudioEnabled: (enabled) => set({ ambientAudioEnabled: enabled }),
+      // Domyślnie cicho (10%) - to appka terenowa, dźwięk w tle nie może zagłuszać syntezatora
+      // mowy ani alertów systemowych telefonu, więc startowa głośność jest niska, nie "połowa".
+      ambientAudioVolume: 0.1,
+      setAmbientAudioVolume: (volume) => set({ ambientAudioVolume: volume }),
     }),
     {
       name: 'lysy-app-store',
@@ -78,6 +94,7 @@ export const useAppStore = create<AppState>()(
         mapLayerId: state.mapLayerId,
         powerSaveMode: state.powerSaveMode,
         emergencyInfo: state.emergencyInfo,
+        ambientAudioVolume: state.ambientAudioVolume,
       }),
       onRehydrateStorage: () => () => {
         // Odłożone do makrotaska: onRehydrateStorage jest wywoływane synchronicznie
