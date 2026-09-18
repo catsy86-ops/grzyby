@@ -51,6 +51,23 @@ describe('SpotManager', () => {
     expect(spot.longitude).toBe(19.5)
   })
 
+  it('pokazuje krótkie potwierdzenie "Zapisano" na przycisku po udanym zapisie', async () => {
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={[52.1, 19.5]}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByPlaceholderText(/Nazwa grzybowiska/), { target: { value: 'Test' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz grzybowisko' }))
+
+    expect(await screen.findByText('Zapisano')).toBeInTheDocument()
+  })
+
   it('używa pozycji GPS, gdy brak wybranej pinezki', async () => {
     vi.mocked(geolocation.getCurrentPosition).mockResolvedValue({ latitude: 50.0, longitude: 20.0 })
     render(

@@ -125,7 +125,10 @@ export function EncyclopediaView() {
       {/* Liczba wyników reaguje na każdą zmianę filtra/wyszukiwania animowanym "odbiciem" liczby
           (AnimatePresence po kluczu = wartości) - bez tego zmiana filtra byłaby czytelna tylko po
           policzeniu kart w siatce, nie od razu, jednym spojrzeniem. */}
-      <p className="-mt-1 flex items-baseline gap-1 text-xs text-muted-foreground">
+      <p
+        aria-label={`Liczba wyników: ${filtered.length}`}
+        className="-mt-1 flex items-baseline gap-1 text-xs text-muted-foreground"
+      >
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
             key={filtered.length}
@@ -133,12 +136,13 @@ export function EncyclopediaView() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6, position: 'absolute' }}
             transition={{ duration: 0.16 }}
+            aria-hidden="true"
             className="font-medium tabular-nums text-foreground"
           >
             {filtered.length}
           </motion.span>
         </AnimatePresence>
-        {filtered.length === 1 ? 'gatunek' : 'gatunków'}
+        <span aria-hidden="true">{filtered.length === 1 ? 'gatunek' : 'gatunków'}</span>
       </p>
 
       {/* Siatka 2-kolumnowa już na mobile (nie dopiero od md:) - z miniaturkami zdjęć lista 19

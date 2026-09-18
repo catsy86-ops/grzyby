@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
 import {
@@ -433,6 +433,31 @@ export function JournalView() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        {/* Liczba wyników pojawia się dopiero przy aktywnym wyszukiwaniu (nie duplikuje kafla
+            "znalezisk" z karty wyprawy poniżej) i "odbija się" animowaną liczbą przy każdej
+            zmianie zapytania - natychmiastowa informacja zwrotna podczas pisania, nie dopiero po
+            policzeniu kart w liście. */}
+        {searchQuery.trim() !== '' && filteredFindings && (
+          <p
+            aria-label={`Liczba wyników: ${filteredFindings.length}`}
+            className="mt-1.5 flex items-baseline gap-1 text-xs text-muted-foreground"
+          >
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={filteredFindings.length}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6, position: 'absolute' }}
+                transition={{ duration: 0.16 }}
+                aria-hidden="true"
+                className="font-medium tabular-nums text-foreground"
+              >
+                {filteredFindings.length}
+              </motion.span>
+            </AnimatePresence>
+            <span aria-hidden="true">{filteredFindings.length === 1 ? 'wynik' : 'wyników'}</span>
+          </p>
+        )}
       </div>
 
       <SeasonSummary />

@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { CalendarClockIcon, ChevronDownIcon, CloudRainIcon, MapPinIcon, NavigationIcon, TrashIcon } from 'lucide-react'
+import { CalendarClockIcon, CheckIcon, ChevronDownIcon, CloudRainIcon, MapPinIcon, NavigationIcon, TrashIcon } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { db } from '../../db/db'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useSpotMushroomOutlook } from '../../hooks/useSpotMushroomOutlook'
@@ -216,6 +217,10 @@ export function SpotManager({
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  // Krótki checkmark-moment na przycisku, ten sam wzorzec co "Zapisz" w AddFindingForm.tsx -
+  // szuflada tu nie zamyka się po zapisie (formularz zostaje na kolejne grzybowisko), więc bez
+  // tego jedynym potwierdzeniem był toast z dala od miejsca, gdzie kciuk faktycznie nacisnął.
+  const [justSaved, setJustSaved] = useState(false)
   const spots = useLiveQuery(() => db.spots.orderBy('createdAt').reverse().toArray(), [])
   // Na szerokim ekranie (lg:+) szuflada wysuwa się z prawej jako stały panel boczny zamiast
   // arkusza z dołu - na desktopie jest dość miejsca, żeby nie zasłaniać mapy pod spodem, a
@@ -245,6 +250,8 @@ export function SpotManager({
       setName('')
       setNotes('')
       toast.success(`Zapisano grzybowisko: ${trimmedName}`)
+      setJustSaved(true)
+      setTimeout(() => setJustSaved(false), 900)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Nie udało się zapisać grzybowiska.')
     } finally {
@@ -276,8 +283,25 @@ export function SpotManager({
               onChange={(e) => setName(e.target.value)}
             />
             <Input type="text" placeholder="Notatki (opcjonalnie)" value={notes} onChange={(e) => setNotes(e.target.value)} />
-            <Button size="sm" disabled={!name.trim() || saving} onClick={handleSave}>
-              {saving ? 'Zapisywanie...' : 'Zapisz grzybowisko'}
+            <Button size="sm" disabled={!name.trim() || saving || justSaved} onClick={handleSave}>
+              <AnimatePresence mode="wait" initial={false}>
+                {justSaved ? (
+                  <motion.span
+                    key="saved"
+                    className="flex items-center gap-1.5"
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                  >
+                    <CheckIcon className="size-4" />
+                    Zapisano
+                  </motion.span>
+                ) : (
+                  <motion.span key="label" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    {saving ? 'Zapisywanie...' : 'Zapisz grzybowisko'}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Button>
           </div>
 

@@ -15,6 +15,19 @@ function openAllDetails() {
 describe('EncyclopediaView', () => {
   afterEach(() => cleanup())
 
+  it('pokazuje liczbę wyników i aktualizuje ją po wyszukiwaniu', () => {
+    const allSpecies = speciesData as Species[]
+    render(<EncyclopediaView />)
+
+    expect(screen.getByLabelText(`Liczba wyników: ${allSpecies.length}`)).toBeInTheDocument()
+
+    fireEvent.change(screen.getByPlaceholderText('Szukaj gatunku...'), {
+      target: { value: allSpecies[0].nameCommon },
+    })
+
+    expect(screen.getByLabelText('Liczba wyników: 1')).toBeInTheDocument()
+  })
+
   it('pokazuje porady dot. przygotowania dla gatunków, które je mają', () => {
     render(<EncyclopediaView />)
     openAllDetails()

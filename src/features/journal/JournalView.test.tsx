@@ -150,6 +150,39 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
   })
 })
 
+describe('JournalView - licznik wyników wyszukiwania', () => {
+  beforeEach(async () => {
+    await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
+      await db.findings.clear()
+      await db.trips.clear()
+      await db.photos.clear()
+    })
+  })
+
+  afterEach(() => cleanup())
+
+  it('nie pokazuje licznika, gdy pole wyszukiwania jest puste', async () => {
+    await addFinding({ speciesNameGuess: 'Borowik' })
+    render(<JournalView />)
+    await screen.findByText('Borowik')
+
+    expect(screen.queryByLabelText(/Liczba wyników/)).not.toBeInTheDocument()
+  })
+
+  it('pokazuje i aktualizuje liczbę wyników podczas wpisywania w wyszukiwarce', async () => {
+    await addFinding({ speciesNameGuess: 'Borowik' })
+    await addFinding({ speciesNameGuess: 'Muchomor' })
+    render(<JournalView />)
+    await screen.findByText('Borowik')
+
+    fireEvent.change(screen.getByPlaceholderText('Szukaj po gatunku lub notatkach...'), {
+      target: { value: 'Borowik' },
+    })
+
+    expect(await screen.findByLabelText('Liczba wyników: 1')).toBeInTheDocument()
+  })
+})
+
 describe('JournalView - paginacja listy', () => {
   beforeEach(async () => {
     await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
