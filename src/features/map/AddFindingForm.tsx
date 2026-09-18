@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { toast } from 'sonner'
+import { MicIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { useSpeechToText } from '../../hooks/useSpeechToText'
 import { vibrateSuccess } from '../../utils/haptics'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { Alert, AlertDescription } from '../../components/ui/alert'
@@ -35,6 +37,13 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   // Ten sam wzorzec i próg co w SpotManager.tsx/StorageInfoDrawer.tsx/ToolsMenu.tsx.
   const isWidePanel = useMediaQuery('(min-width: 1024px)')
   const spots = useLiveQuery(() => db.spots.toArray(), [])
+  // Dopisuje rozpoznany tekst do istniejącej notatki (spacją, gdy już coś tam jest) zamiast
+  // nadpisywać - grzybiarz w terenie może dyktować w kilku krótkich turach (np. przerywanych
+  // zbieraniem), nie jedną długą wypowiedzią.
+  const { isSupported: speechSupported, isListening, toggleListening } = useSpeechToText((text) => {
+    if (!text) return
+    setNotes((prev) => (prev.trim() === '' ? text : `${prev} ${text}`))
+  })
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -186,7 +195,23 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
           </label>
 
           <label className="block text-sm">
-            Notatki
+            <span className="flex items-center justify-between">
+              Notatki
+              {speechSupported && (
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  aria-label={isListening ? 'Zatrzymaj dyktowanie notatki' : 'Dyktuj notatkę głosowo'}
+                  className={`flex size-7 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 ${
+                    isListening
+                      ? 'animate-pulse bg-destructive text-destructive-foreground'
+                      : 'text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  <MicIcon className="size-4" />
+                </button>
+              )}
+            </span>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="mt-1" rows={3} />
           </label>
 
