@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { computeAchievements } from './achievements'
-import type { Finding } from '../db/schema'
+import type { Finding, Trip } from '../db/schema'
 
 function makeFinding(overrides: Partial<Finding> = {}): Finding {
   return {
@@ -14,29 +14,51 @@ function makeFinding(overrides: Partial<Finding> = {}): Finding {
   }
 }
 
+function makeTrip(overrides: Partial<Trip> = {}): Trip {
+  return {
+    name: 'Wyprawa',
+    startedAt: Date.now(),
+    endedAt: Date.now(),
+    notes: '',
+    ...overrides,
+  }
+}
+
 function unlockedIds(input: Parameters<typeof computeAchievements>[0]): string[] {
   return computeAchievements(input)
     .filter((a) => a.unlocked)
     .map((a) => a.id)
 }
 
+const EMPTY = { findings: [], trips: [], photoCount: 0 }
+
 describe('computeAchievements', () => {
   it('nic nie jest odblokowane bez znalezisk/wypraw/zdjęć', () => {
-    expect(unlockedIds({ findings: [], completedTripsCount: 0, photoCount: 0 })).toEqual([])
+    expect(unlockedIds(EMPTY)).toEqual([])
   })
 
   it('"Pierwsze znalezisko" odblokowuje się po 1 wpisie', () => {
-    const ids = unlockedIds({ findings: [makeFinding()], completedTripsCount: 0, photoCount: 0 })
+    const ids = unlockedIds({ ...EMPTY, findings: [makeFinding()] })
     expect(ids).toContain('pierwsze-znalezisko')
     expect(ids).not.toContain('kolekcjoner')
   })
 
-  it('"Kolekcjoner" wymaga 10 znalezisk', () => {
+  it('"Kolekcjoner" wymaga 10 znalezisk i pokazuje postęp', () => {
     const findings = Array.from({ length: 9 }, () => makeFinding())
-    expect(unlockedIds({ findings, completedTripsCount: 0, photoCount: 0 })).not.toContain('kolekcjoner')
+    const almost = computeAchievements({ ...EMPTY, findings })
+    expect(almost.find((a) => a.id === 'kolekcjoner')?.unlocked).toBe(false)
+    expect(almost.find((a) => a.id === 'kolekcjoner')?.progress).toEqual({ current: 9, target: 10 })
 
     findings.push(makeFinding())
-    expect(unlockedIds({ findings, completedTripsCount: 0, photoCount: 0 })).toContain('kolekcjoner')
+    expect(unlockedIds({ ...EMPTY, findings })).toContain('kolekcjoner')
+  })
+
+  it('"Legenda lasu" wymaga 100 znalezisk', () => {
+    const findings99 = Array.from({ length: 99 }, () => makeFinding())
+    expect(unlockedIds({ ...EMPTY, findings: findings99 })).not.toContain('legenda-lasu')
+
+    const findings100 = Array.from({ length: 100 }, () => makeFinding())
+    expect(unlockedIds({ ...EMPTY, findings: findings100 })).toContain('legenda-lasu')
   })
 
   it('"Różnorodność" liczy unikalne speciesId, ignorując null', () => {
@@ -48,35 +70,91 @@ describe('computeAchievements', () => {
       makeFinding({ speciesId: null }),
       makeFinding({ speciesId: 'd' }),
     ]
-    expect(unlockedIds({ findings, completedTripsCount: 0, photoCount: 0 })).not.toContain('roznorodnosc')
+    expect(unlockedIds({ ...EMPTY, findings })).not.toContain('roznorodnosc')
 
     findings.push(makeFinding({ speciesId: 'e' }))
-    expect(unlockedIds({ findings, completedTripsCount: 0, photoCount: 0 })).toContain('roznorodnosc')
+    expect(unlockedIds({ ...EMPTY, findings })).toContain('roznorodnosc')
+  })
+
+  it('"Kolekcjoner gatunków" wymaga 10 różnych gatunków', () => {
+    const findings9 = Array.from({ length: 9 }, (_, i) => makeFinding({ speciesId: `s${i}` }))
+    expect(unlockedIds({ ...EMPTY, findings: findings9 })).not.toContain('kolekcjoner-gatunkow')
+
+    const findings10 = Array.from({ length: 10 }, (_, i) => makeFinding({ speciesId: `s${i}` }))
+    expect(unlockedIds({ ...EMPTY, findings: findings10 })).toContain('kolekcjoner-gatunkow')
   })
 
   it('"Borowikowy debiut" wymaga konkretnego speciesId', () => {
     expect(
-      unlockedIds({ findings: [makeFinding({ speciesId: 'muchomor-czerwony' })], completedTripsCount: 0, photoCount: 0 }),
+      unlockedIds({ ...EMPTY, findings: [makeFinding({ speciesId: 'muchomor-czerwony' })] }),
     ).not.toContain('borowikowy-debiut')
 
     expect(
-      unlockedIds({ findings: [makeFinding({ speciesId: 'borowik-szlachetny' })], completedTripsCount: 0, photoCount: 0 }),
+      unlockedIds({ ...EMPTY, findings: [makeFinding({ speciesId: 'borowik-szlachetny' })] }),
     ).toContain('borowikowy-debiut')
+
+    const borowikAchievement = computeAchievements({
+      ...EMPTY,
+      findings: [makeFinding({ speciesId: 'borowik-szlachetny' })],
+    }).find((a) => a.id === 'borowikowy-debiut')
+    expect(borowikAchievement?.progress).toBeNull()
   })
 
   it('"Wyprawowicz" liczy zakończone wyprawy, nie znaleziska', () => {
-    expect(unlockedIds({ findings: [], completedTripsCount: 4, photoCount: 0 })).not.toContain('wyprawowicz')
-    expect(unlockedIds({ findings: [], completedTripsCount: 5, photoCount: 0 })).toContain('wyprawowicz')
+    expect(unlockedIds({ ...EMPTY, trips: Array.from({ length: 4 }, () => makeTrip()) })).not.toContain(
+      'wyprawowicz',
+    )
+    expect(unlockedIds({ ...EMPTY, trips: Array.from({ length: 5 }, () => makeTrip()) })).toContain(
+      'wyprawowicz',
+    )
+  })
+
+  it('"Sezonowy maratończyk" wymaga 3 wypraw w JEDNYM miesiącu, nie rozłożonych w czasie', () => {
+    const spreadOut = [
+      makeTrip({ startedAt: new Date(2026, 0, 1).getTime() }),
+      makeTrip({ startedAt: new Date(2026, 3, 1).getTime() }),
+      makeTrip({ startedAt: new Date(2026, 6, 1).getTime() }),
+    ]
+    expect(unlockedIds({ ...EMPTY, trips: spreadOut })).not.toContain('sezonowy-maratonczyk')
+
+    const sameMonth = [
+      makeTrip({ startedAt: new Date(2026, 8, 1).getTime() }),
+      makeTrip({ startedAt: new Date(2026, 8, 10).getTime() }),
+      makeTrip({ startedAt: new Date(2026, 8, 20).getTime() }),
+    ]
+    expect(unlockedIds({ ...EMPTY, trips: sameMonth })).toContain('sezonowy-maratonczyk')
+  })
+
+  it('"Stały gość" wymaga 5 znalezisk w tym samym grzybowisku', () => {
+    const scattered = [
+      makeFinding({ spotId: 1 }),
+      makeFinding({ spotId: 2 }),
+      makeFinding({ spotId: 1 }),
+      makeFinding({ spotId: 3 }),
+    ]
+    expect(unlockedIds({ ...EMPTY, findings: scattered })).not.toContain('staly-gosc')
+
+    const sameSpot = Array.from({ length: 5 }, () => makeFinding({ spotId: 1 }))
+    expect(unlockedIds({ ...EMPTY, findings: sameSpot })).toContain('staly-gosc')
+  })
+
+  it('"Ciężka zdobycz" wymaga 5 kg łącznej wagi', () => {
+    expect(unlockedIds({ ...EMPTY, findings: [makeFinding({ weightGrams: 4999 })] })).not.toContain(
+      'ciezka-zdobycz',
+    )
+    expect(
+      unlockedIds({ ...EMPTY, findings: [makeFinding({ weightGrams: 3000 }), makeFinding({ weightGrams: 2000 })] }),
+    ).toContain('ciezka-zdobycz')
   })
 
   it('"Fotograf" liczy zdjęcia, nie znaleziska', () => {
-    expect(unlockedIds({ findings: [], completedTripsCount: 0, photoCount: 9 })).not.toContain('fotograf')
-    expect(unlockedIds({ findings: [], completedTripsCount: 0, photoCount: 10 })).toContain('fotograf')
+    expect(unlockedIds({ ...EMPTY, photoCount: 9 })).not.toContain('fotograf')
+    expect(unlockedIds({ ...EMPTY, photoCount: 10 })).toContain('fotograf')
   })
 
   it('nie ujawnia danych o spożyciu/reakcjach w żadnym osiągnięciu (bezpieczeństwo, nie gamifikacja)', () => {
     const findings = [makeFinding({ reactionSeverity: 'ciężka', consumed: true })]
-    const achievements = computeAchievements({ findings, completedTripsCount: 0, photoCount: 0 })
+    const achievements = computeAchievements({ ...EMPTY, findings })
     for (const a of achievements) {
       expect(a.title.toLowerCase()).not.toMatch(/reakcj|zatru|spoż/)
       expect(a.description.toLowerCase()).not.toMatch(/reakcj|zatru|spoż/)
