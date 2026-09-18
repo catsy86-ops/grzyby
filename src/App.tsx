@@ -13,6 +13,7 @@ import { CookingTimer } from './features/tools/CookingTimer'
 import { ToolsMenu, type ToolKey } from './features/tools/ToolsMenu'
 import { Logo } from './components/Logo'
 import { AnimatedHeaderTitle } from './components/AnimatedHeaderTitle'
+import { AnimatedHeaderBackground } from './components/AnimatedHeaderBackground'
 import { AppSplash } from './components/AppSplash'
 import { OnboardingOverlay } from './components/OnboardingOverlay'
 import { useTickReminders } from './hooks/useTickReminders'
@@ -216,27 +217,17 @@ function App() {
     <div className="flex h-full flex-col bg-background">
       <AppSplash />
       <OnboardingOverlay />
-      {/* Gradient primary -> akcent per zakładka zamiast prawie niewidocznego primary ->
-          primary/90 - nagłówek jako realna przestrzeń marki. Diagonalny kierunek + oba kolory
-          tak samo ciemne w obu motywach (patrz index.css) utrzymują kontrast tekstu
-          primary-foreground. Faza A nowecos.md + poprawka z audytu UI: wszystkie 4 zakładki mają
-          teraz własny, subtelnie inny końcowy kolor gradientu (leśna zieleń / bursztyn skanu /
-          teal dziennika / błękit bazy wiedzy - patrz uzasadnienie doboru w index.css) dla
-          szybszej orientacji "w której jestem zakładce" - dotąd Dziennik i Baza wiedzy dzieliły
-          niemal identyczny domyślny ton z Rozpoznaj (amber-700 vs 600). */}
-      <header
-        className={`safe-area-top flex items-center gap-2 bg-gradient-to-br from-primary via-primary px-4 pb-3 pt-4 text-primary-foreground shadow-[var(--shadow-card)] transition-colors duration-300 ${
-          activeTab === 'mapa'
-            ? 'to-header-accent-mapa/70'
-            : activeTab === 'rozpoznaj'
-              ? 'to-header-accent-rozpoznaj/70'
-              : activeTab === 'dziennik'
-                ? 'to-header-accent-dziennik/70'
-                : 'to-header-accent-baza-wiedzy/70'
-        }`}
-      >
-        <ThemeToggle />
-        <div className="flex flex-1 items-center justify-center gap-1.5">
+      {/* Płaski, jednolicie ciemny (nie zielony gradient per-zakładka jak dawniej) - tło nagłówka
+          niesie teraz AnimatedHeaderBackground (unoszące się grzyby/piwo), więc samo tło musi być
+          stonowane i jednolite w obu motywach, żeby animowane ikony były czytelne na wierzchu.
+          `relative overflow-hidden` przycina ikony wypływające poza wysokość nagłówka, treść
+          (ThemeToggle/tytuł/przycisk narzędzi) dostaje `z-10`, żeby zawsze była nad animacją. */}
+      <header className="safe-area-top relative flex items-center gap-2 overflow-hidden bg-primary px-4 pb-3 pt-4 text-primary-foreground shadow-[var(--shadow-card)]">
+        <AnimatedHeaderBackground />
+        <div className="relative z-10">
+          <ThemeToggle />
+        </div>
+        <div className="relative z-10 flex flex-1 items-center justify-center gap-1.5">
           <Logo className="size-5" />
           <AnimatedHeaderTitle />
         </div>
@@ -248,7 +239,7 @@ function App() {
           type="button"
           onClick={() => setShowToolsMenu(true)}
           aria-label="Narzędzia"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground outline-none ring-1 ring-primary-foreground/25 transition-colors hover:bg-primary-foreground/25 focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
+          className="relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground outline-none ring-1 ring-primary-foreground/25 transition-colors hover:bg-primary-foreground/25 focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
         >
           <WrenchIcon className="size-4.5" />
         </button>

@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 
 const TITLE = 'Grzybobranie'
-const SUBTITLE = 'Niebuszewo'
+const SUBTITLE = 'Leć po browara i dawaj w las!'
 
 const LETTER_CONTAINER = {
   hidden: {},
@@ -20,7 +20,7 @@ const LETTER = {
 
 // Nagłówek robi się "żywy" w dwóch krokach: litery "Grzybobranie" wskakują pojedynczo (jak
 // grzyby wyrastające z ziemi), dopiero po nich pojawia się nazwa okolicy - w ten sposób oko
-// najpierw czyta nazwę apki, a "Niebuszewo" czuje się jak podpis/lokalizacja, nie część logo.
+// najpierw czyta nazwę apki, a podtytuł czuje się jak hasło/zawołanie, nie część logo.
 // Delikatny, zapętlony połysk (gradient sweep) na samym tytule - subtelny sygnał "żyje", bez
 // pętli co sekundę, która by rozpraszała przy każdym spojrzeniu na nagłówek.
 export function AnimatedHeaderTitle({ className }: { className?: string }) {
