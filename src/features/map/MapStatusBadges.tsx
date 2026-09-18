@@ -76,7 +76,10 @@ export function MapStatusBadges({
   const showBadges = !collapsible || expanded
 
   return (
-    <div className="absolute left-4 top-4 z-[1000] flex flex-col items-start gap-2">
+    // Prawy górny róg, nie lewy - Leaflet umieszcza swoje natywne kontrolki zoom (+/-) domyślnie
+    // w lewym górnym rogu (topleft), więc plakietki tam nachodziły na nie wizualnie. Prawy górny
+    // róg jest wolny (menu narzędzi/FAB są w prawym dolnym, patrz MapToolbar.tsx).
+    <div className="absolute right-4 top-4 z-[1000] flex flex-col items-end gap-2">
       {collapsible && (
         <button
           type="button"

@@ -27,8 +27,17 @@ describe('MapView (test dymny po refaktoryzacji Fazy 19)', () => {
 
   afterEach(() => cleanup())
 
+  // Akcje "Zlokalizuj mnie"/"Więcej narzędzi mapy" są portalowane do nagłówka aplikacji (patrz
+  // MapHeaderActions.tsx + `headerActionsSlot` w MapView.tsx) - w testach ten węzeł DOM trzeba
+  // dostarczyć ręcznie (App.tsx robi to przez `ref`), inaczej portal nie ma dokąd renderować.
+  function renderMapView() {
+    const headerActionsSlot = document.createElement('div')
+    document.body.appendChild(headerActionsSlot)
+    return render(<MapView headerActionsSlot={headerActionsSlot} />)
+  }
+
   it('renderuje się bez wyjątku i pokazuje przyciski akcji', async () => {
-    render(<MapView />)
+    renderMapView()
 
     expect(await screen.findByRole('button', { name: /Dodaj znalezisko/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Zlokalizuj mnie' })).toBeInTheDocument()
@@ -36,7 +45,7 @@ describe('MapView (test dymny po refaktoryzacji Fazy 19)', () => {
   })
 
   it('przełącza się na widok-listę i z powrotem na mapę', async () => {
-    render(<MapView />)
+    renderMapView()
 
     const toggle = await screen.findByRole('button', { name: /Pokaż listę/ })
     act(() => toggle.click())

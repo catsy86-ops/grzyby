@@ -87,7 +87,7 @@ function IdentifyViewSkeleton() {
   )
 }
 
-function ActiveView({ tab }: { tab: ActiveTab }) {
+function ActiveView({ tab, mapHeaderActionsSlot }: { tab: ActiveTab; mapHeaderActionsSlot: HTMLDivElement | null }) {
   const fallback =
     tab === 'mapa' ? <MapViewSkeleton /> : tab === 'rozpoznaj' ? <IdentifyViewSkeleton /> : <CardListSkeleton />
   return (
@@ -95,7 +95,7 @@ function ActiveView({ tab }: { tab: ActiveTab }) {
       {(() => {
         switch (tab) {
           case 'mapa':
-            return <MapView />
+            return <MapView headerActionsSlot={mapHeaderActionsSlot} />
           case 'rozpoznaj':
             return <IdentifyView />
           case 'dziennik':
@@ -166,6 +166,11 @@ function App() {
   const [showTickCare, setShowTickCare] = useState(false)
   const [showCookingTimer, setShowCookingTimer] = useState(false)
   const [showEmergencyCard, setShowEmergencyCard] = useState(false)
+  // Węzeł DOM drugiego rzędu nagłówka (tylko na zakładce Mapy) - MapView portaluje tam swoje
+  // kontekstowe akcje (patrz MapHeaderActions.tsx). `useState` zamiast zwykłego `useRef`, bo
+  // callback-ref musi wywołać re-render App, żeby `headerMapActionsEl` faktycznie dotarł do
+  // MapView przy pierwszym montowaniu tego wiersza (ref.current samo w sobie nie jest reaktywne).
+  const [headerMapActionsEl, setHeaderMapActionsEl] = useState<HTMLDivElement | null>(null)
   const [showToolsMenu, setShowToolsMenu] = useState(false)
   const forestMode = useAppStore((s) => s.forestMode)
   const setForestMode = useAppStore((s) => s.setForestMode)
@@ -228,28 +233,39 @@ function App() {
           niesie teraz AnimatedHeaderBackground (unoszące się grzyby/piwo), więc samo tło musi być
           stonowane i jednolite w obu motywach, żeby animowane ikony były czytelne na wierzchu.
           `relative overflow-hidden` przycina ikony wypływające poza wysokość nagłówka, treść
-          (ThemeToggle/tytuł/przycisk narzędzi) dostaje `z-10`, żeby zawsze była nad animacją. */}
-      <header className="safe-area-top relative flex items-center gap-2 overflow-hidden bg-primary px-4 pb-3 pt-4 text-primary-foreground shadow-[var(--shadow-card)]">
+          (ThemeToggle/tytuł/przycisk narzędzi) dostaje `z-10`, żeby zawsze była nad animacją.
+          `flex-col` (nie pojedynczy rząd) - na zakładce Mapy dochodzi drugi, węższy rząd z
+          kontekstowymi akcjami mapy (Zlokalizuj/Grzybowiska/Więcej), przeniesionymi tu z rogu
+          mapy, gdzie nachodziły na natywne kontrolki zoom Leaflet. Oba rzędy dzielą jedno tło
+          (AnimatedHeaderBackground) i cień, więc czytają się jako jeden spójny pasek, nie dwa
+          osobne. */}
+      <header className="safe-area-top relative flex flex-col overflow-hidden bg-primary text-primary-foreground shadow-[var(--shadow-card)]">
         <AnimatedHeaderBackground />
-        <div className="relative z-10">
+        <div className="relative z-10 flex items-center gap-2 px-4 pb-3 pt-4">
           <ThemeToggle />
+          <div className="flex flex-1 items-center justify-center gap-1.5">
+            <Logo className="size-5" />
+            <AnimatedHeaderTitle />
+          </div>
+          {/* Przycisk "Narzędzia" celowo WYRAŹNIEJSZY niż ThemeToggle obok (stała, nie tylko
+              hover, obwódka/tło + pełna nieprzezroczystość ikony) - to wejście do pierwszej
+              pomocy/kleszczy/checklisty sprzętu, nie kosmetyczne ustawienie, więc nie powinno mieć
+              tej samej, łatwej do przeoczenia wagi wizualnej co przełącznik motywu. */}
+          <button
+            type="button"
+            onClick={() => setShowToolsMenu(true)}
+            aria-label="Narzędzia"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground outline-none ring-1 ring-primary-foreground/25 transition-colors hover:bg-primary-foreground/25 focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
+          >
+            <WrenchIcon className="size-4.5" />
+          </button>
         </div>
-        <div className="relative z-10 flex flex-1 items-center justify-center gap-1.5">
-          <Logo className="size-5" />
-          <AnimatedHeaderTitle />
-        </div>
-        {/* Przycisk "Narzędzia" celowo WYRAŹNIEJSZY niż ThemeToggle obok (stała, nie tylko
-            hover, obwódka/tło + pełna nieprzezroczystość ikony) - to wejście do pierwszej
-            pomocy/kleszczy/checklisty sprzętu, nie kosmetyczne ustawienie, więc nie powinno mieć
-            tej samej, łatwej do przeoczenia wagi wizualnej co przełącznik motywu. */}
-        <button
-          type="button"
-          onClick={() => setShowToolsMenu(true)}
-          aria-label="Narzędzia"
-          className="relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground outline-none ring-1 ring-primary-foreground/25 transition-colors hover:bg-primary-foreground/25 focus-visible:ring-3 focus-visible:ring-primary-foreground/50"
-        >
-          <WrenchIcon className="size-4.5" />
-        </button>
+        {activeTab === 'mapa' && (
+          <div
+            ref={setHeaderMapActionsEl}
+            className="relative z-10 flex items-center justify-end gap-0.5 border-t border-primary-foreground/10 px-3 pb-2 pt-1.5"
+          />
+        )}
       </header>
       <AnimatePresence>
         {!isOnline && (
@@ -298,7 +314,7 @@ function App() {
               className="h-full"
             >
               <ErrorBoundary resetKey={activeTab}>
-                <ActiveView tab={activeTab} />
+                <ActiveView tab={activeTab} mapHeaderActionsSlot={headerMapActionsEl} />
               </ErrorBoundary>
             </motion.div>
           </AnimatePresence>

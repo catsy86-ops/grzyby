@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Circle, MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
 import L from 'leaflet'
@@ -32,6 +33,7 @@ import { FindingMarkers, FindingsHeatmap, MapClickHandler, MapInstanceCapture, R
 import { MapStatusBadges } from './MapStatusBadges'
 import { MapOverlayMessages } from './MapOverlayMessages'
 import { MapToolbar } from './MapToolbar'
+import { MapHeaderActions } from './MapHeaderActions'
 import { FindingsListView } from './FindingsListView'
 import { CompassPanel } from './CompassPanel'
 import { Skeleton } from '../../components/ui/skeleton'
@@ -72,7 +74,15 @@ function isInsideRegion([lat, lng]: [number, number]): boolean {
 // przyjmuje callback otwierający konkretny arkusz.
 export type ActiveSheet = 'add-finding' | 'offline-download' | 'spots' | 'szczecin-spots' | 'compass' | null
 
-export function MapView() {
+interface MapViewProps {
+  // Węzeł DOM w górnym nagłówku aplikacji (App.tsx), do którego portalowane są kontekstowe akcje
+  // mapy (Zlokalizuj/Grzybowiska/Więcej narzędzi) - patrz MapHeaderActions.tsx. `null` przez
+  // ułamek sekundy przed zamontowaniem nagłówka (ref jeszcze nie podłączony) - wtedy akcje po
+  // prostu jeszcze się nie renderują, bez zauważalnego miganiania.
+  headerActionsSlot: HTMLDivElement | null
+}
+
+export function MapView({ headerActionsSlot }: MapViewProps) {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null)
   const [isListView, setIsListView] = useState(false)
@@ -292,45 +302,52 @@ export function MapView() {
           />
         )}
         <MapToolbar
-          userPosition={userPosition}
-          hasReturnPoint={returnPoint != null}
           isListView={isListView}
           onToggleListView={() => setIsListView((v) => !v)}
-          onLocate={() => {
-            // "Zlokalizuj mnie" na pozycji spoza regionu apki cicho nic by nie zrobił (patrz
-            // `isInsideRegion` wyżej) - bez komunikatu wyglądałoby to jak zawieszony przycisk,
-            // więc tu jedyne miejsce, gdzie warto o tym jawnie poinformować (auto-recentrowanie
-            // przy GPS-owym ticku ma zostać ciche, żeby nie zasypywać komunikatami w terenie).
-            if (userPosition && !isInsideRegion(userPosition)) {
-              reportError('Twoja pozycja jest poza obszarem Szczecina i okolic - mapa pokazuje tylko ten region.')
-              return
-            }
-            handleLocate()
-          }}
-          onOpenSheet={setActiveSheet}
-          onSaveReturnPoint={handleSaveReturnPoint}
           onAddFinding={() => setActiveSheet('add-finding')}
-          mapLayerId={mapLayerId}
-          onChangeMapLayer={setMapLayerId}
-          findingsCount={filteredFindings?.length ?? 0}
-          isHeatmapView={isHeatmapView}
-          onToggleHeatmapView={() => setIsHeatmapView((v) => !v)}
-          speciesOptions={presentSpeciesOptions}
-          speciesFilterIds={speciesFilterIds}
-          onToggleSpeciesFilter={(id) =>
-            setSpeciesFilterIds((prev) => {
-              const next = new Set(prev)
-              if (next.has(id)) next.delete(id)
-              else next.add(id)
-              return next
-            })
-          }
-          onClearSpeciesFilter={() => setSpeciesFilterIds(new Set())}
-          powerSaveMode={powerSaveMode}
-          onChangePowerSaveMode={setPowerSaveMode}
-          powerSaveActive={powerSaveActive}
         />
       </div>
+
+      {headerActionsSlot &&
+        createPortal(
+          <MapHeaderActions
+            userPosition={userPosition}
+            hasReturnPoint={returnPoint != null}
+            onLocate={() => {
+              // "Zlokalizuj mnie" na pozycji spoza regionu apki cicho nic by nie zrobił (patrz
+              // `isInsideRegion` wyżej) - bez komunikatu wyglądałoby to jak zawieszony przycisk,
+              // więc tu jedyne miejsce, gdzie warto o tym jawnie poinformować (auto-recentrowanie
+              // przy GPS-owym ticku ma zostać ciche, żeby nie zasypywać komunikatami w terenie).
+              if (userPosition && !isInsideRegion(userPosition)) {
+                reportError('Twoja pozycja jest poza obszarem Szczecina i okolic - mapa pokazuje tylko ten region.')
+                return
+              }
+              handleLocate()
+            }}
+            onOpenSheet={setActiveSheet}
+            onSaveReturnPoint={handleSaveReturnPoint}
+            mapLayerId={mapLayerId}
+            onChangeMapLayer={setMapLayerId}
+            findingsCount={filteredFindings?.length ?? 0}
+            isHeatmapView={isHeatmapView}
+            onToggleHeatmapView={() => setIsHeatmapView((v) => !v)}
+            speciesOptions={presentSpeciesOptions}
+            speciesFilterIds={speciesFilterIds}
+            onToggleSpeciesFilter={(id) =>
+              setSpeciesFilterIds((prev) => {
+                const next = new Set(prev)
+                if (next.has(id)) next.delete(id)
+                else next.add(id)
+                return next
+              })
+            }
+            onClearSpeciesFilter={() => setSpeciesFilterIds(new Set())}
+            powerSaveMode={powerSaveMode}
+            onChangePowerSaveMode={setPowerSaveMode}
+            powerSaveActive={powerSaveActive}
+          />,
+          headerActionsSlot,
+        )}
 
       {activeSheet === 'add-finding' && (
         <AddFindingForm
