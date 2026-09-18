@@ -17,6 +17,7 @@ import { AnimatedHeaderBackground } from './components/AnimatedHeaderBackground'
 import { AppSplash } from './components/AppSplash'
 import { OnboardingOverlay } from './components/OnboardingOverlay'
 import { useTickReminders } from './hooks/useTickReminders'
+import { useSpotRevisitReminders } from './hooks/useSpotRevisitReminders'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
@@ -168,6 +169,7 @@ function App() {
   const setForestMode = useAppStore((s) => s.setForestMode)
   useAndroidWidgetSync()
   useTickReminders()
+  useSpotRevisitReminders()
 
   function changeTab(tab: ActiveTab) {
     if (!supportsViewTransitions) {

@@ -72,6 +72,14 @@ export interface Spot {
   longitude: number
   notes: string
   createdAt: number
+  // Miesiąc (1-12), w którym warto ponownie sprawdzić to miejsce w przyszłym sezonie (np.
+  // znaleziono tu coś obiecującego, ale za wcześnie/za późno w sezonie na pełny wysyp) - patrz
+  // utils/spotRevisit.ts. `undefined` = brak flagi, nie jest to indeksowane pole Dexie (nie ma
+  // potrzeby zapytań "wszystkie oflagowane" poza jednym hookiem sprawdzającym cały zbiór).
+  revisitMonth?: number
+  // Kiedy flaga została ustawiona - potrzebne, żeby przypomnienie nie odpaliło się od razu, gdy
+  // ktoś oflaguje grzybowisko w bieżącym miesiącu (patrz shouldRemindRevisit).
+  revisitFlaggedAt?: number
 }
 
 // Punkt śladu GPS zebrany podczas aktywnej wyprawy (patrz hooks/useTripTrail.ts) - rysowany jako

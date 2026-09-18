@@ -182,6 +182,50 @@ describe('SpotManager', () => {
     expect(fetch).toHaveBeenCalledOnce()
   })
 
+  it('pokazuje plakietkę flagi "sprawdzić w sezonie", gdy grzybowisko ma ustawiony revisitMonth', async () => {
+    await db.spots.add({
+      name: 'Do sprawdzenia',
+      latitude: 1,
+      longitude: 1,
+      notes: '',
+      createdAt: 1,
+      revisitMonth: 9,
+      revisitFlaggedAt: Date.now(),
+    })
+
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByText(/Sprawdzić: wrzesień/)).toBeInTheDocument()
+  })
+
+  it('rozwija wybór miesiąca flagi po kliknięciu przycisku kalendarza', async () => {
+    await db.spots.add({ name: 'Bez flagi', latitude: 1, longitude: 1, notes: '', createdAt: 1 })
+
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
+
+    const toggle = await screen.findByRole('button', { name: 'Oznacz do sprawdzenia w sezonie: Bez flagi' })
+    fireEvent.click(toggle)
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('Sprawdzić ponownie w:')).toBeInTheDocument()
+  })
+
   it('pokazuje pustą listę, gdy nie ma zapisanych grzybowisk', async () => {
     render(
       <SpotManager

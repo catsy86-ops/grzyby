@@ -1,13 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { ChevronDownIcon, CloudRainIcon, MapPinIcon, NavigationIcon, TrashIcon } from 'lucide-react'
+import { CalendarClockIcon, ChevronDownIcon, CloudRainIcon, MapPinIcon, NavigationIcon, TrashIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useSpotMushroomOutlook } from '../../hooks/useSpotMushroomOutlook'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { computeSpotStats } from '../../utils/spotStats'
 import { formatDate } from '../../utils/formatDate'
+import { MONTH_NAMES, monthLabel } from '../../utils/spotRevisit'
 import { Badge } from '../../components/ui/badge'
 import {
   AlertDialog,
@@ -22,6 +23,7 @@ import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { Input } from '../../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 
 interface SpotManagerProps {
   open: boolean
@@ -33,12 +35,15 @@ interface SpotManagerProps {
   onSetNavigationTargetSpotId: (id: number | null) => void
 }
 
+const NONE_MONTH = '__none__'
+
 function SpotRow({
   spotId,
   name,
   notes,
   latitude,
   longitude,
+  revisitMonth,
   isNavigationTarget,
   onToggleNavigationTarget,
 }: {
@@ -47,11 +52,21 @@ function SpotRow({
   notes: string
   latitude: number
   longitude: number
+  revisitMonth: number | undefined
   isNavigationTarget: boolean
   onToggleNavigationTarget: () => void
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [outlookExpanded, setOutlookExpanded] = useState(false)
+  const [revisitPickerOpen, setRevisitPickerOpen] = useState(false)
+
+  async function handleChangeRevisitMonth(value: string | null) {
+    if (value == null || value === NONE_MONTH) {
+      await db.spots.update(spotId, { revisitMonth: undefined, revisitFlaggedAt: undefined })
+    } else {
+      await db.spots.update(spotId, { revisitMonth: Number(value), revisitFlaggedAt: Date.now() })
+    }
+  }
   const findings = useLiveQuery(() => db.findings.where('spotId').equals(spotId).toArray(), [spotId])
   const stats = computeSpotStats(findings ?? [])
   const { outlook, isLoading: isOutlookLoading } = useSpotMushroomOutlook(
@@ -83,6 +98,12 @@ function SpotRow({
             {stats.speciesDiversity > 0 && ` · ${stats.speciesDiversity} gatunków`}
             {stats.lastVisitAt != null && ` · ostatnio ${formatDate(stats.lastVisitAt)}`}
           </p>
+          {revisitMonth != null && (
+            <Badge variant="outline" className="mt-1.5 gap-1 text-[11px]">
+              <CalendarClockIcon className="size-3" />
+              Sprawdzić: {monthLabel(revisitMonth)}
+            </Badge>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <button
@@ -95,6 +116,19 @@ function SpotRow({
             }`}
           >
             <NavigationIcon className="size-4" />
+          </button>
+          <button
+            type="button"
+            aria-label={
+              revisitPickerOpen ? `Ukryj wybór miesiąca sprawdzenia: ${name}` : `Oznacz do sprawdzenia w sezonie: ${name}`
+            }
+            aria-expanded={revisitPickerOpen}
+            onClick={() => setRevisitPickerOpen((v) => !v)}
+            className={`rounded p-1 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+              revisitMonth != null ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+            }`}
+          >
+            <CalendarClockIcon className="size-4" />
           </button>
           <button
             type="button"
@@ -115,6 +149,25 @@ function SpotRow({
           </button>
         </div>
       </CardContent>
+
+      {revisitPickerOpen && (
+        <CardContent className="flex items-center gap-2 pt-0">
+          <p className="shrink-0 text-xs text-muted-foreground">Sprawdzić ponownie w:</p>
+          <Select value={revisitMonth != null ? String(revisitMonth) : NONE_MONTH} onValueChange={handleChangeRevisitMonth}>
+            <SelectTrigger className="h-8 flex-1 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE_MONTH}>-- brak flagi --</SelectItem>
+              {MONTH_NAMES.map((label, index) => (
+                <SelectItem key={label} value={String(index + 1)}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      )}
 
       {outlookExpanded && (
         <CardContent className="pt-0">
@@ -237,6 +290,7 @@ export function SpotManager({
                 notes={spot.notes}
                 latitude={spot.latitude}
                 longitude={spot.longitude}
+                revisitMonth={spot.revisitMonth}
                 isNavigationTarget={navigationTargetSpotId === spot.id}
                 onToggleNavigationTarget={() =>
                   onSetNavigationTargetSpotId(navigationTargetSpotId === spot.id ? null : spot.id!)
