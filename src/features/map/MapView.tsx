@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Circle, MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
 import L from 'leaflet'
@@ -12,7 +12,8 @@ import {
 import { db } from '../../db/db'
 import { szczecinSpots } from '../../data/szczecinSpots'
 import { getMapLayer } from '../../data/mapLayers'
-import type { Spot } from '../../db/schema'
+import speciesData from '../../data/species.json'
+import type { Species, Spot } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { useAppStore } from '../../stores/appStore'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
@@ -30,6 +31,7 @@ import { MapStatusBadges } from './MapStatusBadges'
 import { MapOverlayMessages } from './MapOverlayMessages'
 import { MapToolbar } from './MapToolbar'
 import { FindingsListView } from './FindingsListView'
+import { CompassPanel } from './CompassPanel'
 import { Skeleton } from '../../components/ui/skeleton'
 
 // Apka jest kierowana do mieszkańców Szczecina i okolic (nie ogólnopolska) - domyślny widok przy
@@ -66,13 +68,17 @@ function isInsideRegion([lat, lng]: [number, number]): boolean {
 // (`showAddForm`/`showOfflineDownload`/`showSpotManager`), które nic nie stało na przeszkodzie,
 // by były `true` jednocześnie (dwa nałożone Drawer/Sheet). Eksportowany, bo `MapToolbar`
 // przyjmuje callback otwierający konkretny arkusz.
-export type ActiveSheet = 'add-finding' | 'offline-download' | 'spots' | 'szczecin-spots' | null
+export type ActiveSheet = 'add-finding' | 'offline-download' | 'spots' | 'szczecin-spots' | 'compass' | null
 
 export function MapView() {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null)
   const [isListView, setIsListView] = useState(false)
   const [isHeatmapView, setIsHeatmapView] = useState(false)
+  // Pusty zbiór = pokaż wszystkie gatunki (brak filtra). Filtr lokalny do widoku mapy (nie w
+  // appStore) - lista widoku (FindingsListView) ma własne wyszukiwanie tekstowe, a to jest
+  // osobna potrzeba: szybkie odfiltrowanie mapy do 1-2 gatunków przy dużej liczbie znalezisk.
+  const [speciesFilterIds, setSpeciesFilterIds] = useState<Set<string>>(new Set())
   const [tileLoadIssue, setTileLoadIssue] = useState(false)
   const mapRef = useRef<L.Map | null>(null)
   // Cel startowej pozycji `MapContainer` - trzymany w stanie (nie tylko jako stała), bo
@@ -112,10 +118,25 @@ export function MapView() {
 
   const findingPosition = pinPosition ?? userPosition
 
+  const speciesById = useMemo(() => new Map((speciesData as Species[]).map((s) => [s.id, s])), [])
+  // Tylko gatunki faktycznie obecne wśród znalezisk trafiają do listy filtra - lista wszystkich
+  // 19 gatunków z atlasu byłaby w większości pusta dla typowego użytkownika.
+  const presentSpeciesOptions = useMemo(() => {
+    const ids = new Set((findings ?? []).map((f) => f.speciesId).filter((id): id is string => id != null))
+    return Array.from(ids)
+      .map((id) => speciesById.get(id))
+      .filter((s): s is Species => s != null)
+      .sort((a, b) => a.nameCommon.localeCompare(b.nameCommon, 'pl'))
+  }, [findings, speciesById])
+  const filteredFindings = useMemo(() => {
+    if (speciesFilterIds.size === 0) return findings
+    return findings?.filter((f) => f.speciesId != null && speciesFilterIds.has(f.speciesId))
+  }, [findings, speciesFilterIds])
+
   return (
     <div className="relative z-0 h-full w-full">
       {isListView ? (
-        <FindingsListView findings={findings ?? []} spots={spots ?? []} userPosition={userPosition} />
+        <FindingsListView findings={filteredFindings ?? []} spots={spots ?? []} userPosition={userPosition} />
       ) : (
         <MapContainer
           center={mapTarget.center}
@@ -205,7 +226,12 @@ export function MapView() {
               </Popup>
             </Marker>
           ))}
-          {findings && (isHeatmapView ? <FindingsHeatmap findings={findings} /> : <FindingMarkers findings={findings} />)}
+          {filteredFindings &&
+            (isHeatmapView ? (
+              <FindingsHeatmap findings={filteredFindings} />
+            ) : (
+              <FindingMarkers findings={filteredFindings} />
+            ))}
           {/* Kuratorowane grzybowiska "Szczecin i okolice" - zawsze widoczne na mapie (nie tylko
               przy otwartym SzczecinSpotsPanel), tak jak spoty użytkownika wyżej - to statyczna,
               mała lista (6 pozycji), więc brak sensu chować ją za dodatkowym przełącznikiem. */}
@@ -277,9 +303,20 @@ export function MapView() {
           onAddFinding={() => setActiveSheet('add-finding')}
           mapLayerId={mapLayerId}
           onChangeMapLayer={setMapLayerId}
-          findingsCount={findings?.length ?? 0}
+          findingsCount={filteredFindings?.length ?? 0}
           isHeatmapView={isHeatmapView}
           onToggleHeatmapView={() => setIsHeatmapView((v) => !v)}
+          speciesOptions={presentSpeciesOptions}
+          speciesFilterIds={speciesFilterIds}
+          onToggleSpeciesFilter={(id) =>
+            setSpeciesFilterIds((prev) => {
+              const next = new Set(prev)
+              if (next.has(id)) next.delete(id)
+              else next.add(id)
+              return next
+            })
+          }
+          onClearSpeciesFilter={() => setSpeciesFilterIds(new Set())}
         />
       </div>
 
@@ -328,6 +365,17 @@ export function MapView() {
           setMapTarget({ center: position, zoom: 13 })
           mapRef.current?.setView(position, 13)
         }}
+      />
+
+      <CompassPanel
+        open={activeSheet === 'compass'}
+        onOpenChange={(open) => setActiveSheet(open ? 'compass' : null)}
+        targets={[
+          ...(returnPointInfo ? [{ label: 'Auto', ...returnPointInfo }] : []),
+          ...(navigationTargetSpot && navigationInfo
+            ? [{ label: navigationTargetSpot.name, ...navigationInfo }]
+            : []),
+        ]}
       />
     </div>
   )

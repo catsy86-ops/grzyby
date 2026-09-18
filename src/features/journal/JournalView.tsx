@@ -34,7 +34,14 @@ import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { exportFindingsToPdf } from '../../utils/pdfExport'
 import { exportFindingsToGpx } from '../../utils/gpxExport'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
-import { countSpeciesDiversity, formatDuration, formatWeight, sumWeightGrams } from '../../utils/tripStats'
+import {
+  countSpeciesDiversity,
+  formatDuration,
+  formatWeight,
+  groupFindingsByMonth,
+  groupFindingsBySpeciesCount,
+  sumWeightGrams,
+} from '../../utils/tripStats'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
 import {
   AlertDialog,
@@ -46,6 +53,7 @@ import {
   AlertDialogTitle,
 } from '../../components/ui/alert-dialog'
 import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
 import { Card, CardContent } from '../../components/ui/card'
 import {
   DropdownMenu,
@@ -164,6 +172,20 @@ export function JournalView() {
     }
     return Array.from(counts.entries()).map(([name, { count, edibility }]) => ({ name, count, edibility }))
   }, [filteredFindings])
+
+  const monthlyChartData = useMemo(() => {
+    if (!filteredFindings) return []
+    return groupFindingsByMonth(filteredFindings)
+  }, [filteredFindings])
+  const hasMonthlyFindings = monthlyChartData.some((m) => m.count > 0)
+
+  const tripSpeciesBreakdown = useMemo(() => {
+    if (!selectedTrip || !filteredFindings) return []
+    return groupFindingsBySpeciesCount(filteredFindings).map(({ speciesId, count }) => ({
+      count,
+      name: (speciesId && (speciesData as Species[]).find((s) => s.id === speciesId)?.nameCommon) ?? 'Nieokreślony',
+    }))
+  }, [selectedTrip, filteredFindings])
 
   async function handleExport() {
     const blob = await exportData()
@@ -438,6 +460,15 @@ export function JournalView() {
                 <StatTile value={formatWeight(sumWeightGrams(filteredFindings))} label="waga" />
               )}
             </StatTileRow>
+            {tripSpeciesBreakdown.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {tripSpeciesBreakdown.map(({ name, count }) => (
+                  <Badge key={name} variant="secondary" className="font-normal">
+                    {name}×{count}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -473,6 +504,32 @@ export function JournalView() {
                   <Cell key={entry.name} fill={edibilityChartColor(entry.edibility)} />
                 ))}
               </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Rozkład znalezisk wg miesiąca bieżącego roku - inny wymiar niż wykres po gatunkach
+          wyżej (ten pokazuje "kiedy", nie "co"). Ukryty gdy cały rok jest pusty (np. świeże
+          konto), żeby nie pokazywać samych zer. */}
+      {hasMonthlyFindings && (
+        <div className="h-56 rounded-xl border border-border p-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyChartData}>
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }} />
+              <YAxis allowDecimals={false} tick={{ fill: 'var(--color-muted-foreground)' }} />
+              <Tooltip
+                cursor={{ fill: 'var(--color-muted)' }}
+                contentStyle={{
+                  background: 'var(--color-popover)',
+                  color: 'var(--color-popover-foreground)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                labelStyle={{ color: 'var(--color-popover-foreground)' }}
+              />
+              <Bar dataKey="count" radius={[4, 4, 0, 0]} fill="var(--color-primary)" />
             </BarChart>
           </ResponsiveContainer>
         </div>

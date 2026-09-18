@@ -33,6 +33,7 @@ export function EncyclopediaView() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<EdibilityStatus | 'wszystkie'>('wszystkie')
   const [seasonOnly, setSeasonOnly] = useState(false)
+  const [protectedOnly, setProtectedOnly] = useState(false)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [listRef] = useAutoAnimate()
 
@@ -46,9 +47,10 @@ export function EncyclopediaView() {
         s.nameCommon.toLowerCase().includes(query.toLowerCase()) ||
         s.nameLatin.toLowerCase().includes(query.toLowerCase())
       const matchesSeason = !seasonOnly || isInSeason(s.season)
-      return matchesFilter && matchesQuery && matchesSeason
+      const matchesProtected = !protectedOnly || !!s.legalProtection
+      return matchesFilter && matchesQuery && matchesSeason && matchesProtected
     })
-  }, [species, query, filter, seasonOnly])
+  }, [species, query, filter, seasonOnly, protectedOnly])
 
   return (
     // max-w rośnie na szerszych ekranach (md/lg) - dotąd apka była wszędzie ograniczona do
@@ -85,6 +87,16 @@ export function EncyclopediaView() {
           >
             <LeafIcon />
             W sezonie
+          </Toggle>
+          <Toggle
+            variant="outline"
+            pressed={protectedOnly}
+            onPressedChange={setProtectedOnly}
+            aria-label="Pokaż tylko gatunki chronione"
+            className="shrink-0 gap-1.5"
+          >
+            <ScaleIcon />
+            Chronione
           </Toggle>
         </div>
 

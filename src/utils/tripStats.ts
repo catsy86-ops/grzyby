@@ -11,6 +11,24 @@ export function countSpeciesDiversity(findings: Finding[]): number {
   return speciesIds.size
 }
 
+export interface SpeciesCount {
+  speciesId: string | null
+  count: number
+}
+
+// Rozbicie znalezisk wyprawy wg gatunku ("Borowik×7"), posortowane malejąco po liczności -
+// `countSpeciesDiversity` zwraca tylko sumę różnorodności, ale nie mówi, który gatunek zdominował
+// wyprawę. `speciesId: null` grupuje niezidentyfikowane znaleziska pod jedną pozycją.
+export function groupFindingsBySpeciesCount(findings: Finding[]): SpeciesCount[] {
+  const counts = new Map<string | null, number>()
+  for (const finding of findings) {
+    counts.set(finding.speciesId, (counts.get(finding.speciesId) ?? 0) + 1)
+  }
+  return Array.from(counts.entries())
+    .map(([speciesId, count]) => ({ speciesId, count }))
+    .sort((a, b) => b.count - a.count)
+}
+
 export function sumWeightGrams(findings: Finding[]): number {
   return findings.reduce((sum, f) => sum + (f.weightGrams ?? 0), 0)
 }
@@ -32,6 +50,28 @@ export function groupFindingsByYear(findings: Finding[]): Map<number, Finding[]>
     else byYear.set(year, [finding])
   }
   return byYear
+}
+
+const MONTH_LABELS = [
+  'Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru',
+]
+
+export interface MonthlyFindingsPoint {
+  month: string
+  count: number
+}
+
+// Rozkład znalezisk wg miesiąca kalendarzowego roku bieżącego - inaczej niż `groupFindingsByYear`
+// (porównanie lat), to pokazuje sezonowość w obrębie jednego roku ("kiedy w roku najwięcej
+// grzybów"), więc miesiące bez żadnego znaleziska też muszą się pojawić na wykresie jako 0
+// (inaczej słupki "przeskakiwałyby" nierówno odstępami).
+export function groupFindingsByMonth(findings: Finding[], year: number = new Date().getFullYear()): MonthlyFindingsPoint[] {
+  const counts = new Array<number>(12).fill(0)
+  for (const finding of findings) {
+    const date = new Date(finding.createdAt)
+    if (date.getFullYear() === year) counts[date.getMonth()]++
+  }
+  return MONTH_LABELS.map((label, i) => ({ month: label, count: counts[i] }))
 }
 
 // Zmiana procentowa względem poprzedniego roku - `null`, gdy brak danych z poprzedniego roku do

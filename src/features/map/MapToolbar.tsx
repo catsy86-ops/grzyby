@@ -1,7 +1,9 @@
 import {
   CarIcon,
+  CompassIcon,
   CrosshairIcon,
   DownloadIcon,
+  FilterIcon,
   FlameIcon,
   LayersIcon,
   ListIcon,
@@ -29,6 +31,7 @@ import { buildLocationSmsUrl } from '../../utils/locationSms'
 import type { Position } from '../../utils/bearing'
 import { MAP_LAYERS, type MapLayerId } from '../../data/mapLayers'
 import { MIN_FINDINGS_FOR_HEATMAP } from '../../utils/heatmapStyle'
+import type { Species } from '../../db/schema'
 import type { ActiveSheet } from './MapView'
 
 interface MapToolbarProps {
@@ -45,6 +48,10 @@ interface MapToolbarProps {
   findingsCount: number
   isHeatmapView: boolean
   onToggleHeatmapView: () => void
+  speciesOptions: Species[]
+  speciesFilterIds: Set<string>
+  onToggleSpeciesFilter: (id: string) => void
+  onClearSpeciesFilter: () => void
 }
 
 // Przyciski akcji + menu narzędzi (prawy dolny róg) - wydzielone z MapView (Faza 19). Menu
@@ -66,6 +73,10 @@ export function MapToolbar({
   findingsCount,
   isHeatmapView,
   onToggleHeatmapView,
+  speciesOptions,
+  speciesFilterIds,
+  onToggleSpeciesFilter,
+  onClearSpeciesFilter,
 }: MapToolbarProps) {
   const heatmapDisabled = findingsCount < MIN_FINDINGS_FOR_HEATMAP
   return (
@@ -108,6 +119,35 @@ export function MapToolbar({
               ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuGroup>
+          {speciesOptions.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="flex items-center justify-between gap-2">
+                  Gatunek
+                  {speciesFilterIds.size > 0 && (
+                    <button
+                      type="button"
+                      onClick={onClearSpeciesFilter}
+                      className="text-xs font-normal text-primary underline underline-offset-2"
+                    >
+                      Wyczyść
+                    </button>
+                  )}
+                </DropdownMenuLabel>
+                {speciesOptions.map((species) => (
+                  <DropdownMenuCheckboxItem
+                    key={species.id}
+                    checked={speciesFilterIds.has(species.id)}
+                    onCheckedChange={() => onToggleSpeciesFilter(species.id)}
+                  >
+                    <FilterIcon />
+                    {species.nameCommon}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuGroup>
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuCheckboxItem
             checked={isHeatmapView}
@@ -118,6 +158,10 @@ export function MapToolbar({
             {heatmapDisabled ? `Mapa cieplna (min. ${MIN_FINDINGS_FOR_HEATMAP} znalezisk)` : 'Mapa cieplna znalezisk'}
           </DropdownMenuCheckboxItem>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => onOpenSheet('compass')}>
+            <CompassIcon />
+            Kompas
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onOpenSheet('szczecin-spots')}>
             <TreePineIcon />
             Szczecin i okolice

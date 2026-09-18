@@ -16,6 +16,10 @@ const baseProps = {
   findingsCount: 0,
   isHeatmapView: false,
   onToggleHeatmapView: vi.fn(),
+  speciesOptions: [],
+  speciesFilterIds: new Set<string>(),
+  onToggleSpeciesFilter: vi.fn(),
+  onClearSpeciesFilter: vi.fn(),
 }
 
 describe('MapToolbar', () => {
@@ -104,5 +108,28 @@ describe('MapToolbar', () => {
     fireEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Mapa cieplna znalezisk' }))
 
     expect(onToggleHeatmapView).toHaveBeenCalledOnce()
+  })
+
+  it('menu narzędzi pozwala odfiltrować gatunek i wyczyścić filtr', () => {
+    const onToggleSpeciesFilter = vi.fn()
+    const onClearSpeciesFilter = vi.fn()
+    render(
+      <MapToolbar
+        {...baseProps}
+        speciesOptions={[
+          { id: 'borowik', nameCommon: 'Borowik szlachetny', nameLatin: '', edibility: 'jadalny', description: '', habitat: '', season: '', lookalikes: [], imageUrls: [] },
+        ]}
+        speciesFilterIds={new Set(['borowik'])}
+        onToggleSpeciesFilter={onToggleSpeciesFilter}
+        onClearSpeciesFilter={onClearSpeciesFilter}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Więcej narzędzi mapy' }))
+    fireEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Borowik szlachetny' }))
+    expect(onToggleSpeciesFilter).toHaveBeenCalledWith('borowik')
+
+    fireEvent.click(screen.getByText('Wyczyść'))
+    expect(onClearSpeciesFilter).toHaveBeenCalledOnce()
   })
 })
