@@ -19,6 +19,8 @@ import { useAppStore } from '../../stores/appStore'
 import { useSunsetCountdown } from '../../hooks/useSunsetCountdown'
 import { useMushroomOutlook } from '../../hooks/useMushroomOutlook'
 import { useMapGeolocation } from '../../hooks/useMapGeolocation'
+import { useBatteryStatus } from '../../hooks/useBatteryStatus'
+import { isPowerSaveActive } from '../../utils/powerSave'
 import { useReturnPointTracking } from '../../hooks/useReturnPointTracking'
 import { useSpotNavigation } from '../../hooks/useSpotNavigation'
 import { useTripTrail } from '../../hooks/useTripTrail'
@@ -98,8 +100,12 @@ export function MapView() {
   const findings = useLiveQuery(() => db.findings.toArray(), [])
   const spots = useLiveQuery(() => db.spots.toArray(), [])
   const { activeTripId, activeTrip } = useActiveTrip()
+  const powerSaveMode = useAppStore((s) => s.powerSaveMode)
+  const setPowerSaveMode = useAppStore((s) => s.setPowerSaveMode)
+  const batteryStatus = useBatteryStatus()
+  const powerSaveActive = isPowerSaveActive(powerSaveMode, batteryStatus)
   const { userPosition, userAccuracyMeters, recenterTarget, locateError, isPositionStale, handleLocate, clearLocateError, reportError } =
-    useMapGeolocation()
+    useMapGeolocation(powerSaveActive)
   const sunsetCountdown = useSunsetCountdown(userPosition)
   const mushroomOutlook = useMushroomOutlook(userPosition)
   // Błędy zapisu punktu powrotu (np. `getCurrentPosition()` w `handleSaveReturnPoint`) trafiają
@@ -111,7 +117,7 @@ export function MapView() {
   )
   const { navigationTargetSpot, navigationInfo, setNavigationTargetSpotId, clearNavigationTarget } =
     useSpotNavigation(userPosition, spots)
-  const { trailPoints } = useTripTrail(activeTripId, userPosition)
+  const { trailPoints } = useTripTrail(activeTripId, userPosition, powerSaveActive ? 50 : undefined)
   const mapLayerId = useAppStore((s) => s.mapLayerId)
   const setMapLayerId = useAppStore((s) => s.setMapLayerId)
   const activeMapLayer = getMapLayer(mapLayerId)
@@ -269,6 +275,8 @@ export function MapView() {
           navigationTargetSpot={navigationTargetSpot}
           navigationInfo={navigationInfo}
           onClearNavigationTarget={clearNavigationTarget}
+          powerSaveActive={powerSaveActive}
+          batteryLevel={batteryStatus?.level ?? null}
         />
       )}
 
@@ -317,6 +325,9 @@ export function MapView() {
             })
           }
           onClearSpeciesFilter={() => setSpeciesFilterIds(new Set())}
+          powerSaveMode={powerSaveMode}
+          onChangePowerSaveMode={setPowerSaveMode}
+          powerSaveActive={powerSaveActive}
         />
       </div>
 

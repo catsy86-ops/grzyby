@@ -20,6 +20,9 @@ const baseProps = {
   speciesFilterIds: new Set<string>(),
   onToggleSpeciesFilter: vi.fn(),
   onClearSpeciesFilter: vi.fn(),
+  powerSaveMode: 'auto' as const,
+  onChangePowerSaveMode: vi.fn(),
+  powerSaveActive: false,
 }
 
 describe('MapToolbar', () => {
@@ -131,5 +134,23 @@ describe('MapToolbar', () => {
 
     fireEvent.click(screen.getByText('Wyczyść'))
     expect(onClearSpeciesFilter).toHaveBeenCalledOnce()
+  })
+
+  it('menu narzędzi pozwala zmienić tryb oszczędzania baterii', () => {
+    const onChangePowerSaveMode = vi.fn()
+    render(<MapToolbar {...baseProps} onChangePowerSaveMode={onChangePowerSaveMode} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Więcej narzędzi mapy' }))
+    fireEvent.click(screen.getByText('Zawsze włączone'))
+
+    expect(onChangePowerSaveMode).toHaveBeenCalledWith('always')
+  })
+
+  it('pokazuje "(aktywne)" przy oszczędzaniu baterii, gdy jest włączone', () => {
+    render(<MapToolbar {...baseProps} powerSaveActive />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Więcej narzędzi mapy' }))
+
+    expect(screen.getByText(/Oszczędzanie baterii \(aktywne\)/)).toBeInTheDocument()
   })
 })

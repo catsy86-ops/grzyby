@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { CarIcon, ChevronDownIcon, CloudRainIcon, InfoIcon, NavigationIcon, SunsetIcon, XIcon } from 'lucide-react'
+import { BatteryLowIcon, CarIcon, ChevronDownIcon, CloudRainIcon, InfoIcon, NavigationIcon, SunsetIcon, XIcon } from 'lucide-react'
 import { Badge } from '../../components/ui/badge'
 import type { SunsetCountdown } from '../../hooks/useSunsetCountdown'
 import type { MushroomOutlook } from '../../utils/mushroomWeather'
@@ -20,6 +20,8 @@ interface MapStatusBadgesProps {
   navigationTargetSpot: Spot | null
   navigationInfo: SpotNavigationInfo | null
   onClearNavigationTarget: () => void
+  powerSaveActive: boolean
+  batteryLevel: number | null
 }
 
 // Pasek plakietek stanu (lewy górny róg mapy) - czysto prezentacyjny, wydzielony z MapView
@@ -35,11 +37,18 @@ export function MapStatusBadges({
   navigationTargetSpot,
   navigationInfo,
   onClearNavigationTarget,
+  powerSaveActive,
+  batteryLevel,
 }: MapStatusBadgesProps) {
   const [expanded, setExpanded] = useState(false)
-  const activeCount = [activeTripName, sunsetCountdown, mushroomOutlook, returnPoint, navigationTargetSpot].filter(
-    Boolean,
-  ).length
+  const activeCount = [
+    activeTripName,
+    sunsetCountdown,
+    mushroomOutlook,
+    returnPoint,
+    navigationTargetSpot,
+    powerSaveActive,
+  ].filter(Boolean).length
 
   if (activeCount === 0) return null
 
@@ -108,6 +117,20 @@ export function MapStatusBadges({
               >
                 <CloudRainIcon className="size-3.5" />
                 {mushroomOutlook.label}
+              </Badge>
+            </motion.div>
+          )}
+          {powerSaveActive && (
+            <motion.div
+              key="power-save-badge"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+            >
+              <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-xs shadow">
+                <BatteryLowIcon className="size-3.5" />
+                Oszczędzanie baterii{batteryLevel != null && ` (${Math.round(batteryLevel * 100)}%)`}
               </Badge>
             </motion.div>
           )}

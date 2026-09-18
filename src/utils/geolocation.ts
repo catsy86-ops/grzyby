@@ -39,6 +39,17 @@ export interface WatchedPosition extends Coordinates {
   accuracyMeters: number
 }
 
+export interface WatchPositionOptions {
+  // Wyłączane w trybie oszczędzania baterii (patrz useBatteryStatus/appStore.powerSaveMode) -
+  // GPS wysokiej dokładności (chip GNSS pracujący non-stop) jest głównym źródłem zużycia baterii
+  // przy wielogodzinnym śledzeniu pozycji w lesie, znacznie większym niż sam ekran czy radio.
+  enableHighAccuracy?: boolean
+  // Większy `maximumAge` pozwala przeglądarce oddać starszy, już posiadany odczyt zamiast
+  // wymuszać nowy pomiar GNSS przy każdym ticku - w trybie oszczędzania baterii pozycja
+  // odświeża się rzadziej, kosztem świeżości, w zamian za dłuższy czas pracy na baterii.
+  maximumAge?: number
+}
+
 // Ciągłe śledzenie pozycji (watchPosition) zamiast pojedynczego odpytania - standardowa technika
 // nawigacji GPS w aplikacjach webowych: pierwszy odczyt z GPS bywa niedokładny (zimny start
 // odbiornika), kolejne odczyty z tego samego strumienia szybko się poprawiają, a użytkownik w
@@ -47,6 +58,7 @@ export interface WatchedPosition extends Coordinates {
 export function watchPosition(
   onUpdate: (position: WatchedPosition) => void,
   onError: (message: string) => void,
+  options?: WatchPositionOptions,
 ): () => void {
   if (!('geolocation' in navigator)) {
     onError('Geolokalizacja nie jest wspierana przez to urządzenie')
@@ -61,7 +73,11 @@ export function watchPosition(
       })
     },
     (error) => onError(describeGeolocationError(error)),
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+    {
+      enableHighAccuracy: options?.enableHighAccuracy ?? true,
+      timeout: 15000,
+      maximumAge: options?.maximumAge ?? 5000,
+    },
   )
   return () => navigator.geolocation.clearWatch(watchId)
 }

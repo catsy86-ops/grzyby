@@ -24,7 +24,14 @@ interface AppState {
   setForestMode: (enabled: boolean) => void
   mapLayerId: MapLayerId
   setMapLayerId: (id: MapLayerId) => void
+  powerSaveMode: PowerSaveMode
+  setPowerSaveMode: (mode: PowerSaveMode) => void
 }
+
+// 'auto' włącza oszczędzanie baterii samodzielnie poniżej progu z useBatteryStatus (patrz
+// MapView) - użytkownik może to wymusić ('always', np. wie że nie ma ładowarki na cały dzień w
+// lesie) lub całkiem wyłączyć ('never', np. woli maksymalną dokładność GPS-a mimo baterii).
+export type PowerSaveMode = 'auto' | 'always' | 'never'
 
 // activeTripId jest utrwalany, żeby zamknięcie/zabicie aplikacji w trakcie wyprawy w lesie
 // (typowe przy słabej baterii/zasięgu) nie gubiło powiązania nowych znalezisk z wyprawą.
@@ -43,6 +50,8 @@ export const useAppStore = create<AppState>()(
       setForestMode: (enabled) => set({ forestMode: enabled }),
       mapLayerId: DEFAULT_MAP_LAYER_ID,
       setMapLayerId: (id) => set({ mapLayerId: id }),
+      powerSaveMode: 'auto',
+      setPowerSaveMode: (mode) => set({ powerSaveMode: mode }),
     }),
     {
       name: 'lysy-app-store',
@@ -52,6 +61,7 @@ export const useAppStore = create<AppState>()(
         navigationTargetSpotId: state.navigationTargetSpotId,
         forestMode: state.forestMode,
         mapLayerId: state.mapLayerId,
+        powerSaveMode: state.powerSaveMode,
       }),
       onRehydrateStorage: () => () => {
         // Odłożone do makrotaska: onRehydrateStorage jest wywoływane synchronicznie

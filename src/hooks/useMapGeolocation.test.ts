@@ -5,10 +5,16 @@ import { useMapGeolocation } from './useMapGeolocation'
 function mockWatchGeolocation(
   behavior: (success: PositionCallback, error: PositionErrorCallback | null | undefined) => void,
 ) {
-  const watchPositionSpy = vi.fn((success: PositionCallback, error: PositionErrorCallback | null | undefined) => {
-    behavior(success, error)
-    return 1
-  })
+  const watchPositionSpy = vi.fn(
+    (
+      success: PositionCallback,
+      error: PositionErrorCallback | null | undefined,
+      _options?: PositionOptions,
+    ) => {
+      behavior(success, error)
+      return 1
+    },
+  )
   const clearWatchSpy = vi.fn()
   vi.stubGlobal('navigator', {
     ...navigator,
@@ -134,6 +140,24 @@ describe('useMapGeolocation', () => {
     act(() => setDocumentVisibility('visible'))
     expect(watchPositionSpy).toHaveBeenCalledTimes(2)
 
+    unmount()
+  })
+
+  it('używa niższej dokładności GPS i większego maximumAge, gdy powerSave=true', () => {
+    const { watchPositionSpy } = mockWatchGeolocation(() => {})
+    const { unmount } = renderHook(() => useMapGeolocation(true))
+
+    const options = watchPositionSpy.mock.calls[0][2]
+    expect(options).toMatchObject({ enableHighAccuracy: false, maximumAge: 20000 })
+    unmount()
+  })
+
+  it('używa wysokiej dokładności GPS domyślnie (powerSave=false)', () => {
+    const { watchPositionSpy } = mockWatchGeolocation(() => {})
+    const { unmount } = renderHook(() => useMapGeolocation(false))
+
+    const options = watchPositionSpy.mock.calls[0][2]
+    expect(options).toMatchObject({ enableHighAccuracy: true, maximumAge: 5000 })
     unmount()
   })
 

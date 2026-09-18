@@ -49,6 +49,20 @@ describe('useTripTrail', () => {
     await waitFor(async () => expect(await db.tripTrailPoints.where('tripId').equals(1).count()).toBe(2))
   })
 
+  it('respektuje niestandardowy większy próg dystansu (tryb oszczędzania baterii)', async () => {
+    const { rerender } = renderHook(
+      ({ pos }: { pos: [number, number] }) => useTripTrail(1, pos, 50),
+      { initialProps: { pos: [52.0, 19.0] as [number, number] } },
+    )
+
+    await waitFor(async () => expect(await db.tripTrailPoints.where('tripId').equals(1).count()).toBe(1))
+
+    // ~30m - powyżej domyślnego progu 20m, ale poniżej niestandardowego 50m przekazanego wyżej.
+    rerender({ pos: [52.00027, 19.0] })
+    await new Promise((r) => setTimeout(r, 20))
+    expect(await db.tripTrailPoints.where('tripId').equals(1).count()).toBe(1)
+  })
+
   it('resetuje throttling przy zmianie aktywnej wyprawy', async () => {
     const { rerender } = renderHook(
       ({ tripId, pos }: { tripId: number | null; pos: [number, number] }) => useTripTrail(tripId, pos),

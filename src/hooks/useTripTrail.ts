@@ -17,8 +17,14 @@ export interface UseTripTrailResult {
 
 // Zapisuje ślad GPS podczas aktywnej wyprawy do IndexedDB i zwraca go do narysowania na mapie.
 // `userPosition` przychodzi z zewnątrz (useMapGeolocation), jak w useReturnPointTracking -
-// jedno źródło prawdy o pozycji, nie duplikowane tutaj.
-export function useTripTrail(activeTripId: number | null, userPosition: Position | null): UseTripTrailResult {
+// jedno źródło prawdy o pozycji, nie duplikowane tutaj. `minDistanceMeters` rzadszy niż domyślny
+// próg w trybie oszczędzania baterii (patrz utils/powerSave.ts) - mniej zapisów do IndexedDB
+// przy i tak mniej dokładnym (enableHighAccuracy: false) strumieniu pozycji w tym trybie.
+export function useTripTrail(
+  activeTripId: number | null,
+  userPosition: Position | null,
+  minDistanceMeters: number = MIN_RECORD_DISTANCE_METERS,
+): UseTripTrailResult {
   const lastRecordedRef = useRef<Position | null>(null)
 
   const trailRows = useLiveQuery(
@@ -61,7 +67,7 @@ export function useTripTrail(activeTripId: number | null, userPosition: Position
     if (activeTripId == null || !userPosition) return
 
     const last = lastRecordedRef.current
-    if (last && getDistanceMeters(last, userPosition) < MIN_RECORD_DISTANCE_METERS) return
+    if (last && getDistanceMeters(last, userPosition) < minDistanceMeters) return
 
     lastRecordedRef.current = userPosition
     void db.tripTrailPoints.add({
@@ -70,7 +76,7 @@ export function useTripTrail(activeTripId: number | null, userPosition: Position
       longitude: userPosition[1],
       createdAt: Date.now(),
     })
-  }, [activeTripId, userPosition])
+  }, [activeTripId, userPosition, minDistanceMeters])
 
   const trailPoints: Position[] = trailRows?.map((row) => [row.latitude, row.longitude]) ?? []
 

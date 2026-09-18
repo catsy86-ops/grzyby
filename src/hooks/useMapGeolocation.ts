@@ -27,7 +27,11 @@ export interface UseMapGeolocationResult {
 // szybko się poprawiają, a użytkownik w ruchu (np. wracając przez las) widzi aktualizującą się
 // pozycję bez ręcznego odświeżania. Mapa centruje się automatycznie tylko przy pierwszym
 // odczycie po wejściu na zakładkę - kolejne aktualizacje przesuwają tylko marker/koło dokładności.
-export function useMapGeolocation(): UseMapGeolocationResult {
+// `powerSave`: gdy `true` (patrz utils/powerSave.ts), GPS przechodzi na niższą dokładność i
+// rzadsze wymuszanie świeżego odczytu (patrz WatchPositionOptions w utils/geolocation.ts) -
+// wysokodokładny GNSS pracujący non-stop jest głównym źródłem zużycia baterii przy
+// wielogodzinnym śledzeniu pozycji w lesie.
+export function useMapGeolocation(powerSave: boolean = false): UseMapGeolocationResult {
   const [userPosition, setUserPosition] = useState<Position | null>(null)
   const [userAccuracyMeters, setUserAccuracyMeters] = useState<number | null>(null)
   const [recenterTarget, setRecenterTarget] = useState<Position | null>(null)
@@ -54,6 +58,7 @@ export function useMapGeolocation(): UseMapGeolocationResult {
           }
         },
         (message) => setLocateError(message),
+        powerSave ? { enableHighAccuracy: false, maximumAge: 20000 } : undefined,
       )
     }
 
@@ -88,7 +93,7 @@ export function useMapGeolocation(): UseMapGeolocationResult {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       clearInterval(staleCheckInterval)
     }
-  }, [])
+  }, [powerSave])
 
   function handleLocate() {
     setLocateError(null)

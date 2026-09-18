@@ -1,4 +1,5 @@
 import {
+  BatteryIcon,
   CarIcon,
   CompassIcon,
   CrosshairIcon,
@@ -14,6 +15,7 @@ import {
   PlusIcon,
   TreePineIcon,
 } from 'lucide-react'
+import type { PowerSaveMode } from '../../stores/appStore'
 import { Button } from '../../components/ui/button'
 import {
   DropdownMenu,
@@ -52,6 +54,15 @@ interface MapToolbarProps {
   speciesFilterIds: Set<string>
   onToggleSpeciesFilter: (id: string) => void
   onClearSpeciesFilter: () => void
+  powerSaveMode: PowerSaveMode
+  onChangePowerSaveMode: (mode: PowerSaveMode) => void
+  powerSaveActive: boolean
+}
+
+const POWER_SAVE_LABELS: Record<PowerSaveMode, string> = {
+  auto: 'Auto (poniżej 20% baterii)',
+  always: 'Zawsze włączone',
+  never: 'Wyłączone',
 }
 
 // Przyciski akcji + menu narzędzi (prawy dolny róg) - wydzielone z MapView (Faza 19). Menu
@@ -77,6 +88,9 @@ export function MapToolbar({
   speciesFilterIds,
   onToggleSpeciesFilter,
   onClearSpeciesFilter,
+  powerSaveMode,
+  onChangePowerSaveMode,
+  powerSaveActive,
 }: MapToolbarProps) {
   const heatmapDisabled = findingsCount < MIN_FINDINGS_FOR_HEATMAP
   return (
@@ -148,6 +162,23 @@ export function MapToolbar({
               </DropdownMenuGroup>
             </>
           )}
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="flex items-center gap-1.5">
+              <BatteryIcon className="size-3.5" />
+              Oszczędzanie baterii {powerSaveActive && '(aktywne)'}
+            </DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={powerSaveMode}
+              onValueChange={(value) => onChangePowerSaveMode(value as PowerSaveMode)}
+            >
+              {(Object.keys(POWER_SAVE_LABELS) as PowerSaveMode[]).map((mode) => (
+                <DropdownMenuRadioItem key={mode} value={mode}>
+                  {POWER_SAVE_LABELS[mode]}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuCheckboxItem
             checked={isHeatmapView}

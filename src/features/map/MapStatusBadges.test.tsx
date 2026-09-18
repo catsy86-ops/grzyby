@@ -12,6 +12,8 @@ const baseProps = {
   navigationTargetSpot: null,
   navigationInfo: null,
   onClearNavigationTarget: vi.fn(),
+  powerSaveActive: false,
+  batteryLevel: null,
 }
 
 describe('MapStatusBadges', () => {
@@ -115,6 +117,11 @@ describe('MapStatusBadges', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Zakończ nawigację do grzybowiska' }))
     expect(onClearNavigationTarget).toHaveBeenCalledOnce()
+  })
+
+  it('pokazuje plakietkę oszczędzania baterii z procentem, gdy aktywne', () => {
+    render(<MapStatusBadges {...baseProps} powerSaveActive batteryLevel={0.18} />)
+    expect(screen.getByText(/Oszczędzanie baterii \(18%\)/)).toBeInTheDocument()
   })
 
   it('zwija plakietki za przełącznikiem, gdy aktywne są 2 lub więcej naraz, i rozwija po kliknięciu', () => {
