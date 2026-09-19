@@ -10,6 +10,7 @@ import {
   MapPinnedIcon,
   MessageCircleIcon,
   MoreVerticalIcon,
+  SparklesIcon,
   TreePineIcon,
 } from 'lucide-react'
 import type { PowerSaveMode } from '../../stores/appStore'
@@ -43,6 +44,9 @@ interface MapHeaderActionsProps {
   findingsCount: number
   isHeatmapView: boolean
   onToggleHeatmapView: () => void
+  isSeasonalOverlayEnabled: boolean
+  onToggleSeasonalOverlay: () => void
+  seasonalOverlayDisabled: boolean
   speciesOptions: Species[]
   speciesFilterIds: Set<string>
   onToggleSpeciesFilter: (id: string) => void
@@ -76,6 +80,9 @@ export function MapHeaderActions({
   findingsCount,
   isHeatmapView,
   onToggleHeatmapView,
+  isSeasonalOverlayEnabled,
+  onToggleSeasonalOverlay,
+  seasonalOverlayDisabled,
   speciesOptions,
   speciesFilterIds,
   onToggleSpeciesFilter,
@@ -174,6 +181,14 @@ export function MapHeaderActions({
           >
             <FlameIcon />
             {heatmapDisabled ? `Mapa cieplna (min. ${MIN_FINDINGS_FOR_HEATMAP} znalezisk)` : 'Mapa cieplna znalezisk'}
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuCheckboxItem
+            checked={isSeasonalOverlayEnabled}
+            disabled={seasonalOverlayDisabled}
+            onCheckedChange={onToggleSeasonalOverlay}
+          >
+            <SparklesIcon />
+            {seasonalOverlayDisabled ? 'Nakładka sezonowości (brak historii)' : 'Nakładka sezonowości'}
           </DropdownMenuCheckboxItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onOpenSheet('compass')}>

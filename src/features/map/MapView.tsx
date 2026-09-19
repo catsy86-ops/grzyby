@@ -6,7 +6,7 @@ import L from 'leaflet'
 import {
   candidateMarkerIcon,
   carMarkerIcon,
-  spotMarkerIcon,
+  createSpotMarkerIcon,
   szczecinSpotMarkerIcon,
   userLocationIcon,
 } from '../../components/icons/mapMarkerIcons'
@@ -24,6 +24,7 @@ import { useBatteryStatus } from '../../hooks/useBatteryStatus'
 import { isPowerSaveActive } from '../../utils/powerSave'
 import { useReturnPointTracking } from '../../hooks/useReturnPointTracking'
 import { useSpotNavigation } from '../../hooks/useSpotNavigation'
+import { hasSeasonalMatch } from '../../utils/spotSeasonality'
 import { useTripTrail } from '../../hooks/useTripTrail'
 import { AddFindingForm } from './AddFindingForm'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
@@ -87,6 +88,10 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null)
   const [isListView, setIsListView] = useState(false)
   const [isHeatmapView, setIsHeatmapView] = useState(false)
+  // Nakładka sezonowości (MAP-ROADMAP.md #5) - lokalny, nieutrwalany stan jak isHeatmapView
+  // wyżej, ta sama logika: to widok pomocniczy do jednej sesji planowania, nie trwałe
+  // ustawienie użytkownika.
+  const [isSeasonalOverlayEnabled, setIsSeasonalOverlayEnabled] = useState(false)
   // Pusty zbiór = pokaż wszystkie gatunki (brak filtra). Filtr lokalny do widoku mapy (nie w
   // appStore) - lista widoku (FindingsListView) ma własne wyszukiwanie tekstowe, a to jest
   // osobna potrzeba: szybkie odfiltrowanie mapy do 1-2 gatunków przy dużej liczbie znalezisk.
@@ -148,6 +153,12 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
     if (speciesFilterIds.size === 0) return findings
     return findings?.filter((f) => f.speciesId != null && speciesFilterIds.has(f.speciesId))
   }, [findings, speciesFilterIds])
+  // Czy w ogóle jest sens włączać przełącznik nakładki sezonowości - bez żadnego spotu
+  // spełniającego próg (patrz hasSeasonalMatch) pierścienie i tak nigdzie by się nie pojawiły.
+  const hasAnySeasonalMatch = useMemo(() => {
+    if (!spots || !findings) return false
+    return spots.some((spot) => spot.id != null && hasSeasonalMatch(spot.id, findings))
+  }, [spots, findings])
 
   return (
     <div className="relative z-0 h-full w-full">
@@ -226,7 +237,13 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
             </Marker>
           )}
           {spots?.map((spot: Spot) => (
-            <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={spotMarkerIcon}>
+            <Marker
+              key={spot.id}
+              position={[spot.latitude, spot.longitude]}
+              icon={createSpotMarkerIcon(
+                isSeasonalOverlayEnabled && spot.id != null && hasSeasonalMatch(spot.id, findings ?? []),
+              )}
+            >
               <Popup>
                 <div className="text-sm">
                   <p className="font-semibold">{spot.name}</p>
@@ -331,6 +348,9 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
             findingsCount={filteredFindings?.length ?? 0}
             isHeatmapView={isHeatmapView}
             onToggleHeatmapView={() => setIsHeatmapView((v) => !v)}
+            isSeasonalOverlayEnabled={isSeasonalOverlayEnabled}
+            onToggleSeasonalOverlay={() => setIsSeasonalOverlayEnabled((v) => !v)}
+            seasonalOverlayDisabled={!hasAnySeasonalMatch}
             speciesOptions={presentSpeciesOptions}
             speciesFilterIds={speciesFilterIds}
             onToggleSpeciesFilter={(id) =>

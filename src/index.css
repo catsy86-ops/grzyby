@@ -591,3 +591,30 @@ body {
     animation: eq-bounce 0.9s ease-in-out infinite;
   }
 }
+
+/* Pierścień "sezon pasuje" na markerze grzybowiska (MAP-ROADMAP.md #5) - subtelny, rozchodzący
+   się pierścień za pinezką, gdy w tym miesiącu w przeszłości faktycznie coś tu znaleziono
+   (patrz utils/spotSeasonality.ts). Statyczna, jaśniejsza obwódka bez animacji przy
+   prefers-reduced-motion - sygnał zostaje, ruch znika. */
+@keyframes spot-seasonal-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+.spot-seasonal-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--color-brand-accent);
+  z-index: -1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .spot-seasonal-ring {
+    animation: spot-seasonal-ring 1.8s ease-out infinite;
+  }
+}

@@ -42,21 +42,27 @@ function pinDivIcon({
   outline = false,
   size = 34,
   label,
+  ring = false,
 }: {
   Glyph: ComponentType<{ size?: number; className?: string }>
   fill: string
   outline?: boolean
   size?: number
   label: string
+  // Pulsujący pierścień za pinezką (patrz .spot-seasonal-ring w index.css) - sygnał "w tym
+  // miesiącu historycznie tu coś rosło" (MAP-ROADMAP.md #5), dodawany per-instancja, nie
+  // wypiekany na stałe w bazowej ikonie.
+  ring?: boolean
 }) {
   const height = Math.round((size * PIN_VIEWBOX_H) / PIN_VIEWBOX_W)
   const html = renderToStaticMarkup(
     <span
       role="img"
-      aria-label={label}
+      aria-label={ring ? `${label} - sezonowo aktywne w tym miesiącu` : label}
       className="marker-pop-in-pin relative block drop-shadow-md"
       style={{ width: size, height }}
     >
+      {ring && <span className="spot-seasonal-ring" aria-hidden="true" />}
       <svg viewBox={`0 0 ${PIN_VIEWBOX_W} ${PIN_VIEWBOX_H}`} width={size} height={height}>
         <path
           d={PIN_PATH}
@@ -85,11 +91,17 @@ export const carMarkerIcon = pinDivIcon({
 })
 
 // Grzybowisko - zapisane, nazwane miejsce zbioru.
-export const spotMarkerIcon = pinDivIcon({
-  Glyph: MapPinnedIcon,
-  fill: 'var(--color-brand-accent)',
-  label: 'Grzybowisko',
-})
+// Wariant z pulsującym pierścieniem sezonowości (MAP-ROADMAP.md #5) - funkcja, nie stała, bo
+// ring jest per-spot (zależy od jego historii znalezisk w bieżącym miesiącu), więc nie da się
+// wypiec go raz jak spotMarkerIcon wyżej.
+export function createSpotMarkerIcon(seasonalMatch: boolean): L.DivIcon {
+  return pinDivIcon({
+    Glyph: MapPinnedIcon,
+    fill: 'var(--color-brand-accent)',
+    label: 'Grzybowisko',
+    ring: seasonalMatch,
+  })
+}
 
 // Zweryfikowane, kuratorowane grzybowisko "Szczecin i Okolice" (patrz data/szczecinSpots.json) -
 // osobny kolor (niebieski, nieużywany przez żaden inny marker) i glif (sosna, nie MapPinnedIcon
