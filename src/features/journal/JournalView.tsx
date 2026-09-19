@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { EmptyBasketIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
+import { useAppStore } from '../../stores/appStore'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
 import { EdibilityBadge, edibilityChartColor, speciesCardClassName } from '../../components/EdibilityBadge'
@@ -70,6 +71,7 @@ import { Skeleton } from '../../components/ui/skeleton'
 import { Textarea } from '../../components/ui/textarea'
 import { FirstAidGuide } from '../tools/FirstAidGuide'
 import { NotificationPermissionBanner } from '../../components/NotificationPermissionBanner'
+import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { AchievementsDrawer } from './AchievementsDrawer'
 import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
@@ -191,6 +193,7 @@ export function JournalView() {
   async function handleExport() {
     const blob = await exportData()
     downloadBlob(blob, `lysy-dziennik-${new Date().toISOString().slice(0, 10)}.json`)
+    useAppStore.getState().setLastExportAt(Date.now())
   }
 
   async function handleExportPdf() {
@@ -239,11 +242,26 @@ export function JournalView() {
   }
 
   async function handleDelete(id: number) {
+    const deletedFinding = findings?.find((f) => f.id === id)
+    const deletedPhotos = await db.photos.where('findingId').equals(id).toArray()
     await db.transaction('rw', db.findings, db.photos, async () => {
       await db.photos.where('findingId').equals(id).delete()
       await db.findings.delete(id)
     })
     setConfirmDeleteId(null)
+    toast.success('Usunięto znalezisko.', {
+      duration: 8000,
+      action: {
+        label: 'Cofnij',
+        onClick: () => {
+          if (!deletedFinding) return
+          void db.transaction('rw', db.findings, db.photos, async () => {
+            await db.findings.put(deletedFinding)
+            for (const photo of deletedPhotos) await db.photos.put(photo)
+          })
+        },
+      },
+    })
   }
 
   async function handleShare(finding: Finding) {
@@ -392,6 +410,7 @@ export function JournalView() {
       </div>
 
       <NotificationPermissionBanner />
+      <BackupReminderBanner onExport={handleExport} />
 
       {severeReactionFindings.length > 0 && (
         <Alert variant="destructive-soft">

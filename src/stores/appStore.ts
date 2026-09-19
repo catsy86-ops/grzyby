@@ -38,6 +38,10 @@ interface AppState {
   // wspólnego.
   ambientAudioVolume: number
   setAmbientAudioVolume: (volume: number) => void
+  // Kiedy użytkownik ostatnio zrobił pełny eksport JSON (jedyna forma backupu - apka jest 100%
+  // offline, bez chmury) - patrz utils/backupReminder.ts i BackupReminderBanner. `null` = nigdy.
+  lastExportAt: number | null
+  setLastExportAt: (timestamp: number) => void
 }
 
 // Dane karty awaryjnej (patrz features/tools/EmergencyCard.tsx) - czysto lokalne (localStorage,
@@ -83,6 +87,8 @@ export const useAppStore = create<AppState>()(
       // mowy ani alertów systemowych telefonu, więc startowa głośność jest niska, nie "połowa".
       ambientAudioVolume: 0.1,
       setAmbientAudioVolume: (volume) => set({ ambientAudioVolume: volume }),
+      lastExportAt: null,
+      setLastExportAt: (timestamp) => set({ lastExportAt: timestamp }),
     }),
     {
       name: 'lysy-app-store',
@@ -95,6 +101,7 @@ export const useAppStore = create<AppState>()(
         powerSaveMode: state.powerSaveMode,
         emergencyInfo: state.emergencyInfo,
         ambientAudioVolume: state.ambientAudioVolume,
+        lastExportAt: state.lastExportAt,
       }),
       onRehydrateStorage: () => () => {
         // Odłożone do makrotaska: onRehydrateStorage jest wywoływane synchronicznie
