@@ -7,7 +7,11 @@ import { useActiveTrip } from '../../stores/useActiveTrip'
 import { countSpeciesDiversity, formatDuration, formatWeight, isLongTrip, sumWeightGrams } from '../../utils/tripStats'
 import { showLocalNotification } from '../../utils/notifications'
 import { formatDate, formatDateTime } from '../../utils/formatDate'
+import { getCurrentPosition } from '../../utils/geolocation'
+import { buildLocationSmsUrl } from '../../utils/locationSms'
+import { isTripOverdue } from '../../utils/overdueTrip'
 import { StatTile, StatTileRow } from '../../components/StatTiles'
+import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
@@ -31,10 +35,14 @@ function randomTripStartQuip(): string {
 export function TripManager() {
   const { activeTripId, activeTrip } = useActiveTrip()
   const setActiveTripId = useAppStore((s) => s.setActiveTripId)
+  const emergencyInfo = useAppStore((s) => s.emergencyInfo)
   const [newTripName, setNewTripName] = useState('')
+  const [plannedReturnHours, setPlannedReturnHours] = useState('')
   const [showNewTripInput, setShowNewTripInput] = useState(false)
-  // Odświeża licznik czasu trwania aktywnej wyprawy co minutę, bez zapytań do bazy.
-  const [, forceTick] = useState(0)
+  const [sendingLocationSms, setSendingLocationSms] = useState(false)
+  // Odświeża licznik czasu trwania aktywnej wyprawy (i sprawdzenie przekroczenia planowanego
+  // powrotu) co minutę, bez zapytań do bazy.
+  const [now, setNow] = useState(() => Date.now())
 
   const activeTripFindings = useLiveQuery(
     () => (activeTripId != null ? db.findings.where('tripId').equals(activeTripId).toArray() : []),
@@ -56,7 +64,7 @@ export function TripManager() {
 
     checkLongTrip()
     const interval = setInterval(() => {
-      forceTick((n) => n + 1)
+      setNow(Date.now())
       checkLongTrip()
     }, 60_000)
     return () => clearInterval(interval)
@@ -64,14 +72,18 @@ export function TripManager() {
 
   async function handleStartTrip() {
     const name = newTripName.trim() || `Wyprawa ${formatDate(new Date())}`
+    const hours = Number(plannedReturnHours)
+    const plannedReturnAt = plannedReturnHours.trim() && hours > 0 ? Date.now() + hours * 60 * 60_000 : null
     const id = await db.trips.add({
       name,
       startedAt: Date.now(),
       endedAt: null,
       notes: '',
+      plannedReturnAt,
     })
     setActiveTripId(id)
     setNewTripName('')
+    setPlannedReturnHours('')
     setShowNewTripInput(false)
     toast(randomTripStartQuip())
   }
@@ -81,6 +93,21 @@ export function TripManager() {
     await db.trips.update(activeTripId, { endedAt: Date.now() })
     setActiveTripId(null)
   }
+
+  async function handleSendLocationSms() {
+    setSendingLocationSms(true)
+    try {
+      const position = await getCurrentPosition()
+      const url = buildLocationSmsUrl(position.latitude, position.longitude, emergencyInfo.contactPhone)
+      window.location.href = url
+    } catch {
+      toast.error('Nie udało się ustalić lokalizacji do wysłania SMS-a.')
+    } finally {
+      setSendingLocationSms(false)
+    }
+  }
+
+  const overdue = isTripOverdue(activeTrip?.plannedReturnAt, now)
 
   if (activeTripId != null && activeTrip) {
     return (
@@ -112,6 +139,17 @@ export function TripManager() {
               <StatTile value={formatWeight(sumWeightGrams(activeTripFindings))} label="waga" />
             )}
           </StatTileRow>
+          {overdue && (
+            <Alert variant="warning">
+              <AlertTitle>Wyprawa się przeciąga</AlertTitle>
+              <AlertDescription className="flex flex-col gap-2">
+                <span>Minął planowany czas powrotu. Jeśli wszystko OK, po prostu zakończ wyprawę.</span>
+                <Button size="sm" variant="outline" onClick={handleSendLocationSms} disabled={sendingLocationSms}>
+                  {sendingLocationSms ? 'Ustalanie pozycji…' : 'Wyślij SMS z lokalizacją'}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
     )
@@ -121,19 +159,34 @@ export function TripManager() {
     <Card size="sm">
       <CardContent>
         {showNewTripInput ? (
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                value={newTripName}
+                onChange={(e) => setNewTripName(e.target.value)}
+                placeholder="Nazwa wyprawy (opcjonalnie)"
+                className="flex-1"
+                autoFocus
+              />
+            </div>
             <Input
-              type="text"
-              value={newTripName}
-              onChange={(e) => setNewTripName(e.target.value)}
-              placeholder="Nazwa wyprawy (opcjonalnie)"
-              className="flex-1"
-              autoFocus
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.5"
+              value={plannedReturnHours}
+              onChange={(e) => setPlannedReturnHours(e.target.value)}
+              placeholder="Planowany powrót za ile godzin (opcjonalnie)"
             />
-            <Button onClick={handleStartTrip}>Start</Button>
-            <Button variant="ghost" onClick={() => setShowNewTripInput(false)}>
-              Anuluj
-            </Button>
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={handleStartTrip}>
+                Start
+              </Button>
+              <Button variant="ghost" onClick={() => setShowNewTripInput(false)}>
+                Anuluj
+              </Button>
+            </div>
           </div>
         ) : (
           <Button className="w-full" onClick={() => setShowNewTripInput(true)}>
