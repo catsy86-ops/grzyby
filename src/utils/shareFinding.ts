@@ -21,11 +21,26 @@ export function buildFindingShareText(finding: Finding): string {
   return lines.join('\n')
 }
 
-export async function shareFinding(finding: Finding): Promise<'shared' | 'copied' | 'cancelled'> {
+// MAP-ROADMAP.md #6 - "udostępnianie znaleziska jako obraz". Apka jest offline-first bez
+// własnego backendu, więc prawdziwy deep-link nie ma gdzie wskazywać - realistyczna wersja to
+// dołączenie faktycznego zdjęcia znaleziska (już skompresowanego, patrz utils/imageUtils.ts) do
+// tego samego natywnego arkusza `navigator.share`, obok tekstu. Web Share API Level 2 (pliki)
+// ma węższe wsparcie niż samo `share({text})` - stąd `canShare({ files })`, nie tylko
+// `typeof navigator.share === 'function'`, zanim spróbujemy dołączyć plik.
+function canSharePhoto(file: File): boolean {
+  return typeof navigator !== 'undefined' && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })
+}
+
+export async function shareFinding(finding: Finding, photoBlob?: Blob | null): Promise<'shared' | 'copied' | 'cancelled'> {
   const text = buildFindingShareText(finding)
   if (canShareFinding()) {
+    const photoFile = photoBlob ? new File([photoBlob], 'znalezisko.jpg', { type: photoBlob.type || 'image/jpeg' }) : null
     try {
-      await navigator.share({ title: 'Znalezisko z Łysego', text })
+      if (photoFile && canSharePhoto(photoFile)) {
+        await navigator.share({ title: 'Znalezisko z Łysego', text, files: [photoFile] })
+      } else {
+        await navigator.share({ title: 'Znalezisko z Łysego', text })
+      }
       return 'shared'
     } catch (err) {
       // Użytkownik zamknął natywny arkusz udostępniania - to nie błąd, nie ma czego zgłaszać.

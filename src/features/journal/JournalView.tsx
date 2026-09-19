@@ -247,7 +247,8 @@ export function JournalView() {
 
   async function handleShare(finding: Finding) {
     try {
-      const result = await shareFinding(finding)
+      const photo = finding.id != null ? await db.photos.where('findingId').equals(finding.id).first() : undefined
+      const result = await shareFinding(finding, photo?.blob)
       if (result === 'copied') toast.success('Skopiowano opis znaleziska do schowka.')
     } catch {
       toast.error('Nie udało się udostępnić znaleziska.')
