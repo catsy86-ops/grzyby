@@ -4,6 +4,7 @@ import {
   countSpeciesDiversity,
   formatDuration,
   formatWeight,
+  groupFindingsBySpeciesCount,
   groupFindingsByYear,
   isLongTrip,
   LONG_TRIP_THRESHOLD_MS,
@@ -36,6 +37,22 @@ describe('countSpeciesDiversity', () => {
 
   it('zwraca 0 dla pustej listy', () => {
     expect(countSpeciesDiversity([])).toBe(0)
+  })
+})
+
+describe('groupFindingsBySpeciesCount', () => {
+  it('sums quantity per species instead of counting entries, defaulting missing quantity to 1', () => {
+    const findings = [
+      makeFinding({ speciesId: 'borowik', quantity: 5 }),
+      makeFinding({ speciesId: 'borowik', quantity: 2 }),
+      makeFinding({ speciesId: 'borowik' }), // brak quantity - liczy się jako 1
+      makeFinding({ speciesId: 'kurka', quantity: 3 }),
+    ]
+    const result = groupFindingsBySpeciesCount(findings)
+    expect(result).toEqual([
+      { speciesId: 'borowik', count: 8 },
+      { speciesId: 'kurka', count: 3 },
+    ])
   })
 })
 

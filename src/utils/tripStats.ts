@@ -18,11 +18,13 @@ export interface SpeciesCount {
 
 // Rozbicie znalezisk wyprawy wg gatunku ("Borowik×7"), posortowane malejąco po liczności -
 // `countSpeciesDiversity` zwraca tylko sumę różnorodności, ale nie mówi, który gatunek zdominował
-// wyprawę. `speciesId: null` grupuje niezidentyfikowane znaleziska pod jedną pozycją.
+// wyprawę. `speciesId: null` grupuje niezidentyfikowane znaleziska pod jedną pozycją. Sumuje
+// `Finding.quantity` (liczba sztuk w danym wpisie), nie same wpisy - bez podanej liczby sztuk
+// wpis liczy się jako 1 (stary format, jedno znalezisko = jedno zdarzenie).
 export function groupFindingsBySpeciesCount(findings: Finding[]): SpeciesCount[] {
   const counts = new Map<string | null, number>()
   for (const finding of findings) {
-    counts.set(finding.speciesId, (counts.get(finding.speciesId) ?? 0) + 1)
+    counts.set(finding.speciesId, (counts.get(finding.speciesId) ?? 0) + (finding.quantity ?? 1))
   }
   return Array.from(counts.entries())
     .map(([speciesId, count]) => ({ speciesId, count }))

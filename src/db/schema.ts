@@ -35,6 +35,11 @@ export interface Finding {
   // wyprawa może dotknąć kilku grzybowisk, jedno grzybowisko odwiedzane jest w wielu wyprawach).
   spotId?: number
   weightGrams?: number
+  // Liczba sztuk znalezionych w tym jednym wpisie (np. cała kępka borowików podczas jednego
+  // zbierania) - niezależne od `weightGrams` (część grzybiarzy waży zbiór, część liczy sztuki,
+  // niektórzy oba). `undefined` = nie podano, nie zakłada się "1" - stary format Findingu (jedno
+  // znalezisko = jedno zdarzenie) zostaje domyślnym, kompatybilnym stanem.
+  quantity?: number
   // Śledzenie spożycia i ewentualnej reakcji - pomaga powiązać objawy zatrucia
   // z konkretnym znaleziskiem, zwłaszcza że toksyny niektórych gatunków działają
   // z opóźnieniem (nawet 6-24h).

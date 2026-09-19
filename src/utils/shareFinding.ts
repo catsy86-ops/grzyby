@@ -11,7 +11,7 @@ export function canShareFinding(): boolean {
 
 export function buildFindingShareText(finding: Finding): string {
   const lines = [
-    `🍄 ${finding.speciesNameGuess ?? 'Nieokreślony gatunek'}`,
+    `🍄 ${finding.speciesNameGuess ?? 'Nieokreślony gatunek'}${finding.quantity != null ? ` ×${finding.quantity}` : ''}`,
     `Znalezisko z ${formatDate(finding.createdAt)}`,
   ]
   if (finding.latitude != null && finding.longitude != null) {

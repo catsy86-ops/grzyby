@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Finding } from '../db/schema'
 import { buildFindingShareText, canShareFinding, shareFinding } from './shareFinding'
 

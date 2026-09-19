@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { toast } from 'sonner'
-import { CheckIcon, MicIcon } from 'lucide-react'
+import { CheckIcon, MicIcon, MinusIcon, PlusIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
@@ -30,6 +30,12 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   const [speciesId, setSpeciesId] = useState<string>('')
   const [spotId, setSpotId] = useState<number | ''>('')
   const [weightGrams, setWeightGrams] = useState('')
+  // Liczba sztuk - `null` = nie podano (nie zakładamy "1", patrz komentarz przy Finding.quantity
+  // w schema.ts). `flyUp` to nonce, który zmienia się przy każdym kliknięciu "+", żeby
+  // AnimatePresence za każdym razem odpaliło animację "+1" od nowa (patrz JSX niżej), nawet
+  // klikane wielokrotnie pod rząd.
+  const [quantity, setQuantity] = useState<number | null>(null)
+  const [flyUp, setFlyUp] = useState(0)
   const [notes, setNotes] = useState('')
   const [photos, setPhotos] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
@@ -84,6 +90,7 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
           tripId: activeTripId ?? undefined,
           spotId: spotId === '' ? undefined : spotId,
           weightGrams: weightGrams.trim() === '' ? undefined : Number(weightGrams),
+          quantity: quantity ?? undefined,
         })
         // Schema (Photo.findingId) wspiera wiele zdjęć per znalezisko - zapisy sekwencyjnie, żeby
         // zachować kolejność wyboru użytkownika.
@@ -201,6 +208,53 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
               className="mt-1"
             />
           </label>
+
+          <div className="block text-sm">
+            Liczba sztuk (opcjonalnie)
+            {/* Stepper zamiast pola liczbowego z klawiaturą - w terenie, w rękawiczkach, łatwiej
+                trafić w duży przycisk +/- niż wpisać cyfrę. Pływające "+1" (nowe.md, pkt o
+                mikrointerakcjach przy liczbie znalezisk) to jedyny wizualny sygnał, że kliknięcie
+                faktycznie coś zmieniło - stepper sam w sobie jest cichy. */}
+            <div className="relative mt-1 flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label="Zmniejsz liczbę sztuk"
+                disabled={quantity == null}
+                onClick={() => setQuantity((q) => (q == null || q <= 1 ? null : q - 1))}
+              >
+                <MinusIcon className="size-3.5" />
+              </Button>
+              <span className="min-w-6 text-center font-medium tabular-nums">{quantity ?? '—'}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label="Zwiększ liczbę sztuk"
+                onClick={() => {
+                  setQuantity((q) => (q ?? 0) + 1)
+                  setFlyUp((n) => n + 1)
+                }}
+              >
+                <PlusIcon className="size-3.5" />
+              </Button>
+              <AnimatePresence>
+                {flyUp > 0 && (
+                  <motion.span
+                    key={flyUp}
+                    initial={{ opacity: 1, y: 0 }}
+                    animate={{ opacity: 0, y: -18 }}
+                    transition={{ duration: 0.5 }}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-14 text-sm font-semibold text-primary"
+                  >
+                    +1
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
 
           <label className="block text-sm">
             <span className="flex items-center justify-between">

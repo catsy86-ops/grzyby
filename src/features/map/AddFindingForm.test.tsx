@@ -41,6 +41,34 @@ describe('AddFindingForm', () => {
     expect(await db.findings.count()).toBe(1)
   })
 
+  it('zapisuje liczbę sztuk ustawioną stepperem +/-, pomijając pole gdy zostaje na zerze', async () => {
+    const onClose = vi.fn()
+    render(<AddFindingForm initialPosition={[52.1, 19.5]} onClose={onClose} />)
+
+    const increment = screen.getByRole('button', { name: 'Zwiększ liczbę sztuk' })
+    fireEvent.click(increment)
+    fireEvent.click(increment)
+    fireEvent.click(increment)
+    fireEvent.click(screen.getByRole('button', { name: 'Zmniejsz liczbę sztuk' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true))
+
+    const saved = await db.findings.toArray()
+    expect(saved[0].quantity).toBe(2)
+  })
+
+  it('nie zapisuje quantity, gdy stepper nigdy nie był użyty', async () => {
+    const onClose = vi.fn()
+    render(<AddFindingForm initialPosition={[52.1, 19.5]} onClose={onClose} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true))
+
+    const saved = await db.findings.toArray()
+    expect(saved[0].quantity).toBeUndefined()
+  })
+
   it('zapisuje wiele zdjęć dla jednego znaleziska', async () => {
     const onClose = vi.fn()
     render(<AddFindingForm initialPosition={[52.1, 19.5]} onClose={onClose} />)

@@ -109,6 +109,7 @@ export function JournalView() {
   const [editSpeciesId, setEditSpeciesId] = useState('')
   const [editNotes, setEditNotes] = useState('')
   const [editWeightGrams, setEditWeightGrams] = useState('')
+  const [editQuantity, setEditQuantity] = useState('')
   const [editLatitude, setEditLatitude] = useState<number | null>(null)
   const [editLongitude, setEditLongitude] = useState<number | null>(null)
   const [editPhoto, setEditPhoto] = useState<File | null>(null)
@@ -260,6 +261,7 @@ export function JournalView() {
     setEditSpeciesId(finding.speciesId ?? '')
     setEditNotes(finding.notes)
     setEditWeightGrams(finding.weightGrams != null ? String(finding.weightGrams) : '')
+    setEditQuantity(finding.quantity != null ? String(finding.quantity) : '')
     setEditLatitude(finding.latitude)
     setEditLongitude(finding.longitude)
     setEditPhoto(null)
@@ -298,6 +300,7 @@ export function JournalView() {
           speciesNameGuess: species?.nameCommon ?? null,
           notes: editNotes,
           weightGrams: editWeightGrams.trim() === '' ? undefined : Number(editWeightGrams),
+          quantity: editQuantity.trim() === '' ? undefined : Number(editQuantity),
           latitude: editLatitude,
           longitude: editLongitude,
         })
@@ -620,6 +623,19 @@ export function JournalView() {
                     />
                   </label>
 
+                  <label className="text-sm">
+                    Liczba sztuk
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      step={1}
+                      value={editQuantity}
+                      onChange={(e) => setEditQuantity(e.target.value)}
+                      className="mt-1"
+                    />
+                  </label>
+
                   <div className="text-sm">
                     <span>Lokalizacja</span>
                     <div className="mt-1 flex items-center gap-2">
@@ -736,6 +752,7 @@ export function JournalView() {
                           </>
                         )}
                         {finding.weightGrams != null && <> · {formatWeight(finding.weightGrams)}</>}
+                        {finding.quantity != null && <> · {finding.quantity} szt.</>}
                       </p>
                       {finding.notes && <p className="mt-1 text-sm text-foreground/80">{finding.notes}</p>}
                       <ConsumptionTracker finding={finding} />
