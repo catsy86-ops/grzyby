@@ -1,13 +1,23 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { CalendarClockIcon, CheckIcon, ChevronDownIcon, CloudRainIcon, MapPinIcon, NavigationIcon, TrashIcon } from 'lucide-react'
+import {
+  CalendarClockIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  CloudRainIcon,
+  MapPinIcon,
+  NavigationIcon,
+  SparklesIcon,
+  TrashIcon,
+} from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { db } from '../../db/db'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useSpotMushroomOutlook } from '../../hooks/useSpotMushroomOutlook'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { computeSpotStats } from '../../utils/spotStats'
+import { rankSpotsBySeasonality } from '../../utils/spotRanking'
 import { formatDate } from '../../utils/formatDate'
 import { MONTH_NAMES, monthLabel } from '../../utils/spotRevisit'
 import { Badge } from '../../components/ui/badge'
@@ -222,6 +232,14 @@ export function SpotManager({
   // tego jedynym potwierdzeniem był toast z dala od miejsca, gdzie kciuk faktycznie nacisnął.
   const [justSaved, setJustSaved] = useState(false)
   const spots = useLiveQuery(() => db.spots.orderBy('createdAt').reverse().toArray(), [])
+  // Ranking sezonowy jest czysto lokalny (patrz spotRanking.ts) - liczony dla wszystkich spotów
+  // naraz jest tani, w przeciwieństwie do prognozy pogody per spot (celowo leniwej, żeby nie
+  // pruć darmowego limitu Open-Meteo).
+  const allFindings = useLiveQuery(() => db.findings.toArray(), [])
+  const rankedSpots = useMemo(
+    () => rankSpotsBySeasonality(spots ?? [], allFindings ?? []).slice(0, 3),
+    [spots, allFindings],
+  )
   // Na szerokim ekranie (lg:+) szuflada wysuwa się z prawej jako stały panel boczny zamiast
   // arkusza z dołu - na desktopie jest dość miejsca, żeby nie zasłaniać mapy pod spodem, a
   // panel z boku czyta się bardziej jak "narzędzie obok mapy" niż modal najeżdżający na widok.
@@ -271,6 +289,34 @@ export function SpotManager({
         </DrawerHeader>
 
         <div className="flex flex-col gap-3 px-4 pb-4">
+          {rankedSpots.length > 0 && (
+            <div className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <p className="flex items-center gap-1.5 text-xs font-medium text-primary">
+                <SparklesIcon className="size-3.5" />
+                Dziś warto sprawdzić
+              </p>
+              {rankedSpots.map(({ spot, matchCount }) => (
+                <div key={spot.id} className="flex items-center justify-between gap-2 text-sm">
+                  <span>
+                    {spot.name}{' '}
+                    <span className="text-xs text-muted-foreground">
+                      ({matchCount}× w tym miesiącu w poprzednich latach)
+                    </span>
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={() =>
+                      onSetNavigationTargetSpotId(navigationTargetSpotId === spot.id ? null : spot.id!)
+                    }
+                  >
+                    {navigationTargetSpotId === spot.id ? 'Nawiguję' : 'Nawiguj'}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <MapPinIcon className="size-3.5" />
