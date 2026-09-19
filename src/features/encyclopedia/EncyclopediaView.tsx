@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { LeafIcon, ChefHatIcon, ChevronDownIcon, CompassIcon, ScaleIcon } from 'lucide-react'
+import { LeafIcon, ChefHatIcon, ChevronDownIcon, CompassIcon, ScaleIcon, SwordsIcon } from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
@@ -19,6 +19,7 @@ import { getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'
 import { SHAPE_GROUP_LABEL, getSpeciesShapeGroup } from '../../utils/speciesShape'
 import { SpeciesShapeIcon } from '../../components/icons/speciesShapeIcons'
 import { ForestAssistant } from './ForestAssistant'
+import { LookalikeQuiz } from './LookalikeQuiz'
 
 const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
   { label: 'Wszystkie', value: 'wszystkie' },
@@ -35,6 +36,7 @@ export function EncyclopediaView() {
   const [seasonOnly, setSeasonOnly] = useState(false)
   const [protectedOnly, setProtectedOnly] = useState(false)
   const [assistantOpen, setAssistantOpen] = useState(false)
+  const [quizOpen, setQuizOpen] = useState(false)
   const [listRef] = useAutoAnimate()
 
   const species = speciesData as Species[]
@@ -59,10 +61,16 @@ export function EncyclopediaView() {
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-heading-md font-semibold tracking-tight">Baza wiedzy o gatunkach</h1>
-        <Button variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={() => setAssistantOpen(true)}>
-          <CompassIcon className="size-4" />
-          Leśny asystent
-        </Button>
+        <div className="flex shrink-0 gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setQuizOpen(true)}>
+            <SwordsIcon className="size-4" />
+            Quiz
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setAssistantOpen(true)}>
+            <CompassIcon className="size-4" />
+            Leśny asystent
+          </Button>
+        </div>
       </div>
 
       {/* Sticky pasek wyszukiwania/filtrów - przy przewijaniu 19 gatunków w dół wracanie na
@@ -271,6 +279,7 @@ export function EncyclopediaView() {
       </div>
 
       <ForestAssistant open={assistantOpen} onOpenChange={setAssistantOpen} />
+      <LookalikeQuiz open={quizOpen} onOpenChange={setQuizOpen} />
     </div>
   )
 }
