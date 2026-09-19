@@ -36,6 +36,7 @@ import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { exportFindingsToPdf } from '../../utils/pdfExport'
 import { exportFindingsToGpx } from '../../utils/gpxExport'
 import { exportFindingsToCsv } from '../../utils/csvExport'
+import { computeDryingRatioPercent } from '../../utils/dryingRatio'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
 import {
   countSpeciesDiversity,
@@ -113,6 +114,7 @@ export function JournalView() {
   const [editSpeciesId, setEditSpeciesId] = useState('')
   const [editNotes, setEditNotes] = useState('')
   const [editWeightGrams, setEditWeightGrams] = useState('')
+  const [editDriedWeightGrams, setEditDriedWeightGrams] = useState('')
   const [editQuantity, setEditQuantity] = useState('')
   const [editLatitude, setEditLatitude] = useState<number | null>(null)
   const [editLongitude, setEditLongitude] = useState<number | null>(null)
@@ -287,6 +289,7 @@ export function JournalView() {
     setEditSpeciesId(finding.speciesId ?? '')
     setEditNotes(finding.notes)
     setEditWeightGrams(finding.weightGrams != null ? String(finding.weightGrams) : '')
+    setEditDriedWeightGrams(finding.driedWeightGrams != null ? String(finding.driedWeightGrams) : '')
     setEditQuantity(finding.quantity != null ? String(finding.quantity) : '')
     setEditLatitude(finding.latitude)
     setEditLongitude(finding.longitude)
@@ -326,6 +329,7 @@ export function JournalView() {
           speciesNameGuess: species?.nameCommon ?? null,
           notes: editNotes,
           weightGrams: editWeightGrams.trim() === '' ? undefined : Number(editWeightGrams),
+          driedWeightGrams: editDriedWeightGrams.trim() === '' ? undefined : Number(editDriedWeightGrams),
           quantity: editQuantity.trim() === '' ? undefined : Number(editQuantity),
           latitude: editLatitude,
           longitude: editLongitude,
@@ -655,6 +659,20 @@ export function JournalView() {
                   </label>
 
                   <label className="text-sm">
+                    Waga po wysuszeniu (gramy)
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      step={1}
+                      value={editDriedWeightGrams}
+                      onChange={(e) => setEditDriedWeightGrams(e.target.value)}
+                      className="mt-1"
+                      placeholder="Opcjonalnie, gdy zbiór był suszony"
+                    />
+                  </label>
+
+                  <label className="text-sm">
                     Liczba sztuk
                     <Input
                       type="number"
@@ -745,6 +763,10 @@ export function JournalView() {
           const findingSpecies = finding.speciesId
             ? (speciesData as Species[]).find((sp) => sp.id === finding.speciesId)
             : undefined
+          const dryingPercent =
+            finding.weightGrams != null && finding.driedWeightGrams != null
+              ? computeDryingRatioPercent(finding.weightGrams, finding.driedWeightGrams)
+              : null
 
           return (
             // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (transform-based
@@ -784,6 +806,13 @@ export function JournalView() {
                         )}
                         {finding.weightGrams != null && <> · {formatWeight(finding.weightGrams)}</>}
                         {finding.quantity != null && <> · {finding.quantity} szt.</>}
+                        {finding.driedWeightGrams != null && (
+                          <>
+                            {' '}
+                            · suche {formatWeight(finding.driedWeightGrams)}
+                            {dryingPercent != null && ` (${dryingPercent}%)`}
+                          </>
+                        )}
                       </p>
                       {finding.notes && <p className="mt-1 text-sm text-foreground/80">{finding.notes}</p>}
                       <ConsumptionTracker finding={finding} />

@@ -40,6 +40,10 @@ export interface Finding {
   // niektórzy oba). `undefined` = nie podano, nie zakłada się "1" - stary format Findingu (jedno
   // znalezisko = jedno zdarzenie) zostaje domyślnym, kompatybilnym stanem.
   quantity?: number
+  // Waga po wysuszeniu - typowe u grzybiarzy suszących część zbioru. Niezależne od `weightGrams`
+  // (świeża waga z dnia zbioru), dodawane zwykle później, po dokończeniu suszenia, stąd tylko w
+  // formularzu edycji, nie przy dodawaniu znaleziska. Pozwala pokazać ubytek wagi (świeża→sucha).
+  driedWeightGrams?: number
   // Śledzenie spożycia i ewentualnej reakcji - pomaga powiązać objawy zatrucia
   // z konkretnym znaleziskiem, zwłaszcza że toksyny niektórych gatunków działają
   // z opóźnieniem (nawet 6-24h).

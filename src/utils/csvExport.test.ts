@@ -22,7 +22,7 @@ describe('buildCsv', () => {
 
   it('includes the header row', () => {
     const csv = buildCsv([])
-    expect(csv).toContain('Data,Gatunek,Ilość,Waga (g),Notatki,Szerokość,Długość')
+    expect(csv).toContain('Data,Gatunek,Ilość,Waga (g),Waga sucha (g),Notatki,Szerokość,Długość')
   })
 
   it('renders a finding row with its fields', () => {

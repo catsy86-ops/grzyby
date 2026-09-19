@@ -3,7 +3,7 @@ import type { Finding } from '../db/schema'
 // Eksport do arkusza kalkulacyjnego (Excel/Arkusze Google) - obok istniejących JSON (pełny
 // backup)/PDF (czytelny wydruk)/GPX (nawigacja). Ten sam zestaw pól co GPX/PDF, w formacie który
 // łatwo dalej filtrować/sortować w arkuszu. Czysto lokalna funkcja, zero sieci.
-const CSV_HEADER = ['Data', 'Gatunek', 'Ilość', 'Waga (g)', 'Notatki', 'Szerokość', 'Długość']
+const CSV_HEADER = ['Data', 'Gatunek', 'Ilość', 'Waga (g)', 'Waga sucha (g)', 'Notatki', 'Szerokość', 'Długość']
 
 function escapeCsvField(value: string): string {
   if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`
@@ -17,6 +17,7 @@ export function buildCsv(findings: Finding[]): string {
       f.speciesNameGuess ?? '',
       f.quantity != null ? String(f.quantity) : '',
       f.weightGrams != null ? String(f.weightGrams) : '',
+      f.driedWeightGrams != null ? String(f.driedWeightGrams) : '',
       f.notes,
       f.latitude != null ? String(f.latitude) : '',
       f.longitude != null ? String(f.longitude) : '',
