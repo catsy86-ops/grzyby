@@ -11,6 +11,7 @@ import {
   MoreVerticalIcon,
   PencilIcon,
   Share2Icon,
+  TableIcon,
   TrashIcon,
   TrophyIcon,
   UploadIcon,
@@ -34,6 +35,7 @@ import { getCurrentPosition } from '../../utils/geolocation'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { exportFindingsToPdf } from '../../utils/pdfExport'
 import { exportFindingsToGpx } from '../../utils/gpxExport'
+import { exportFindingsToCsv } from '../../utils/csvExport'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
 import {
   countSpeciesDiversity,
@@ -212,6 +214,12 @@ export function JournalView() {
     downloadBlob(blob, `lysy-${selectedTrip ? selectedTrip.name.replace(/\s+/g, '-').toLowerCase() : 'dziennik'}-${new Date().toISOString().slice(0, 10)}.gpx`)
   }
 
+  function handleExportCsv() {
+    if (!filteredFindings) return
+    const blob = exportFindingsToCsv(filteredFindings)
+    downloadBlob(blob, `lysy-${selectedTrip ? selectedTrip.name.replace(/\s+/g, '-').toLowerCase() : 'dziennik'}-${new Date().toISOString().slice(0, 10)}.csv`)
+  }
+
   async function finishImport(payload: ExportPayload) {
     try {
       const result = await importPayload(payload)
@@ -387,6 +395,10 @@ export function JournalView() {
               <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportGpx}>
                 <MapIcon />
                 Trasa (GPX)
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportCsv}>
+                <TableIcon />
+                CSV (Excel/Arkusze)
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
