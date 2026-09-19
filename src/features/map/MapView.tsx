@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Circle, MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -84,7 +84,12 @@ interface MapViewProps {
 }
 
 export function MapView({ headerActionsSlot }: MapViewProps) {
-  const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
+  // Pozwala skrótowi PWA "Dodaj znalezisko" (manifest.shortcuts w vite.config.ts, ikona apki
+  // przytrzymana na telefonie) otworzyć od razu formularz, bez przechodzenia przez zakładkę
+  // Mapa i FAB - jeden URL query param, oczyszczany zaraz po odczycie w efekcie niżej.
+  const [activeSheet, setActiveSheet] = useState<ActiveSheet>(() =>
+    new URLSearchParams(window.location.search).get('open') === 'add-finding' ? 'add-finding' : null,
+  )
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null)
   const [isListView, setIsListView] = useState(false)
   const [isHeatmapView, setIsHeatmapView] = useState(false)
@@ -111,6 +116,12 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
   // /code-review po commicie f28ba90. Ta flaga każe mu pominąć dokładnie jedno, najbliższe
   // odpalenie efektu po takim przejściu.
   const suppressNextRecenterRef = useRef(false)
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('open') === 'add-finding') {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
 
   const findings = useLiveQuery(() => db.findings.toArray(), [])
   const spots = useLiveQuery(() => db.spots.toArray(), [])

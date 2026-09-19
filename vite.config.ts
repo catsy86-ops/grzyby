@@ -41,6 +41,17 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
+        // Skrót z długiego przytrzymania ikony apki na telefonie - prosto do formularza
+        // znaleziska, bez przechodzenia przez zakładkę Mapa i FAB. Obsłużone w MapView.tsx
+        // (czyta `?open=add-finding` z URL-a przy starcie).
+        shortcuts: [
+          {
+            name: 'Dodaj znalezisko',
+            short_name: 'Dodaj',
+            url: '/?open=add-finding',
+            icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
