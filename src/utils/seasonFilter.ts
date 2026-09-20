@@ -43,12 +43,42 @@ export function parseSeasonRange(season: string): SeasonRange | null {
 // -fioletowa gama sezonu jest wizualnie jednoznacznie odrębna od skali bezpieczeństwa.
 const SEASON_DOT_CLASS = ['bg-sky-500', 'bg-teal-500', 'bg-cyan-600', 'bg-violet-500'] as const
 
+// 0=zima(gru-lut), 1=wiosna(mar-maj), 2=lato(cze-sie), 3=jesień(wrz-lis) - wydzielone z
+// `getSeasonDotClass` (liczone tam z miesiąca startowego zakresu), żeby ta sama paleta dała się
+// zastosować per-miesiąc w `SeasonCalendarStrip.tsx` (kalendarz sezonowy - Część 3 pkt 7
+// UI-QOL-ROADMAP.md), nie tylko jako jedna kropka za cały zakres.
+export function meteorologicalSeasonIndexForMonth(month: number): 0 | 1 | 2 | 3 {
+  return Math.floor(((month + 1) % 12) / 3) as 0 | 1 | 2 | 3
+}
+
+export function seasonColorClassForMonth(month: number): string {
+  return SEASON_DOT_CLASS[meteorologicalSeasonIndexForMonth(month)]
+}
+
 export function getSeasonDotClass(season: string): string {
   const range = parseSeasonRange(season)
   if (!range) return 'bg-muted-foreground'
-  // 0=zima(gru-lut), 1=wiosna(mar-maj), 2=lato(cze-sie), 3=jesień(wrz-lis)
-  const meteorologicalSeason = Math.floor(((range.startMonth + 1) % 12) / 3) as 0 | 1 | 2 | 3
-  return SEASON_DOT_CLASS[meteorologicalSeason]
+  return seasonColorClassForMonth(range.startMonth)
+}
+
+export const MONTH_ABBR_PL = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru']
+
+// Rozwija zakres tekstowy ("Czerwiec - Październik") na 12-elementową maskę miesięcy (0=styczeń),
+// z obsługą zakresu przechodzącego przez przełom roku (np. "Listopad - Luty") - ta sama logika
+// wrap-around co `isInSeason`. Nieparsowalny format zwraca same `false` (kalendarz po prostu nic
+// nie podświetli, tekstowy opis obok zostaje jedynym źródłem informacji - fail-open jak
+// `isInSeason` nie ma tu zastosowania, bo to wizualizacja, nie filtr ukrywający dane).
+export function getSeasonMonths(season: string): boolean[] {
+  const months = new Array(12).fill(false)
+  const range = parseSeasonRange(season)
+  if (!range) return months
+  if (range.startMonth <= range.endMonth) {
+    for (let m = range.startMonth; m <= range.endMonth; m++) months[m] = true
+  } else {
+    for (let m = range.startMonth; m < 12; m++) months[m] = true
+    for (let m = 0; m <= range.endMonth; m++) months[m] = true
+  }
+  return months
 }
 
 export type MeteorologicalSeason = 'zima' | 'wiosna' | 'lato' | 'jesien'

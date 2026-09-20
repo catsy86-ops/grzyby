@@ -7,6 +7,7 @@ import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
 import { EdibilityBadge, edibilityChartColor, speciesCardClassName } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
+import { SeasonCalendarStrip } from '../../components/SeasonCalendarStrip'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
@@ -252,6 +253,7 @@ export function EncyclopediaView() {
                 <CollapsibleContent>
                   <p className="mt-2 text-sm leading-relaxed text-foreground/80">{s.description}</p>
                   <p className="mt-1 text-xs text-muted-foreground">Siedlisko: {s.habitat}</p>
+                  <SeasonCalendarStrip season={s.season} />
                   <LookalikesWarning species={s} allSpecies={species} />
                   {s.preparationTips && (
                     // text-sm (nie text-xs) - porady dot. przyrządzania bywają bezpieczeństwem,

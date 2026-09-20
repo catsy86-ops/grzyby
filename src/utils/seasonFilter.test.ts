@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getCurrentSeason, isInSeason, parseSeasonRange } from './seasonFilter'
+import { getCurrentSeason, getSeasonMonths, isInSeason, parseSeasonRange } from './seasonFilter'
 import speciesData from '../data/species.json'
 
 describe('parseSeasonRange', () => {
@@ -45,6 +45,22 @@ describe('isInSeason', () => {
 
   it('domyślnie true (fail-open) dla nieparsowalnego formatu', () => {
     expect(isInSeason('cały rok', new Date(2026, 0, 1))).toBe(true)
+  })
+})
+
+describe('getSeasonMonths', () => {
+  it('zaznacza wyłącznie miesiące w standardowym zakresie', () => {
+    const months = getSeasonMonths('Czerwiec - październik')
+    expect(months).toEqual([false, false, false, false, false, true, true, true, true, true, false, false])
+  })
+
+  it('obsługuje zakres przechodzący przez przełom roku', () => {
+    const months = getSeasonMonths('Listopad - luty')
+    expect(months).toEqual([true, true, false, false, false, false, false, false, false, false, true, true])
+  })
+
+  it('zwraca same false dla nieparsowalnego formatu', () => {
+    expect(getSeasonMonths('cały rok')).toEqual(new Array(12).fill(false))
   })
 })
 
