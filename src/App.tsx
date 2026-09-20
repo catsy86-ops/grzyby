@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
-import { MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, WifiOffIcon, WrenchIcon } from 'lucide-react'
+import { BellIcon, MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, WifiOffIcon, WrenchIcon } from 'lucide-react'
 import { useAppStore, type ActiveTab } from './stores/appStore'
 import { lazyRetry } from './utils/lazyRetry'
 import { Toaster } from './components/ui/sonner'
@@ -13,6 +13,8 @@ import { TickCareGuide } from './features/tools/TickCareGuide'
 import { CookingTimer } from './features/tools/CookingTimer'
 import { EmergencyCard } from './features/tools/EmergencyCard'
 import { ToolsMenu, type ToolKey } from './features/tools/ToolsMenu'
+import { NotificationCenter } from './components/NotificationCenter'
+import { useNotificationItems } from './hooks/useNotificationItems'
 import { Logo } from './components/Logo'
 import { AnimatedHeaderTitle } from './components/AnimatedHeaderTitle'
 import { AnimatedHeaderBackground } from './components/AnimatedHeaderBackground'
@@ -177,6 +179,8 @@ function App() {
   // MapView przy pierwszym montowaniu tego wiersza (ref.current samo w sobie nie jest reaktywne).
   const [headerMapActionsEl, setHeaderMapActionsEl] = useState<HTMLDivElement | null>(null)
   const [showToolsMenu, setShowToolsMenu] = useState(false)
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false)
+  const notificationItems = useNotificationItems()
   const forestMode = useAppStore((s) => s.forestMode)
   const setForestMode = useAppStore((s) => s.setForestMode)
   useAndroidWidgetSync()
@@ -254,8 +258,30 @@ function App() {
             <Logo className="size-5" />
             <AnimatedHeaderTitle />
           </div>
-          {/* Przycisk "Narzędzia" celowo WYRAŹNIEJSZY niż ThemeToggle obok (stała, nie tylko
-              hover, obwódka/tło + pełna nieprzezroczystość ikony) - to wejście do pierwszej
+          {/* Dzwonek celowo tej samej, subtelnej wagi co ThemeToggle (hover-only, bez stałej
+              obwódki/tła) - w odróżnieniu od "Narzędzia" to nie jest wejście do osobnego zestawu
+              funkcji, tylko podgląd stanu innych, już istniejących mechanizmów (backup/wyprawa/
+              rewizyta). Plakietka pojawia się tylko, gdy faktycznie jest coś do zobaczenia. */}
+          <button
+            type="button"
+            onClick={() => setShowNotificationCenter(true)}
+            aria-label={
+              notificationItems.length > 0
+                ? `Powiadomienia (${notificationItems.length})`
+                : 'Powiadomienia'
+            }
+            className="relative flex size-9 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-[color,background-color,transform] hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50 active:translate-y-px"
+          >
+            <BellIcon className="size-4.5" />
+            {notificationItems.length > 0 && (
+              <span
+                aria-hidden="true"
+                className="absolute right-1.5 top-1.5 size-2 rounded-full bg-brand-accent ring-2 ring-primary"
+              />
+            )}
+          </button>
+          {/* Przycisk "Narzędzia" celowo WYRAŹNIEJSZY niż ThemeToggle/dzwonek obok (stała, nie
+              tylko hover, obwódka/tło + pełna nieprzezroczystość ikony) - to wejście do pierwszej
               pomocy/kleszczy/checklisty sprzętu, nie kosmetyczne ustawienie, więc nie powinno mieć
               tej samej, łatwej do przeoczenia wagi wizualnej co przełącznik motywu. */}
           <button
@@ -352,6 +378,7 @@ function App() {
         forestMode={forestMode}
         onToggleForestMode={() => setForestMode(!forestMode)}
       />
+      <NotificationCenter open={showNotificationCenter} onOpenChange={setShowNotificationCenter} />
     </div>
   )
 }
