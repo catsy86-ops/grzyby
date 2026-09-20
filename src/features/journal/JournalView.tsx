@@ -2,11 +2,11 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'sonner'
 import {
   DownloadIcon,
   FileTextIcon,
+  ListFilterIcon,
   MapIcon,
   MoreVerticalIcon,
   PencilIcon,
@@ -38,6 +38,8 @@ import { exportFindingsToGpx } from '../../utils/gpxExport'
 import { exportFindingsToCsv } from '../../utils/csvExport'
 import { computeDryingRatioPercent } from '../../utils/dryingRatio'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
+import { isWithinDateRange, type SortOrder } from '../../utils/journalFilters'
+import { rankSpotsByFindingCount } from '../../utils/spotStats'
 import {
   countSpeciesDiversity,
   formatDuration,
@@ -65,6 +67,8 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu'
@@ -78,6 +82,7 @@ import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { AchievementsDrawer } from './AchievementsDrawer'
 import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
+import { JournalBarChart } from './JournalBarChart'
 import { SeasonSummary } from './SeasonSummary'
 import { TripManager } from './TripManager'
 import { TripsHistory } from './TripsHistory'
@@ -94,10 +99,11 @@ const PAGE_SIZE = 100
 
 export function JournalView() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
-  const pageQueryResult = useLiveQuery(
-    () => db.findings.orderBy('createdAt').reverse().limit(visibleCount + 1).toArray(),
-    [visibleCount],
-  )
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest')
+  const pageQueryResult = useLiveQuery(() => {
+    const query = db.findings.orderBy('createdAt')
+    return (sortOrder === 'newest' ? query.reverse() : query).limit(visibleCount + 1).toArray()
+  }, [visibleCount, sortOrder])
   const hasMoreFindings = (pageQueryResult?.length ?? 0) > visibleCount
   const findings = pageQueryResult && (hasMoreFindings ? pageQueryResult.slice(0, visibleCount) : pageQueryResult)
 
@@ -110,6 +116,8 @@ export function JournalView() {
 
   const [tripFilter, setTripFilter] = useState<TripFilter>('wszystkie')
   const [searchQuery, setSearchQuery] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editSpeciesId, setEditSpeciesId] = useState('')
   const [editNotes, setEditNotes] = useState('')
@@ -152,8 +160,11 @@ export function JournalView() {
           f.notes.toLowerCase().includes(query),
       )
     }
+    if (dateFrom || dateTo) {
+      result = result.filter((f) => isWithinDateRange(f.createdAt, dateFrom, dateTo))
+    }
     return result
-  }, [findings, tripFilter, searchQuery])
+  }, [findings, tripFilter, searchQuery, dateFrom, dateTo])
 
   const confirmDeleteFinding = useMemo(
     () => (confirmDeleteId != null ? findings?.find((f) => f.id === confirmDeleteId) : undefined),
@@ -177,8 +188,18 @@ export function JournalView() {
       const existing = counts.get(label)
       counts.set(label, { count: (existing?.count ?? 0) + 1, edibility: species?.edibility })
     }
-    return Array.from(counts.entries()).map(([name, { count, edibility }]) => ({ name, count, edibility }))
+    return Array.from(counts.entries()).map(([name, { count, edibility }]) => ({
+      name,
+      count,
+      fill: edibilityChartColor(edibility),
+    }))
   }, [filteredFindings])
+
+  const spots = useLiveQuery(() => db.spots.toArray(), [])
+  const spotChartData = useMemo(() => {
+    if (!filteredFindings || !spots) return []
+    return rankSpotsByFindingCount(filteredFindings, spots)
+  }, [filteredFindings, spots])
 
   const monthlyChartData = useMemo(() => {
     if (!filteredFindings) return []
@@ -466,17 +487,82 @@ export function JournalView() {
           Tu zostaje samo wyszukiwanie (bez filtra wypraw z TripsHistory poniżej), żeby nie
           przypinać zbyt dużej, rzadziej używanej sekcji nad długą listą znalezisk. */}
       <div className="sticky top-0 z-10 -mx-4 bg-background/95 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-        <Input
-          type="search"
-          placeholder="Szukaj po gatunku lub notatkach..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {/* Liczba wyników pojawia się dopiero przy aktywnym wyszukiwaniu (nie duplikuje kafla
-            "znalezisk" z karty wyprawy poniżej) i "odbija się" animowaną liczbą przy każdej
+        <div className="flex gap-2">
+          <Input
+            type="search"
+            placeholder="Szukaj po gatunku lub notatkach..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="relative shrink-0"
+                  aria-label="Sortowanie i zakres dat"
+                />
+              }
+            >
+              <ListFilterIcon />
+              {(sortOrder !== 'newest' || dateFrom || dateTo) && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-primary"
+                />
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Sortowanie</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
+                  <DropdownMenuRadioItem value="newest">Najnowsze najpierw</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="oldest">Najstarsze najpierw</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="flex items-center justify-between gap-2">
+                  Zakres dat
+                  {(dateFrom || dateTo) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDateFrom('')
+                        setDateTo('')
+                      }}
+                      className="text-xs font-normal text-primary underline underline-offset-2"
+                    >
+                      Wyczyść
+                    </button>
+                  )}
+                </DropdownMenuLabel>
+                <div className="flex flex-col gap-2 px-2 pb-2">
+                  <label className="block text-xs text-muted-foreground">
+                    Od
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="mt-1"
+                    />
+                  </label>
+                  <label className="block text-xs text-muted-foreground">
+                    Do
+                    <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="mt-1" />
+                  </label>
+                </div>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        {/* Liczba wyników pojawia się dopiero przy aktywnym wyszukiwaniu/filtrze (nie duplikuje
+            kafla "znalezisk" z karty wyprawy poniżej) i "odbija się" animowaną liczbą przy każdej
             zmianie zapytania - natychmiastowa informacja zwrotna podczas pisania, nie dopiero po
             policzeniu kart w liście. */}
-        {searchQuery.trim() !== '' && filteredFindings && (
+        {(searchQuery.trim() !== '' || dateFrom || dateTo) && filteredFindings && (
           <p
             aria-label={`Liczba wyników: ${filteredFindings.length}`}
             className="mt-1.5 flex items-baseline gap-1 text-xs text-muted-foreground"
@@ -537,67 +623,22 @@ export function JournalView() {
         </Card>
       )}
 
-      {chartData.length > 0 && (
-        <div className="h-56 rounded-xl border border-border p-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }}
-                interval={0}
-                angle={-20}
-                textAnchor="end"
-              />
-              <YAxis allowDecimals={false} tick={{ fill: 'var(--color-muted-foreground)' }} />
-              <Tooltip
-                cursor={{ fill: 'var(--color-muted)' }}
-                contentStyle={{
-                  background: 'var(--color-popover)',
-                  color: 'var(--color-popover-foreground)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-                labelStyle={{ color: 'var(--color-popover-foreground)' }}
-              />
-              {/* Kolor słupka wg jadalności gatunku (skala z EdibilityBadge) zamiast płaskiego
-                  zielonego - wykres pokazuje na pierwszy rzut oka nie tylko liczbę zbiorów, ale
-                  i to, czy sezon był "bezpieczny" (przewaga zielonych słupków) czy nie. */}
-              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                {chartData.map((entry) => (
-                  <Cell key={entry.name} fill={edibilityChartColor(entry.edibility)} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      {/* Kolor słupka wg jadalności gatunku (skala z EdibilityBadge, patrz `chartData`) zamiast
+          płaskiego zielonego - wykres pokazuje na pierwszy rzut oka nie tylko liczbę zbiorów, ale
+          i to, czy sezon był "bezpieczny" (przewaga zielonych słupków) czy nie. */}
+      {chartData.length > 0 && <JournalBarChart data={chartData} angledLabels />}
 
       {/* Rozkład znalezisk wg miesiąca bieżącego roku - inny wymiar niż wykres po gatunkach
           wyżej (ten pokazuje "kiedy", nie "co"). Ukryty gdy cały rok jest pusty (np. świeże
           konto), żeby nie pokazywać samych zer. */}
       {hasMonthlyFindings && (
-        <div className="h-56 rounded-xl border border-border p-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyChartData}>
-              <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }} />
-              <YAxis allowDecimals={false} tick={{ fill: 'var(--color-muted-foreground)' }} />
-              <Tooltip
-                cursor={{ fill: 'var(--color-muted)' }}
-                contentStyle={{
-                  background: 'var(--color-popover)',
-                  color: 'var(--color-popover-foreground)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-                labelStyle={{ color: 'var(--color-popover-foreground)' }}
-              />
-              <Bar dataKey="count" radius={[4, 4, 0, 0]} fill="var(--color-primary)" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <JournalBarChart data={monthlyChartData.map((m) => ({ name: m.month, count: m.count }))} />
       )}
+
+      {/* "Najlepsze miejscówki" - inny wymiar niż wykres po gatunkach/miesiącach wyżej (ten
+          pokazuje "gdzie"). Ukryty przy braku znalezisk powiązanych z zapisanym grzybowiskiem
+          (np. świeże konto bez zapisanych spotów). */}
+      {spotChartData.length > 0 && <JournalBarChart data={spotChartData} angledLabels />}
 
       {filteredFindings === undefined && (
         <div className="flex flex-col gap-3">

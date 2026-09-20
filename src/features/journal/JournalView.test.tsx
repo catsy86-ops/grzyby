@@ -348,6 +348,77 @@ describe('JournalView - eksport PDF', () => {
   })
 })
 
+describe('JournalView - sortowanie i filtr dat', () => {
+  beforeEach(async () => {
+    await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
+      await db.findings.clear()
+      await db.trips.clear()
+      await db.photos.clear()
+    })
+  })
+
+  afterEach(() => cleanup())
+
+  it('domyślnie sortuje najnowsze znaleziska najpierw', async () => {
+    await addFinding({ notes: 'Stary', createdAt: 1000 })
+    await addFinding({ notes: 'Nowy', createdAt: 2000 })
+
+    render(<JournalView />)
+
+    const entries = await screen.findAllByText(/^(Stary|Nowy)$/)
+    expect(entries.map((e) => e.textContent)).toEqual(['Nowy', 'Stary'])
+  })
+
+  it('zmienia sortowanie na najstarsze najpierw po wyborze z menu', async () => {
+    await addFinding({ notes: 'Stary', createdAt: 1000 })
+    await addFinding({ notes: 'Nowy', createdAt: 2000 })
+
+    render(<JournalView />)
+    await screen.findByText('Nowy')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i zakres dat' }))
+    fireEvent.click(await screen.findByText('Najstarsze najpierw'))
+
+    await waitFor(() => {
+      const entries = screen.getAllByText(/^(Stary|Nowy)$/)
+      expect(entries.map((e) => e.textContent)).toEqual(['Stary', 'Nowy'])
+    })
+  })
+
+  it('filtruje znaleziska po zakresie dat', async () => {
+    await addFinding({ notes: 'Za wcześnie', createdAt: new Date('2026-01-01T12:00:00').getTime() })
+    await addFinding({ notes: 'W zakresie', createdAt: new Date('2026-06-15T12:00:00').getTime() })
+    await addFinding({ notes: 'Za późno', createdAt: new Date('2026-12-01T12:00:00').getTime() })
+
+    render(<JournalView />)
+    await screen.findByText('Za wcześnie')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i zakres dat' }))
+    fireEvent.change(screen.getByLabelText('Od'), { target: { value: '2026-06-01' } })
+    fireEvent.change(screen.getByLabelText('Do'), { target: { value: '2026-06-30' } })
+
+    await waitFor(() => {
+      expect(screen.getByText('W zakresie')).toBeInTheDocument()
+      expect(screen.queryByText('Za wcześnie')).not.toBeInTheDocument()
+      expect(screen.queryByText('Za późno')).not.toBeInTheDocument()
+    })
+  })
+
+  it('czyści zakres dat po kliknięciu "Wyczyść"', async () => {
+    await addFinding({ notes: 'Poza zakresem', createdAt: new Date('2026-01-01T12:00:00').getTime() })
+
+    render(<JournalView />)
+    await screen.findByText('Poza zakresem')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i zakres dat' }))
+    fireEvent.change(screen.getByLabelText('Od'), { target: { value: '2026-06-01' } })
+    await waitFor(() => expect(screen.queryByText('Poza zakresem')).not.toBeInTheDocument())
+
+    fireEvent.click(screen.getByText('Wyczyść'))
+    await waitFor(() => expect(screen.getByText('Poza zakresem')).toBeInTheDocument())
+  })
+})
+
 describe('JournalView - ostrzeżenie o ciężkiej reakcji', () => {
   beforeEach(async () => {
     await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
