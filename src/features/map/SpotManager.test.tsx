@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../db/db'
 import { SpotManager } from './SpotManager'
 import * as geolocation from '../../utils/geolocation'
+import * as exportImport from '../../utils/exportImport'
 
 vi.mock('../../utils/geolocation', () => ({
   getCurrentPosition: vi.fn(),
@@ -241,6 +242,58 @@ describe('SpotManager', () => {
 
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByText('Sprawdzić ponownie w:')).toBeInTheDocument()
+  })
+
+  it('pokazuje link "Otwórz w Mapach" ze współrzędnymi grzybowiska', async () => {
+    await db.spots.add({ name: 'Nawigowalny', latitude: 53.4, longitude: 14.5, notes: '', createdAt: 1 })
+
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
+
+    const link = await screen.findByRole('link', { name: 'Otwórz w Mapach: Nawigowalny' })
+    expect(link).toHaveAttribute('href', 'https://www.google.com/maps?q=53.4,14.5')
+    expect(link).toHaveAttribute('target', '_blank')
+  })
+
+  it('pokazuje przycisk dodania do kalendarza tylko gdy grzybowisko ma flagę "sprawdzić w sezonie", i pobiera plik .ics po kliknięciu', async () => {
+    const downloadSpy = vi.spyOn(exportImport, 'downloadBlob').mockImplementation(() => {})
+    await db.spots.add({ name: 'Bez flagi', latitude: 1, longitude: 1, notes: '', createdAt: 1 })
+    await db.spots.add({
+      name: 'Z flagą',
+      latitude: 2,
+      longitude: 2,
+      notes: '',
+      createdAt: 1,
+      revisitMonth: 9,
+      revisitFlaggedAt: Date.now() - 320 * 24 * 60 * 60_000,
+    })
+
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: /Dodaj przypomnienie do kalendarza: Bez flagi/ })).not.toBeInTheDocument()
+
+    const icsButton = await screen.findByRole('button', { name: 'Dodaj przypomnienie do kalendarza: Z flagą' })
+    fireEvent.click(icsButton)
+
+    expect(downloadSpy).toHaveBeenCalledOnce()
+    const [blob, filename] = downloadSpy.mock.calls[0]
+    expect(filename).toBe('grzybowisko-z-flagą.ics')
+    expect(blob.type).toBe('text/calendar;charset=utf-8')
   })
 
   it('pokazuje pustą listę, gdy nie ma zapisanych grzybowisk', async () => {

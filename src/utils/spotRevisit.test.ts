@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { monthLabel, shouldRemindRevisit } from './spotRevisit'
+import { monthLabel, nextRevisitDate, shouldRemindRevisit } from './spotRevisit'
 
 describe('monthLabel', () => {
   it('zwraca polską nazwę miesiąca dla wartości 1-12', () => {
@@ -26,5 +26,22 @@ describe('shouldRemindRevisit', () => {
     const flaggedAt = new Date(2025, 8, 1).getTime() // wrzesień 2025
     const now = new Date(2026, 8, 15).getTime() // wrzesień 2026
     expect(shouldRemindRevisit(9, flaggedAt, now)).toBe(true)
+  })
+})
+
+describe('nextRevisitDate', () => {
+  it('przesuwa na kolejny rok, gdy oflagowany miesiąc w tym samym roku nie spełnia progu ~10 miesięcy', () => {
+    const flaggedAt = new Date(2026, 8, 1).getTime() // wrzesień 2026
+    const date = nextRevisitDate(9, flaggedAt) // wrzesień - ten sam miesiąc co flaga
+    expect(date.getFullYear()).toBe(2027)
+    expect(date.getMonth()).toBe(8)
+    expect(date.getDate()).toBe(1)
+  })
+
+  it('zostaje w tym samym roku, gdy oflagowany miesiąc już spełnia próg ~10 miesięcy', () => {
+    const flaggedAt = new Date(2025, 8, 1).getTime() // wrzesień 2025
+    const date = nextRevisitDate(9, flaggedAt) // wrzesień 2026 - prawie rok później
+    expect(date.getFullYear()).toBe(2026)
+    expect(date.getMonth()).toBe(8)
   })
 })

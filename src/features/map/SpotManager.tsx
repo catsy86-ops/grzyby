@@ -3,9 +3,11 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
   CalendarClockIcon,
+  CalendarPlusIcon,
   CheckIcon,
   ChevronDownIcon,
   CloudRainIcon,
+  ExternalLinkIcon,
   MapPinIcon,
   NavigationIcon,
   SparklesIcon,
@@ -16,10 +18,13 @@ import { db } from '../../db/db'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useSpotMushroomOutlook } from '../../hooks/useSpotMushroomOutlook'
 import { getCurrentPosition } from '../../utils/geolocation'
+import { downloadBlob } from '../../utils/exportImport'
+import { buildSpotRevisitIcs } from '../../utils/icsExport'
+import { buildGoogleMapsUrl } from '../../utils/mapsLink'
 import { computeSpotStats } from '../../utils/spotStats'
 import { rankSpotsBySeasonality } from '../../utils/spotRanking'
 import { formatDate } from '../../utils/formatDate'
-import { MONTH_NAMES, monthLabel } from '../../utils/spotRevisit'
+import { MONTH_NAMES, monthLabel, nextRevisitDate } from '../../utils/spotRevisit'
 import { Badge } from '../../components/ui/badge'
 import {
   AlertDialog,
@@ -55,6 +60,7 @@ function SpotRow({
   latitude,
   longitude,
   revisitMonth,
+  revisitFlaggedAt,
   isNavigationTarget,
   onToggleNavigationTarget,
 }: {
@@ -64,6 +70,7 @@ function SpotRow({
   latitude: number
   longitude: number
   revisitMonth: number | undefined
+  revisitFlaggedAt: number | undefined
   isNavigationTarget: boolean
   onToggleNavigationTarget: () => void
 }) {
@@ -86,6 +93,16 @@ function SpotRow({
     longitude,
     outlookExpanded,
   )
+
+  function handleDownloadIcs() {
+    if (revisitMonth == null || revisitFlaggedAt == null) return
+    const date = nextRevisitDate(revisitMonth, revisitFlaggedAt)
+    const ics = buildSpotRevisitIcs(name, date)
+    downloadBlob(
+      new Blob([ics], { type: 'text/calendar;charset=utf-8' }),
+      `grzybowisko-${name.replace(/\s+/g, '-').toLowerCase()}.ics`,
+    )
+  }
 
   async function handleDelete() {
     await db.transaction('rw', db.spots, db.findings, async () => {
@@ -128,6 +145,15 @@ function SpotRow({
           >
             <NavigationIcon className="size-4" />
           </button>
+          <a
+            href={buildGoogleMapsUrl(latitude, longitude)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Otwórz w Mapach: ${name}`}
+            className="rounded p-1 text-muted-foreground outline-none transition-transform hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px"
+          >
+            <ExternalLinkIcon className="size-4" />
+          </a>
           <button
             type="button"
             aria-label={
@@ -141,6 +167,16 @@ function SpotRow({
           >
             <CalendarClockIcon className="size-4" />
           </button>
+          {revisitMonth != null && revisitFlaggedAt != null && (
+            <button
+              type="button"
+              aria-label={`Dodaj przypomnienie do kalendarza: ${name}`}
+              onClick={handleDownloadIcs}
+              className="rounded p-1 text-muted-foreground outline-none transition-transform hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px"
+            >
+              <CalendarPlusIcon className="size-4" />
+            </button>
+          )}
           <button
             type="button"
             aria-label={`Usuń grzybowisko: ${name}`}
@@ -361,6 +397,7 @@ export function SpotManager({
                 latitude={spot.latitude}
                 longitude={spot.longitude}
                 revisitMonth={spot.revisitMonth}
+                revisitFlaggedAt={spot.revisitFlaggedAt}
                 isNavigationTarget={navigationTargetSpotId === spot.id}
                 onToggleNavigationTarget={() =>
                   onSetNavigationTargetSpotId(navigationTargetSpotId === spot.id ? null : spot.id!)

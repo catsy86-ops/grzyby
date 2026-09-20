@@ -1,3 +1,5 @@
+import { buildGoogleMapsUrl } from './mapsLink'
+
 // Natywny URI `sms:` otwiera domyślną aplikację SMS telefonu z gotową treścią - użytkownik sam
 // wybiera odbiorcę i wysyła. Żadne dane nie przechodzą przez serwer tej apki (zero backendu).
 export function buildLocationSmsUrl(
@@ -7,7 +9,7 @@ export function buildLocationSmsUrl(
   userAgent: string = typeof navigator !== 'undefined' ? navigator.userAgent : '',
 ): string {
   const body = encodeURIComponent(
-    `Moja lokalizacja: ${latitude.toFixed(5)}, ${longitude.toFixed(5)} - https://www.google.com/maps?q=${latitude},${longitude}`,
+    `Moja lokalizacja: ${latitude.toFixed(5)}, ${longitude.toFixed(5)} - ${buildGoogleMapsUrl(latitude, longitude)}`,
   )
   const recipient = recipientPhone.trim()
   // iOS historycznie wymaga `&` zamiast `?` przed `body`, gdy numer odbiorcy jest pusty -
