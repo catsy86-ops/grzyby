@@ -13,6 +13,35 @@ zakres i priorytet.
 
 ---
 
+## Faza 25 - Domknięcie kodowalnych punktów UI-QOL-ROADMAP.md (2026-09-20, "rób wszystko po kolei")
+
+- [x] **Centralny panel powiadomień** (Część 2 pkt 7) - dzwonek w nagłówku (`NotificationCenter.tsx`,
+      `utils/notificationCenter.ts`, `hooks/useNotificationItems.ts`), agreguje backup/przeciągającą
+      się wyprawę/gotowe rewizyty w jedną listę. Celowo pomija ostrzeżenie sztormowe (wymagałoby
+      powtórnego fetchu pogody).
+- [x] **Wizualny kalendarz sezonowy per gatunek** (reszta Część 3 pkt 7) - `SeasonCalendarStrip.tsx`
+      w sekcji "Szczegóły" karty Atlasu, ta sama paleta meteorologiczna co istniejąca kropka sezonu.
+
+**Zatrzymane, wymaga decyzji użytkownika, NIE zaimplementowane:**
+
+- **PWA `share_target`** (Część 3 pkt 8) - sprawdzony `vite.config.ts`: PWA działa w domyślnym
+  trybie `generateSW` (deklaratywny `runtimeCaching`, bez własnego kodu Service Workera).
+  `share_target` wymaga przechwycenia żądania POST z `multipart/form-data` w fetch-handlerze SW -
+  niemożliwe w `generateSW`, wymaga migracji do `injectManifest` (własny `src/sw.ts`, ręczne
+  `precacheAndRoute`). To ingerencja w fundament apki (gwarancja "100% offline" z nagłówka tego
+  dokumentu), nie kosmetyczna zmiana - i tak niski priorytet (słabe wsparcie iOS Safari, brak
+  możliwości przetestowania end-to-end bez realnego telefonu). Nie podjęto bez wyraźnej zgody.
+- **Rozszerzenie atlasu gatunków** (Część 3 pkt 6) - praca redakcyjna wymagająca realnej wiedzy
+  mykologicznej (opisy, jadalność, sobowtóry) w domenie, gdzie błąd ma konsekwencje bezpieczeństwa
+  (zatrucie). Nie generowane automatycznie bez weryfikowalnego źródła - do zrobienia z
+  użytkownikiem, nie zamiast niego.
+
+Wszystko powyższe (2 zrobione punkty) tsc/oxlint/vitest(605)/build czyste, wypchnięte.
+**Cała kodowalna, niskoryzykowna część `UI-QOL-ROADMAP.md` jest teraz zamknięta** - zostają tylko
+te dwa punkty wymagające jawnej decyzji.
+
+---
+
 ## Faza 24 - Dalsza realizacja UI-QOL-ROADMAP.md (2026-09-20, "leć dalej z roadmapą")
 
 Kontynuacja Fazy 23 - pozostałe punkty "warte zrobienia szybko" plus jeden z "większe, do
