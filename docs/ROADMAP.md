@@ -13,6 +13,25 @@ zakres i priorytet.
 
 ---
 
+## Faza 22 - Odznaki z nowe.md + plan rozbudowy UI/QoL/funkcji (2026-09-20)
+
+Na prośbę "zrób analizę i przedstaw plan rozbudowy w UI, QoL i potrzebne funkcje" (konta+sync i
+tryb rodzinny świadomie zostawione na później). Audyt `nowe.md` wykazał jedną realną lukę wobec
+oryginalnego brainstormu, potem trzy równoległe eksploracje agentów (UI/wizualne, QoL/tarcie w
+workflow, brakujące funkcje/treść) na bazie aktualnego kodu, nie pamięci.
+
+- [x] **5 brakujących odznak z `nowe.md`**: "Pierwsza wyprawa", "Weteran szlaku" (10 wypraw),
+      "Jesienny grzybiarz", "Paparazzo" (25 zdjęć), "Grzybobranie w deszczu" (nowe pole
+      `Trip.wasRainy`, jednorazowy best-effort odczyt pogody Open-Meteo przy końcu wyprawy).
+- [x] **Plan rozbudowy UI/QoL/funkcji spisany w `docs/UI-QOL-ROADMAP.md`** - nic z niego nie
+      zaimplementowane, materiał do wyboru. Najwyżej oceniony strat/koszt: scalenie rozproszonych
+      dziś ustawień w jedno miejsce (wyszło niezależnie z dwóch audytów), trzy drobne poprawki
+      `AddFindingForm.tsx` (autoFocus, zapamiętany gatunek, ostrzeżenie o duplikacie), testy dla
+      `TripManager`/`useOverdueTripReminder`/`useStormWarning` (dziś zero pokrycia, w tym świeżo
+      dodanej logiki `wasRainy`).
+
+---
+
 ## Faza 21 - Wizualny polish mapy/UI + plan rozbudowy mapy (2026-09-17)
 
 Na prośbę "popraw wizualnie mapę" + "co zostało do zrobienia" + "uruchom agentów i zaproponuj
