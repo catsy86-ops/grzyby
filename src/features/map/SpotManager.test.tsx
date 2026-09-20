@@ -296,6 +296,82 @@ describe('SpotManager', () => {
     expect(blob.type).toBe('text/calendar;charset=utf-8')
   })
 
+  it('nie pokazuje przycisku scalania, gdy jest tylko jedno grzybowisko', async () => {
+    await db.spots.add({ name: 'Samotne', latitude: 1, longitude: 1, notes: '', createdAt: 1 })
+
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
+
+    await screen.findByText('Samotne')
+    expect(screen.queryByRole('button', { name: /Scal grzybowisko/ })).not.toBeInTheDocument()
+  })
+
+  it('scala grzybowisko z wybranym docelowym: przenosi znaleziska i usuwa źródłowe', async () => {
+    const sourceId = await db.spots.add({ name: 'Źródłowe', latitude: 1, longitude: 1, notes: '', createdAt: 1 })
+    const targetId = await db.spots.add({ name: 'Docelowe', latitude: 2, longitude: 2, notes: '', createdAt: 1 })
+    const findingId = await db.findings.add({
+      speciesId: null,
+      speciesNameGuess: null,
+      latitude: 1,
+      longitude: 1,
+      notes: '',
+      createdAt: 1,
+      spotId: sourceId,
+    })
+
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Scal grzybowisko: Źródłowe' }))
+    expect(await screen.findByText('Scal "Źródłowe" z innym grzybowiskiem')).toBeInTheDocument()
+
+    const trigger = screen.getByRole('combobox')
+    fireEvent.pointerDown(trigger, { button: 0, pointerId: 1 })
+    fireEvent.click(trigger)
+    const option = await screen.findByRole('option', { name: 'Docelowe' })
+    fireEvent.pointerDown(option, { button: 0, pointerId: 1 })
+    fireEvent.click(option)
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Scal' })).not.toBeDisabled())
+    fireEvent.click(screen.getByRole('button', { name: 'Scal' }))
+
+    await waitFor(async () => expect(await db.spots.get(sourceId)).toBeUndefined())
+    const finding = await db.findings.get(findingId)
+    expect(finding?.spotId).toBe(targetId)
+  })
+
+  it('przycisk "Scal" w dialogu jest wyłączony, dopóki nie wybrano grzybowiska docelowego', async () => {
+    await db.spots.add({ name: 'A', latitude: 1, longitude: 1, notes: '', createdAt: 1 })
+    await db.spots.add({ name: 'B', latitude: 2, longitude: 2, notes: '', createdAt: 1 })
+
+    render(
+      <SpotManager
+        open
+        onOpenChange={vi.fn()}
+        pinPosition={null}
+        navigationTargetSpotId={null}
+        onSetNavigationTargetSpotId={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Scal grzybowisko: A' }))
+    expect(await screen.findByRole('button', { name: 'Scal' })).toBeDisabled()
+  })
+
   it('pokazuje pustą listę, gdy nie ma zapisanych grzybowisk', async () => {
     render(
       <SpotManager

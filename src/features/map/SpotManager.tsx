@@ -9,6 +9,7 @@ import {
   CloudRainIcon,
   ExternalLinkIcon,
   MapPinIcon,
+  MergeIcon,
   NavigationIcon,
   SparklesIcon,
   TrashIcon,
@@ -37,9 +38,11 @@ import {
 } from '../../components/ui/alert-dialog'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '../../components/ui/dialog'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { Input } from '../../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import type { Spot } from '../../db/schema'
 
 interface SpotManagerProps {
   open: boolean
@@ -53,6 +56,8 @@ interface SpotManagerProps {
 
 const NONE_MONTH = '__none__'
 
+const NONE_MERGE_TARGET = '__none__'
+
 function SpotRow({
   spotId,
   name,
@@ -61,6 +66,7 @@ function SpotRow({
   longitude,
   revisitMonth,
   revisitFlaggedAt,
+  otherSpots,
   isNavigationTarget,
   onToggleNavigationTarget,
 }: {
@@ -71,12 +77,15 @@ function SpotRow({
   longitude: number
   revisitMonth: number | undefined
   revisitFlaggedAt: number | undefined
+  otherSpots: Spot[]
   isNavigationTarget: boolean
   onToggleNavigationTarget: () => void
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [outlookExpanded, setOutlookExpanded] = useState(false)
   const [revisitPickerOpen, setRevisitPickerOpen] = useState(false)
+  const [mergeOpen, setMergeOpen] = useState(false)
+  const [mergeTargetId, setMergeTargetId] = useState('')
 
   async function handleChangeRevisitMonth(value: string | null) {
     if (value == null || value === NONE_MONTH) {
@@ -102,6 +111,21 @@ function SpotRow({
       new Blob([ics], { type: 'text/calendar;charset=utf-8' }),
       `grzybowisko-${name.replace(/\s+/g, '-').toLowerCase()}.ics`,
     )
+  }
+
+  async function handleMerge() {
+    const targetId = Number(mergeTargetId)
+    if (!targetId) return
+    // Znaleziska przypisane do scalanego grzybowiska przechodzą pod docelowe - inaczej niż przy
+    // zwykłym usunięciu, to NIE jest utrata powiązania, tylko jego przeniesienie (dwa wpisy dla
+    // tego samego, fizycznie jednego miejsca, są teraz jednym spotem z pełną historią).
+    await db.transaction('rw', db.spots, db.findings, async () => {
+      await db.findings.where('spotId').equals(spotId).modify({ spotId: targetId })
+      await db.spots.delete(spotId)
+    })
+    if (isNavigationTarget) onToggleNavigationTarget()
+    setMergeOpen(false)
+    setMergeTargetId('')
   }
 
   async function handleDelete() {
@@ -177,6 +201,16 @@ function SpotRow({
               <CalendarPlusIcon className="size-4" />
             </button>
           )}
+          {otherSpots.length > 0 && (
+            <button
+              type="button"
+              aria-label={`Scal grzybowisko: ${name}`}
+              onClick={() => setMergeOpen(true)}
+              className="rounded p-1 text-muted-foreground outline-none transition-transform hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px"
+            >
+              <MergeIcon className="size-4" />
+            </button>
+          )}
           <button
             type="button"
             aria-label={`Usuń grzybowisko: ${name}`}
@@ -233,6 +267,46 @@ function SpotRow({
           )}
         </CardContent>
       )}
+
+      <Dialog
+        open={mergeOpen}
+        onOpenChange={(open) => {
+          setMergeOpen(open)
+          if (!open) setMergeTargetId('')
+        }}
+      >
+        <DialogContent>
+          <DialogTitle>Scal "{name}" z innym grzybowiskiem</DialogTitle>
+          <DialogDescription>
+            Znaleziska przypisane do "{name}" zostaną przeniesione do wybranego grzybowiska, a "{name}" zostanie
+            usunięte. Tej operacji nie można cofnąć.
+          </DialogDescription>
+          <Select
+            value={mergeTargetId || NONE_MERGE_TARGET}
+            onValueChange={(value) => setMergeTargetId(value == null || value === NONE_MERGE_TARGET ? '' : value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE_MERGE_TARGET}>-- wybierz grzybowisko --</SelectItem>
+              {otherSpots.map((s) => (
+                <SelectItem key={s.id} value={String(s.id)}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setMergeOpen(false)}>
+              Anuluj
+            </Button>
+            <Button disabled={!mergeTargetId} onClick={handleMerge}>
+              Scal
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
@@ -398,6 +472,7 @@ export function SpotManager({
                 longitude={spot.longitude}
                 revisitMonth={spot.revisitMonth}
                 revisitFlaggedAt={spot.revisitFlaggedAt}
+                otherSpots={(spots ?? []).filter((s) => s.id !== spot.id)}
                 isNavigationTarget={navigationTargetSpotId === spot.id}
                 onToggleNavigationTarget={() =>
                   onSetNavigationTargetSpotId(navigationTargetSpotId === spot.id ? null : spot.id!)
