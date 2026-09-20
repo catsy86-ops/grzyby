@@ -8,6 +8,9 @@ describe('AddFindingForm', () => {
     await db.findings.clear()
     await db.photos.clear()
     await db.spots.clear()
+    // Zapobiega przeciekaniu podpowiedzi "ostatnio wybrany gatunek" (utils/duplicateFindingCheck.ts)
+    // między testami w tym pliku - jsdom trzyma localStorage przez cały czas życia środowiska testu.
+    localStorage.clear()
     // jsdom nie implementuje matchMedia - AddFindingForm używa go teraz przez useMediaQuery
     // (responsywny kierunek Drawer). Re-stubowane w każdym teście (nie tylko raz w
     // vitest.setup.ts), bo jeden z testów niżej wywołuje vi.unstubAllGlobals(), co usuwa też
@@ -126,6 +129,71 @@ describe('AddFindingForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Zapisz' })).not.toBeDisabled())
+  })
+
+  it('podpowiada ostatnio wybrany gatunek jako domyślny i zapisuje z nim znalezisko bez dotykania Select', async () => {
+    localStorage.setItem('grzyby-last-species-id', 'borowik-szlachetny')
+    const onClose = vi.fn()
+    render(<AddFindingForm initialPosition={[52.1, 19.5]} onClose={onClose} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true))
+
+    const saved = (await db.findings.toArray())[0]
+    expect(saved.speciesId).toBe('borowik-szlachetny')
+  })
+
+  it('ignoruje zapamiętany gatunek, jeśli już nie istnieje w species.json', async () => {
+    localStorage.setItem('grzyby-last-species-id', 'nieistniejacy-gatunek')
+    const onClose = vi.fn()
+    render(<AddFindingForm initialPosition={[52.1, 19.5]} onClose={onClose} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true))
+
+    const saved = (await db.findings.toArray())[0]
+    expect(saved.speciesId).toBeNull()
+  })
+
+  it('ostrzega o prawdopodobnym duplikacie (ten sam gatunek dodany w ciągu ostatnich 2 minut) i wymaga potwierdzenia drugim zapisaniem', async () => {
+    await db.findings.add({
+      speciesId: 'borowik-szlachetny',
+      speciesNameGuess: 'Borowik szlachetny',
+      latitude: null,
+      longitude: null,
+      notes: '',
+      createdAt: Date.now() - 30_000,
+    })
+    localStorage.setItem('grzyby-last-species-id', 'borowik-szlachetny')
+    const onClose = vi.fn()
+    render(<AddFindingForm initialPosition={[52.1, 19.5]} onClose={onClose} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+
+    expect(await screen.findByText(/Podobne znalezisko/)).toBeInTheDocument()
+    expect(onClose).not.toHaveBeenCalled()
+    expect(await db.findings.count()).toBe(1)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true))
+    expect(await db.findings.count()).toBe(2)
+  })
+
+  it('nie ostrzega o duplikacie, gdy nie wybrano żadnego gatunku', async () => {
+    await db.findings.add({
+      speciesId: 'borowik-szlachetny',
+      speciesNameGuess: 'Borowik szlachetny',
+      latitude: null,
+      longitude: null,
+      notes: '',
+      createdAt: Date.now() - 30_000,
+    })
+    const onClose = vi.fn()
+    render(<AddFindingForm initialPosition={[52.1, 19.5]} onClose={onClose} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true))
+    expect(await db.findings.count()).toBe(2)
   })
 
   it('nie pokazuje wyboru grzybowiska, gdy nie ma żadnych zapisanych', async () => {

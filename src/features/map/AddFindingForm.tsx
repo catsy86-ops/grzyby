@@ -11,6 +11,12 @@ import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useSpeechToText } from '../../hooks/useSpeechToText'
 import { vibrateSuccess } from '../../utils/haptics'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
+import {
+  DUPLICATE_WINDOW_MS,
+  getLastSpeciesId,
+  isLikelyDuplicateFinding,
+  rememberLastSpeciesId,
+} from '../../utils/duplicateFindingCheck'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
@@ -27,7 +33,13 @@ interface AddFindingFormProps {
 }
 
 export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps) {
-  const [speciesId, setSpeciesId] = useState<string>('')
+  // Podpowiada ostatnio wybrany gatunek zamiast zawsze startować od "-- nieokreślony --" - przy
+  // zbieraniu jednego gatunku seriami oszczędza powtarzanie tego samego wyboru za każdym razem.
+  // Sprawdzone przeciwko species.json na wypadek gdyby zapamiętany id już nie istniał.
+  const [speciesId, setSpeciesId] = useState<string>(() => {
+    const last = getLastSpeciesId()
+    return last != null && (speciesData as Species[]).some((s) => s.id === last) ? last : ''
+  })
   const [spotId, setSpotId] = useState<number | ''>('')
   const [weightGrams, setWeightGrams] = useState('')
   // Liczba sztuk - `null` = nie podano (nie zakładamy "1", patrz komentarz przy Finding.quantity
@@ -45,6 +57,11 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   // ją zobaczyć zanim szuflada zacznie się zsuwać.
   const [justSaved, setJustSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Ostrzeżenie o prawdopodobnym duplikacie (ten sam gatunek+grzybowisko w ostatnich 2 minutach,
+  // patrz utils/duplicateFindingCheck.ts) - `null` = nie wykryto lub użytkownik już potwierdził
+  // "zapisz mimo to" (drugi tap "Zapisz" z tym samym stanem formularza pomija ponowne sprawdzenie).
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
+  const [duplicateConfirmed, setDuplicateConfirmed] = useState(false)
   const { activeTripId, activeTrip } = useActiveTrip()
   // Ten sam wzorzec i próg co w SpotManager.tsx/StorageInfoDrawer.tsx/ToolsMenu.tsx.
   const isWidePanel = useMediaQuery('(min-width: 1024px)')
@@ -59,9 +76,22 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    setSaving(true)
     setError(null)
     const species = (speciesData as Species[]).find((s) => s.id === speciesId) ?? null
+    const resolvedSpotId = spotId === '' ? undefined : spotId
+
+    if (!duplicateConfirmed) {
+      const recentFindings = await db.findings.where('createdAt').above(Date.now() - DUPLICATE_WINDOW_MS).toArray()
+      if (isLikelyDuplicateFinding({ speciesId: species?.id ?? null, spotId: resolvedSpotId }, recentFindings)) {
+        setDuplicateWarning(
+          `Podobne znalezisko (${species?.nameCommon}) zostało dodane w ciągu ostatnich 2 minut. Kliknij "Zapisz" ponownie, aby dodać mimo to.`,
+        )
+        setDuplicateConfirmed(true)
+        return
+      }
+    }
+
+    setSaving(true)
     try {
       // Kompresja PRZED transakcją, nie w środku niej - createImageBitmap/canvas.toBlob są
       // prawdziwie asynchroniczne (dekodowanie obrazu, praca canvasu poza mikrotaskami, które
@@ -88,7 +118,7 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
           notes,
           createdAt: Date.now(),
           tripId: activeTripId ?? undefined,
-          spotId: spotId === '' ? undefined : spotId,
+          spotId: resolvedSpotId,
           weightGrams: weightGrams.trim() === '' ? undefined : Number(weightGrams),
           quantity: quantity ?? undefined,
         })
@@ -102,6 +132,7 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
       // sygnału "udało się". Ten sam moment co w Dzienniku (pusty koszyk -> pierwszy wpis),
       // tylko odwrotnie - to jest "nagroda" za dodanie znaleziska w terenie.
       toast.success(species ? `Dodano do dziennika: ${species.nameCommon}` : 'Dodano znalezisko do dziennika')
+      rememberLastSpeciesId(species?.id ?? null)
       vibrateSuccess()
       setJustSaved(true)
       setTimeout(() => onClose(true), 380)
@@ -143,9 +174,13 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
             Gatunek (opcjonalnie)
             <Select
               value={speciesId || NONE_SPECIES}
-              onValueChange={(value) => setSpeciesId(value == null || value === NONE_SPECIES ? '' : value)}
+              onValueChange={(value) => {
+                setSpeciesId(value == null || value === NONE_SPECIES ? '' : value)
+                setDuplicateWarning(null)
+                setDuplicateConfirmed(false)
+              }}
             >
-              <SelectTrigger className="mt-1 w-full">
+              <SelectTrigger autoFocus className="mt-1 w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -164,7 +199,11 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
               Grzybowisko (opcjonalnie)
               <Select
                 value={spotId === '' ? NONE_SPOT : String(spotId)}
-                onValueChange={(value) => setSpotId(value == null || value === NONE_SPOT ? '' : Number(value))}
+                onValueChange={(value) => {
+                  setSpotId(value == null || value === NONE_SPOT ? '' : Number(value))
+                  setDuplicateWarning(null)
+                  setDuplicateConfirmed(false)
+                }}
               >
                 <SelectTrigger className="mt-1 w-full">
                   <SelectValue />
@@ -276,6 +315,12 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
             </span>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="mt-1" rows={3} />
           </label>
+
+          {duplicateWarning && (
+            <Alert variant="warning">
+              <AlertDescription className="text-current">{duplicateWarning}</AlertDescription>
+            </Alert>
+          )}
 
           {!initialPosition && (
             <Alert variant="warning">
