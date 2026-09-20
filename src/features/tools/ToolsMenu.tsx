@@ -1,7 +1,10 @@
-import { BackpackIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, PhoneCallIcon, TimerIcon, TreePineIcon } from 'lucide-react'
+import { BackpackIcon, BatteryIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, PhoneCallIcon, TimerIcon, TreePineIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
+import { useBatteryStatus } from '../../hooks/useBatteryStatus'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { useAppStore, type PowerSaveMode } from '../../stores/appStore'
+import { isPowerSaveActive, POWER_SAVE_MODE_LABELS } from '../../utils/powerSave'
 import { AmbientPlayer } from './AmbientPlayer'
 
 const LIST_VARIANTS = {
@@ -68,6 +71,10 @@ export function ToolsMenu({
   // Ten sam wzorzec i próg co w SpotManager.tsx/StorageInfoDrawer.tsx - na szerokim ekranie (lg:+)
   // menu wysuwa się z prawej (bliżej przycisku "Narzędzia" w prawym rogu nagłówka) zamiast z dołu.
   const isWidePanel = useMediaQuery('(min-width: 1024px)')
+  const powerSaveMode = useAppStore((s) => s.powerSaveMode)
+  const setPowerSaveMode = useAppStore((s) => s.setPowerSaveMode)
+  const batteryStatus = useBatteryStatus()
+  const powerSaveActive = isPowerSaveActive(powerSaveMode, batteryStatus)
 
   return (
     <Drawer open={open} swipeDirection={isWidePanel ? 'right' : 'down'} onOpenChange={onOpenChange}>
@@ -93,6 +100,28 @@ export function ToolsMenu({
             </span>
             {forestMode && <CheckIcon className="size-4 shrink-0 text-primary" />}
           </button>
+        </div>
+        <div className="mx-4 my-1 border-t border-border" />
+        <div className="flex flex-col gap-0.5 px-4 pb-2">
+          <p className="px-2 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Oszczędzanie baterii {powerSaveActive && '(aktywne)'}
+          </p>
+          {(Object.keys(POWER_SAVE_MODE_LABELS) as PowerSaveMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              role="radio"
+              aria-checked={powerSaveMode === mode}
+              onClick={() => setPowerSaveMode(mode)}
+              className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <BatteryIcon className="size-4.5" />
+              </span>
+              <span className="flex-1 font-medium">{POWER_SAVE_MODE_LABELS[mode]}</span>
+              {powerSaveMode === mode && <CheckIcon className="size-4 shrink-0 text-primary" />}
+            </button>
+          ))}
         </div>
         <div className="mx-4 my-1 border-t border-border" />
         <motion.div

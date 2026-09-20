@@ -7,6 +7,15 @@ import type { PowerSaveMode } from '../stores/appStore'
 // sygnał z systemu, że warto ograniczyć zużycie.
 export const LOW_BATTERY_THRESHOLD = 0.2
 
+// Wspólne etykiety trybu - używane zarówno w menu mapy (MapHeaderActions), jak i w sekcji
+// "Aplikacja" Narzędzi (ToolsMenu), żeby oba miejsca prezentujące to samo ustawienie nie mogły
+// rozjechać się w treści.
+export const POWER_SAVE_MODE_LABELS: Record<PowerSaveMode, string> = {
+  auto: 'Auto (poniżej 20% baterii)',
+  always: 'Zawsze włączone',
+  never: 'Wyłączone',
+}
+
 export function isPowerSaveActive(mode: PowerSaveMode, battery: BatteryStatus | null): boolean {
   if (mode === 'always') return true
   if (mode === 'never') return false

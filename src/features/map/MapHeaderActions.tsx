@@ -14,6 +14,7 @@ import {
   TreePineIcon,
 } from 'lucide-react'
 import type { PowerSaveMode } from '../../stores/appStore'
+import { POWER_SAVE_MODE_LABELS } from '../../utils/powerSave'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -54,12 +55,6 @@ interface MapHeaderActionsProps {
   powerSaveMode: PowerSaveMode
   onChangePowerSaveMode: (mode: PowerSaveMode) => void
   powerSaveActive: boolean
-}
-
-const POWER_SAVE_LABELS: Record<PowerSaveMode, string> = {
-  auto: 'Auto (poniżej 20% baterii)',
-  always: 'Zawsze włączone',
-  never: 'Wyłączone',
 }
 
 // Kontekstowe akcje mapy w górnym pasku (portal do App.tsx przez `headerActionsSlot`, patrz
@@ -166,9 +161,9 @@ export function MapHeaderActions({
               value={powerSaveMode}
               onValueChange={(value) => onChangePowerSaveMode(value as PowerSaveMode)}
             >
-              {(Object.keys(POWER_SAVE_LABELS) as PowerSaveMode[]).map((mode) => (
+              {(Object.keys(POWER_SAVE_MODE_LABELS) as PowerSaveMode[]).map((mode) => (
                 <DropdownMenuRadioItem key={mode} value={mode}>
-                  {POWER_SAVE_LABELS[mode]}
+                  {POWER_SAVE_MODE_LABELS[mode]}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
