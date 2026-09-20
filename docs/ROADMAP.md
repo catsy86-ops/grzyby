@@ -13,6 +13,37 @@ zakres i priorytet.
 
 ---
 
+## Faza 24 - Dalsza realizacja UI-QOL-ROADMAP.md (2026-09-20, "leć dalej z roadmapą")
+
+Kontynuacja Fazy 23 - pozostałe punkty "warte zrobienia szybko" plus jeden z "większe, do
+przemyślenia" (scalanie spotów).
+
+- [x] **Sortowanie i filtr dat w Dzienniku** (Część 2 pkt 6) - `utils/journalFilters.ts`,
+      przełącznik najnowsze/najstarsze wpięty w samo zapytanie Dexie (`orderBy` + opcjonalny
+      `.reverse()`), zakres dat filtrowany tak samo jak istniejący filtr wyprawy/wyszukiwanie
+      (po stronie klienta, na już wczytanej stronie).
+- [x] **Wykres "najlepsze miejscówki"** (Część 3 pkt 5) - `spotStats.rankSpotsByFindingCount()`.
+      Przy okazji dodania trzeciego wykresu wydzielono `JournalBarChart.tsx` z dwóch niemal
+      identycznych bloków `BarChart` (jedyny realny duplikat z Część 1 pkt 2 - `JournalView.tsx`
+      pozostaje duże, ale to konkretne źródło duplikacji jest zamknięte).
+- [x] **Scalanie dwóch grzybowisk** (Część 2 pkt 5) - Dialog wyboru celu w `SpotManager.tsx`,
+      znaleziska przechodzą pod docelowy spot, źródłowy jest usuwany.
+- **Korekta wcześniejszego audytu**: "trend rok-do-roku" (część Część 3 pkt 7) okazał się już
+  zaimplementowany od dawna (`SeasonSummary.tsx`, `yearOverYearDelta`) - audyt missing-features
+  tego nie znalazł. Tylko "wizualny kalendarz sezonowy per gatunek" (druga połowa tego punktu)
+  zostaje otwarta.
+- **Odkrycie testowe warte zapamiętania**: interakcja z `Select` (base-ui) w jsdom wymaga
+  `fireEvent.pointerDown` + `fireEvent.click` (na triggerze I na wybieranej opcji) - sam `click`
+  nic nie robi. Użyte w teście scalania spotów; wcześniej w tej sesji `AddFindingForm.test.tsx`
+  omijał ten sam problem przez seedowanie `localStorage` zamiast klikania w Select.
+
+Pozostałe otwarte z `UI-QOL-ROADMAP.md`: centralny panel powiadomień (Część 2 pkt 7, "głównie
+porządkowe"), wizualny kalendarz sezonowy w Atlasie (reszta Część 3 pkt 7), rozszerzenie treści
+atlasu (Część 3 pkt 6, praca redakcyjna), PWA `share_target`/Badging API (Część 3 pkt 8, niski
+priorytet - słabe wsparcie iOS Safari). Wszystko tsc/oxlint/vitest(589)/build czyste.
+
+---
+
 ## Faza 23 - Realizacja punktu startowego z UI-QOL-ROADMAP.md (2026-09-20, ciąg dalszy)
 
 Na "leć dalej" po przedstawieniu planu z Fazy 22 - zrealizowany cały "Sugerowany punkt startowy"
