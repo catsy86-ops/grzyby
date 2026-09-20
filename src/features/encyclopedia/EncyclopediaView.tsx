@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { LeafIcon, ChefHatIcon, ChevronDownIcon, CompassIcon, ScaleIcon, SwordsIcon } from 'lucide-react'
+import { LeafIcon, ChefHatIcon, ChevronDownIcon, CompassIcon, GitCompareIcon, ScaleIcon, SwordsIcon } from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
@@ -20,6 +20,7 @@ import { SHAPE_GROUP_LABEL, getSpeciesShapeGroup } from '../../utils/speciesShap
 import { SpeciesShapeIcon } from '../../components/icons/speciesShapeIcons'
 import { ForestAssistant } from './ForestAssistant'
 import { LookalikeQuiz } from './LookalikeQuiz'
+import { SpeciesComparePicker } from './SpeciesComparePicker'
 
 const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
   { label: 'Wszystkie', value: 'wszystkie' },
@@ -37,6 +38,7 @@ export function EncyclopediaView() {
   const [protectedOnly, setProtectedOnly] = useState(false)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [quizOpen, setQuizOpen] = useState(false)
+  const [compareOpen, setCompareOpen] = useState(false)
   const [listRef] = useAutoAnimate()
 
   const species = speciesData as Species[]
@@ -62,6 +64,10 @@ export function EncyclopediaView() {
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-heading-md font-semibold tracking-tight">Baza wiedzy o gatunkach</h1>
         <div className="flex shrink-0 gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setCompareOpen(true)}>
+            <GitCompareIcon className="size-4" />
+            Porównaj
+          </Button>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setQuizOpen(true)}>
             <SwordsIcon className="size-4" />
             Quiz
@@ -280,6 +286,7 @@ export function EncyclopediaView() {
 
       <ForestAssistant open={assistantOpen} onOpenChange={setAssistantOpen} />
       <LookalikeQuiz open={quizOpen} onOpenChange={setQuizOpen} />
+      <SpeciesComparePicker open={compareOpen} onOpenChange={setCompareOpen} />
     </div>
   )
 }
