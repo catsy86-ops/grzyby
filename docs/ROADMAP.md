@@ -13,6 +13,34 @@ zakres i priorytet.
 
 ---
 
+## Faza 23 - Realizacja punktu startowego z UI-QOL-ROADMAP.md (2026-09-20, ciąg dalszy)
+
+Na "leć dalej" po przedstawieniu planu z Fazy 22 - zrealizowany cały "Sugerowany punkt startowy"
+z `docs/UI-QOL-ROADMAP.md` w kolejności tam wskazanej. Dokument sam w sobie zostaje jako
+historyczny snapshot propozycji (wzorem `MAP-ROADMAP.md`) - status śledzony tutaj.
+
+- [x] **Scalenie ustawień**: `ToolsMenu.tsx` ma teraz sekcję "Oszczędzanie baterii" (czyta
+      `appStore` bezpośrednio) - dotąd dostępne tylko z menu mapy. Etykiety trybów wydzielone do
+      wspólnej `POWER_SAVE_MODE_LABELS` (`utils/powerSave.ts`).
+- [x] **Trzy poprawki `AddFindingForm.tsx`**: `autoFocus` na Select gatunku, zapamiętany ostatnio
+      wybrany gatunek jako domyślny (`utils/duplicateFindingCheck.ts`, sprawdzony przeciwko
+      `species.json`), miękkie ostrzeżenie o prawdopodobnym duplikacie (ten sam gatunek+spot w
+      ciągu 2 minut) wymagające drugiego tapnięcia "Zapisz".
+- [x] **Testy bezpieczeństwa**: `TripManager.test.tsx`, `useOverdueTripReminder.test.ts`,
+      `useStormWarning.test.ts` - wszystkie trzy miały zero pokrycia, w tym świeżo dodana logika
+      `wasRainy`.
+- [x] **Tanie samodzielne dodatki**: link "Otwórz w Mapach" przy grzybowisku + eksport `.ics` dla
+      flagi "sprawdzić w sezonie" (`utils/mapsLink.ts`, `utils/icsExport.ts`,
+      `spotRevisit.nextRevisitDate`), oraz samodzielny tryb porównywarki gatunków w Atlasie
+      (`SpeciesComparePicker.tsx`, reużywa istniejący `SpeciesComparator.tsx`).
+
+Wszystko commitowane osobno per funkcja, tsc/oxlint/vitest(573)/build czyste przez całą sesję.
+Pozostałe punkty z `UI-QOL-ROADMAP.md` (rozbicie `JournalView.tsx`, scalanie spotów, filtr dat w
+Dzienniku, centralny panel powiadomień, rozszerzenie atlasu, wykresy roczne/miejscówek, PWA
+`share_target`) zostają otwarte - żaden nie był na liście "punkt startowy", do wyboru później.
+
+---
+
 ## Faza 22 - Odznaki z nowe.md + plan rozbudowy UI/QoL/funkcji (2026-09-20)
 
 Na prośbę "zrób analizę i przedstaw plan rozbudowy w UI, QoL i potrzebne funkcje" (konta+sync i
