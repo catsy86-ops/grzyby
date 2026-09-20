@@ -10,6 +10,7 @@ import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { buildLocationSmsUrl } from '../../utils/locationSms'
 import { isTripOverdue } from '../../utils/overdueTrip'
+import { fetchIsCurrentlyRaining } from '../../utils/rainCheck'
 import { StatTile, StatTileRow } from '../../components/StatTiles'
 import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
@@ -92,6 +93,16 @@ export function TripManager() {
     if (activeTripId == null) return
     await db.trips.update(activeTripId, { endedAt: Date.now() })
     setActiveTripId(null)
+
+    // Best-effort: brak GPS/zasięgu w lesie jest normalny przy kończeniu wyprawy, więc
+    // niepowodzenie po prostu zostawia `wasRainy` niezapisane, bez toasta/błędu.
+    try {
+      const position = await getCurrentPosition()
+      const wasRainy = await fetchIsCurrentlyRaining(position.latitude, position.longitude)
+      await db.trips.update(activeTripId, { wasRainy })
+    } catch {
+      // ignorowane celowo - patrz komentarz wyżej
+    }
   }
 
   async function handleSendLocationSms() {

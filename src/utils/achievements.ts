@@ -43,6 +43,15 @@ function maxTripsInOneMonth(trips: Trip[]): number {
   return counts.size === 0 ? 0 : Math.max(...counts.values())
 }
 
+function tripMonths(trips: Trip[]): number[] {
+  return trips.map((t) => new Date(t.startedAt).getMonth())
+}
+
+// Wrzesień-listopad (0-indeksowane 8-10) - szczyt sezonu grzybowego, stąd "jesienny grzybiarz".
+function hasAutumnTrip(trips: Trip[]): boolean {
+  return tripMonths(trips).some((m) => m >= 8 && m <= 10)
+}
+
 // Największa liczba znalezisk przypadająca na jedno zapisane grzybowisko (spotId) - "stały
 // gość" nagradza wracanie w sprawdzone miejsce, nie samą liczbę znalezisk w ogóle.
 function maxFindingsAtOneSpot(findings: Finding[]): number {
@@ -117,12 +126,41 @@ const ACHIEVEMENTS: (Achievement & {
     check: ({ findings }) => findings.some((f) => f.speciesId === 'borowik-szlachetny'),
   },
   {
+    id: 'pierwsza-wyprawa',
+    icon: '🌲',
+    title: 'Pierwsza wyprawa',
+    description: 'Zakończ swoją pierwszą wyprawę.',
+    check: ({ trips }) => trips.length >= 1,
+  },
+  {
     id: 'wyprawowicz',
     icon: '🥾',
     title: 'Wyprawowicz',
     description: 'Zakończ 5 wypraw.',
     check: ({ trips }) => trips.length >= 5,
     progress: ({ trips }) => ({ current: trips.length, target: 5 }),
+  },
+  {
+    id: 'weteran-szlaku',
+    icon: '🏕️',
+    title: 'Weteran szlaku',
+    description: 'Zakończ 10 wypraw.',
+    check: ({ trips }) => trips.length >= 10,
+    progress: ({ trips }) => ({ current: trips.length, target: 10 }),
+  },
+  {
+    id: 'jesienny-grzybiarz',
+    icon: '🍂',
+    title: 'Jesienny grzybiarz',
+    description: 'Wybierz się na wyprawę we wrześniu, październiku lub listopadzie.',
+    check: ({ trips }) => hasAutumnTrip(trips),
+  },
+  {
+    id: 'grzybobranie-w-deszczu',
+    icon: '🌧️',
+    title: 'Grzybobranie w deszczu',
+    description: 'Zakończ wyprawę, podczas gdy padał deszcz.',
+    check: ({ trips }) => trips.some((t) => t.wasRainy === true),
   },
   {
     id: 'sezonowy-maratonczyk',
@@ -155,6 +193,14 @@ const ACHIEVEMENTS: (Achievement & {
     description: 'Zapisz 10 zdjęć znalezisk.',
     check: ({ photoCount }) => photoCount >= 10,
     progress: ({ photoCount }) => ({ current: photoCount, target: 10 }),
+  },
+  {
+    id: 'paparazzo',
+    icon: '📷',
+    title: 'Paparazzo',
+    description: 'Zapisz 25 zdjęć znalezisk.',
+    check: ({ photoCount }) => photoCount >= 25,
+    progress: ({ photoCount }) => ({ current: photoCount, target: 25 }),
   },
 ]
 

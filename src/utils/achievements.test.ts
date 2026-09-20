@@ -152,6 +152,42 @@ describe('computeAchievements', () => {
     expect(unlockedIds({ ...EMPTY, photoCount: 10 })).toContain('fotograf')
   })
 
+  it('"Pierwsza wyprawa" odblokowuje się po 1 zakończonej wyprawie, "Weteran szlaku" po 10', () => {
+    expect(unlockedIds({ ...EMPTY, trips: [makeTrip()] })).toContain('pierwsza-wyprawa')
+    expect(unlockedIds(EMPTY)).not.toContain('pierwsza-wyprawa')
+
+    expect(unlockedIds({ ...EMPTY, trips: Array.from({ length: 9 }, () => makeTrip()) })).not.toContain(
+      'weteran-szlaku',
+    )
+    expect(unlockedIds({ ...EMPTY, trips: Array.from({ length: 10 }, () => makeTrip()) })).toContain(
+      'weteran-szlaku',
+    )
+  })
+
+  it('"Jesienny grzybiarz" wymaga wyprawy we wrześniu-listopadzie', () => {
+    expect(
+      unlockedIds({ ...EMPTY, trips: [makeTrip({ startedAt: new Date(2026, 5, 1).getTime() })] }),
+    ).not.toContain('jesienny-grzybiarz')
+    expect(
+      unlockedIds({ ...EMPTY, trips: [makeTrip({ startedAt: new Date(2026, 9, 1).getTime() })] }),
+    ).toContain('jesienny-grzybiarz')
+  })
+
+  it('"Grzybobranie w deszczu" wymaga wyprawy z wasRainy=true', () => {
+    expect(unlockedIds({ ...EMPTY, trips: [makeTrip({ wasRainy: false })] })).not.toContain(
+      'grzybobranie-w-deszczu',
+    )
+    expect(unlockedIds({ ...EMPTY, trips: [makeTrip()] })).not.toContain('grzybobranie-w-deszczu')
+    expect(unlockedIds({ ...EMPTY, trips: [makeTrip({ wasRainy: true })] })).toContain(
+      'grzybobranie-w-deszczu',
+    )
+  })
+
+  it('"Paparazzo" wymaga 25 zdjęć', () => {
+    expect(unlockedIds({ ...EMPTY, photoCount: 24 })).not.toContain('paparazzo')
+    expect(unlockedIds({ ...EMPTY, photoCount: 25 })).toContain('paparazzo')
+  })
+
   it('nie ujawnia danych o spożyciu/reakcjach w żadnym osiągnięciu (bezpieczeństwo, nie gamifikacja)', () => {
     const findings = [makeFinding({ reactionSeverity: 'ciężka', consumed: true })]
     const achievements = computeAchievements({ ...EMPTY, findings })

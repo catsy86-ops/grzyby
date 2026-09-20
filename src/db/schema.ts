@@ -74,6 +74,9 @@ export interface Trip {
   // przeciąga" (patrz hooks/useOverdueTripReminder.ts), przydatne przy samotnych wyprawach bez
   // zasięgu. `undefined`/`null` = użytkownik nie podał, brak przypomnienia.
   plannedReturnAt?: number | null
+  // Czy w momencie zakończenia wyprawy padał deszcz (jednorazowy odczyt Open-Meteo, best-effort -
+  // brak zasięgu/GPS po prostu zostawia pole `undefined`) - napędza odznakę "Grzybobranie w deszczu".
+  wasRainy?: boolean
 }
 
 // Osobiste "grzybowisko" - nazwane, stałe miejsce (w odróżnieniu od Trip, który jest pojedynczą,
