@@ -415,6 +415,24 @@ body {
   min-height: 2.75rem;
 }
 
+/* Tylko komponent Button (data-slot="button") - NIE każdy natywny <button>, żeby nie rozciągać
+   drobnych, samodzielnie stylowanych przycisków tekstowych (np. "Wyczyść" w filtrze dat
+   JournalView.tsx), które nie przechodzą przez ten komponent i nie mają kwadratowych wariantów
+   ikonowych. Warianty ikonowe (icon-sm/icon/icon-lg w button.tsx) są kwadratowe przez `size-*` -
+   bez min-width dostawały tylko wyższy, ale wciąż wąski (28-32px) cel dotyku, odwrotnie niż
+   potrzeba w rękawiczkach/zimnymi rękami (deklarowany cel tego trybu). */
+.forest-mode [data-slot='button'] {
+  min-width: 2.75rem;
+}
+
+/* Pola formularzy (waga, liczba sztuk, wybór gatunku/wyprawy) nie są elementami `button`, więc
+   reguła wyżej ich nie obejmowała - zostawały małe (h-7/h-8) nawet z włączonym trybem
+   terenowym. */
+.forest-mode input,
+.forest-mode [data-slot='select-trigger'] {
+  min-height: 2.75rem;
+}
+
 /* Sezonowy akcent marki - `--brand-accent` (dotąd stały bursztyn przez cały rok) subtelnie
    przesuwa odcień wg pory roku kalendarzowego (patrz hooks/useSeason.ts, klasa `season-*` na
    <html>, ustawiana tak samo jak `.forest-mode`). Lato zostaje przy oryginalnym bursztynie (to

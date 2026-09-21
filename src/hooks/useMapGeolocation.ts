@@ -38,9 +38,15 @@ export function useMapGeolocation(powerSave: boolean = false): UseMapGeolocation
   const [locateError, setLocateError] = useState<string | null>(null)
   const [isPositionStale, setIsPositionStale] = useState(false)
   const lastUpdateAtRef = useRef<number | null>(null)
+  // Musi przetrwać powtórne uruchomienia efektu niżej (zależnego od `powerSave`) - jako zwykła
+  // zmienna w domknięciu efektu resetowałaby się do `false` za każdym razem, gdy oszczędzanie
+  // baterii włączy/wyłączy się automatycznie w trakcie wyprawy (np. spadek poniżej progu 20%),
+  // co po cichu przesuwało mapę z powrotem na pozycję GPS użytkownika, nawet jeśli ten właśnie
+  // ręcznie przesunął widok. `useRef` żyje przez cały czas montowania hooka (wejście na
+  // zakładkę Mapy), niezależnie od tego, ile razy efekt się przemontuje.
+  const hasCenteredOnFirstFixRef = useRef(false)
 
   useEffect(() => {
-    let hasCenteredOnFirstFix = false
     let stopWatching = () => {}
 
     function startWatching() {
@@ -52,8 +58,8 @@ export function useMapGeolocation(powerSave: boolean = false): UseMapGeolocation
           setUserAccuracyMeters(position.accuracyMeters)
           setLocateError(null)
           setIsPositionStale(false)
-          if (!hasCenteredOnFirstFix) {
-            hasCenteredOnFirstFix = true
+          if (!hasCenteredOnFirstFixRef.current) {
+            hasCenteredOnFirstFixRef.current = true
             setRecenterTarget(next)
           }
         },

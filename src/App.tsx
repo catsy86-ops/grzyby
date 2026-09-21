@@ -24,6 +24,7 @@ import { useTickReminders } from './hooks/useTickReminders'
 import { useSpotRevisitReminders } from './hooks/useSpotRevisitReminders'
 import { useOverdueTripReminder } from './hooks/useOverdueTripReminder'
 import { useStormWarning } from './hooks/useStormWarning'
+import { useTripNotificationCleanup } from './hooks/useTripNotificationCleanup'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
@@ -188,6 +189,7 @@ function App() {
   useSpotRevisitReminders()
   useOverdueTripReminder()
   useStormWarning()
+  useTripNotificationCleanup()
 
   function changeTab(tab: ActiveTab) {
     if (!supportsViewTransitions) {

@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { formatCountdown } from '../../utils/cookingTimer'
 import { showLocalNotification } from '../../utils/notifications'
 import { Button } from '../../components/ui/button'
+import { Progress } from '../../components/ui/progress'
 import { ToolDialog } from './ToolDialog'
 
 const PRESETS = [
@@ -18,6 +19,10 @@ const PRESETS = [
 // wibrację/toast (gdy apka jest na pierwszym planie).
 export function CookingTimer({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null)
+  // Czas startowy odliczania - potrzebny wyłącznie do policzenia procentu dla paska postępu
+  // (`remainingSeconds` samo w sobie nie mówi, jaka to część całości). Nie zmienia się przy
+  // pauzie/wznowieniu, tylko przy nowym starcie/resecie.
+  const [totalSeconds, setTotalSeconds] = useState(0)
   const [isRunning, setIsRunning] = useState(false)
   const [customMinutes, setCustomMinutes] = useState('10')
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -44,6 +49,7 @@ export function CookingTimer({ open, onOpenChange }: { open: boolean; onOpenChan
 
   function start(seconds: number) {
     setRemainingSeconds(seconds)
+    setTotalSeconds(seconds)
     setIsRunning(true)
   }
 
@@ -62,6 +68,10 @@ export function CookingTimer({ open, onOpenChange }: { open: boolean; onOpenChan
       {remainingSeconds != null ? (
         <div className="flex flex-col items-center gap-4 py-2">
           <span className="text-5xl font-bold tabular-nums">{formatCountdown(remainingSeconds)}</span>
+          <Progress
+            value={totalSeconds > 0 ? ((totalSeconds - remainingSeconds) / totalSeconds) * 100 : 0}
+            className="w-full max-w-64"
+          />
           <div className="flex gap-2">
             <Button variant="outline" onClick={togglePause}>
               {isRunning ? <PauseIcon /> : <PlayIcon />}

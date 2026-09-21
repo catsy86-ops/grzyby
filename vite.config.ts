@@ -52,7 +52,10 @@ export default defineConfig({
         theme_color: '#166534',
         background_color: '#ffffff',
         display: 'standalone',
-        orientation: 'portrait',
+        // Bez blokady orientacji (usunięte `orientation: 'portrait'`, ROZBUDOWA-ROADMAP.md
+        // Część 1 pkt 8, decyzja użytkownika) - żaden layout w kodzie (MapView.tsx i inne) nie
+        // zakłada portrait-only, blokada była czysto manifestowa i uniemożliwiała np. trzymanie
+        // telefonu w poziomym uchwycie samochodowym.
         start_url: '/',
         // Skrót z długiego przytrzymania ikony apki na telefonie - prosto do formularza
         // znaleziska, bez przechodzenia przez zakładkę Mapa i FAB. Obsłużone w MapView.tsx
