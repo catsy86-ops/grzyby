@@ -43,7 +43,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } f
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { Input } from '../../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
-import type { Spot } from '../../db/schema'
+import type { Finding, Spot } from '../../db/schema'
 
 interface SpotManagerProps {
   open: boolean
@@ -70,6 +70,7 @@ function SpotRow({
   otherSpots,
   isNavigationTarget,
   onToggleNavigationTarget,
+  findings,
 }: {
   spotId: number
   name: string
@@ -81,6 +82,9 @@ function SpotRow({
   otherSpots: Spot[]
   isNavigationTarget: boolean
   onToggleNavigationTarget: () => void
+  // Znaleziska tego spotu - wycięte przez rodzica z już załadowanego `allFindings` (patrz
+  // `findingsBySpotId` w SpotManager), zamiast osobnego zapytania Dexie per wiersz.
+  findings: Finding[]
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [outlookExpanded, setOutlookExpanded] = useState(false)
@@ -95,8 +99,7 @@ function SpotRow({
       await db.spots.update(spotId, { revisitMonth: Number(value), revisitFlaggedAt: Date.now() })
     }
   }
-  const findings = useLiveQuery(() => db.findings.where('spotId').equals(spotId).toArray(), [spotId])
-  const stats = computeSpotStats(findings ?? [])
+  const stats = computeSpotStats(findings)
   const { outlook, isLoading: isOutlookLoading } = useSpotMushroomOutlook(
     spotId,
     latitude,
@@ -358,6 +361,20 @@ export function SpotManager({
     () => rankSpotsBySeasonality(spots ?? [], allFindings ?? []).slice(0, 3),
     [spots, allFindings],
   )
+  // Indeks per-spot z już załadowanego `allFindings` - zastępuje osobne zapytanie Dexie w każdym
+  // SpotRow (N+1: przy dziesiątkach zapisanych grzybowisk każda zmiana w tabeli findings, gdy
+  // szuflada jest otwarta, odpalała tyle live-queries ile spotów). Budowany raz na zmianę
+  // `allFindings`, odczyt per spot O(1).
+  const findingsBySpotId = useMemo(() => {
+    const map = new Map<number, Finding[]>()
+    for (const finding of allFindings ?? []) {
+      if (finding.spotId == null) continue
+      const bucket = map.get(finding.spotId)
+      if (bucket) bucket.push(finding)
+      else map.set(finding.spotId, [finding])
+    }
+    return map
+  }, [allFindings])
   // Na szerokim ekranie (lg:+) szuflada wysuwa się z prawej jako stały panel boczny zamiast
   // arkusza z dołu - na desktopie jest dość miejsca, żeby nie zasłaniać mapy pod spodem, a
   // panel z boku czyta się bardziej jak "narzędzie obok mapy" niż modal najeżdżający na widok.
@@ -485,6 +502,7 @@ export function SpotManager({
                 onToggleNavigationTarget={() =>
                   onSetNavigationTargetSpotId(navigationTargetSpotId === spot.id ? null : spot.id!)
                 }
+                findings={findingsBySpotId.get(spot.id!) ?? []}
               />
             ))}
             {spots?.length === 0 && (
