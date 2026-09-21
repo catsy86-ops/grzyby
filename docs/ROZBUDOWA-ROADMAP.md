@@ -122,12 +122,12 @@ o jadalności/identyfikacji.
    Drukuje wyłącznie już zweryfikowaną treść atlasu, nie generuje nowej. Złożoność:
    **niska-średnia**.
 
-9. **Rozszerzenie natywnego widgetu Androida o dzisiejszy mushroom outlook**, nie tylko
+9. ✅ **Rozszerzenie natywnego widgetu Androida o dzisiejszy mushroom outlook**, nie tylko
    statystyki wyprawy - `androidWidgetBridge.ts`/`WidgetStats` już istnieje i przesyła dane do
    widgetu, to dodatek do już istniejącego mostu, nie nowa architektura. Złożoność:
    **niska-średnia**.
 
-10. **Checklist bezpieczeństwa przed potwierdzeniem "zjedzone"** - gdy oznaczasz `consumed=true`
+10. ✅ **Checklist bezpieczeństwa przed potwierdzeniem "zjedzone"** - gdy oznaczasz `consumed=true`
     na znalezisku z gatunkiem mającym niepustą listę `lookalikes`, krótkie przypomnienie ("sprawdziłeś
     charakterystyczne cechy odróżniające od sobowtórów?") zanim potwierdzisz. Reużywa istniejące
     dane `lookalikes`, nie dodaje nowej treści merytorycznej - działa w kierunku WIĘKSZEJ

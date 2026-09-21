@@ -1,20 +1,52 @@
 import { useState } from 'react'
 import { db } from '../../db/db'
-import type { Finding, ReactionSeverity } from '../../db/schema'
+import type { Finding, ReactionSeverity, Species } from '../../db/schema'
+import speciesData from '../../data/species.json'
 import { severityLabel } from '../../utils/reactionTracking'
 import { formatDateTime } from '../../utils/formatDate'
 import { Button } from '../../components/ui/button'
 import { Textarea } from '../../components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog'
 
 const SEVERITIES: ReactionSeverity[] = ['brak', 'lekka', 'ciężka']
 
 export function ConsumptionTracker({ finding }: { finding: Finding }) {
   const [reactionNotes, setReactionNotes] = useState(finding.reactionNotes ?? '')
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
+  const species = finding.speciesId
+    ? (speciesData as Species[]).find((s) => s.id === finding.speciesId)
+    : undefined
+
+  // Species.lookalikes to id-ki gatunków (patrz src/data/species.json), nie gotowe nazwy -
+  // trzeba je zresolvować do nameCommon, żeby przypomnienie było czytelne.
+  const lookalikeNames = (species?.lookalikes ?? [])
+    .map((id) => (speciesData as Species[]).find((s) => s.id === id)?.nameCommon)
+    .filter((name): name is string => Boolean(name))
 
   async function markConsumed() {
     if (finding.id == null) return
     await db.findings.update(finding.id, { consumed: true, consumedAt: Date.now() })
+  }
+
+  // Gatunek ma znane sobowtóry (Species.lookalikes) - przed samym potwierdzeniem pokazujemy
+  // przypomnienie, żeby nie oznaczać "zjedzone" w pośpiechu bez sprawdzenia cech odróżniających.
+  // Nie dodaje nowej treści merytorycznej o jadalności, tylko reużywa już istniejące dane.
+  function requestMarkConsumed() {
+    if (species && species.lookalikes.length > 0) {
+      setConfirmOpen(true)
+    } else {
+      void markConsumed()
+    }
   }
 
   async function unmarkConsumed() {
@@ -39,9 +71,31 @@ export function ConsumptionTracker({ finding }: { finding: Finding }) {
 
   if (!finding.consumed) {
     return (
-      <Button variant="link" size="sm" className="mt-2 h-auto p-0 text-xs text-primary" onClick={markConsumed}>
-        Oznacz jako zjedzone
-      </Button>
+      <>
+        <Button variant="link" size="sm" className="mt-2 h-auto p-0 text-xs text-primary" onClick={requestMarkConsumed}>
+          Oznacz jako zjedzone
+        </Button>
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogTitle>Sprawdziłeś cechy sobowtórów?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {species?.nameCommon} ma znane sobowtóry: {lookalikeNames.join(', ')}. Zanim potwierdzisz
+              zjedzenie, upewnij się, że sprawdziłeś cechy odróżniające ten okaz od tych gatunków.
+            </AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Anuluj</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setConfirmOpen(false)
+                  void markConsumed()
+                }}
+              >
+                Tak, sprawdziłem, potwierdź
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
     )
   }
 
