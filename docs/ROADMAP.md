@@ -48,8 +48,24 @@ za nazwami plików/funkcji, nie ufając samym podsumowaniom w tym dokumencie). W
 
 **Stan po tej sesji: cała kodowalna praca z obu roadmap (MAP + UI-QOL) i z nowe.md jest zamknięta.**
 Jedyne co zostaje: konto+sync/tryb rodzinny (świadomie odłożone przez użytkownika, nie ruszać bez
-jego inicjatywy), `android.permission.INTERNET` (wymaga jawnej zgody), oraz dwa drobne,
-nie-pilne porządki (wirtualizacja list, customizacja sonner) - żadne nie blokuje niczego innego.
+jego inicjatywy) i `android.permission.INTERNET` (wymaga jawnej zgody).
+
+**Tego samego dnia, "leć dalej" - dobito dwa z trzech drobnych porządków:**
+- [x] **Customizacja `sonner`** (Faza 7) - lewy pasek akcentu koloru per typ toastu
+      (success/warning/error), ta sama skala co `EdibilityBadge.tsx`. `richColors` nadal świadomie
+      pominięte (patrz Faza 8).
+- [x] **Podział `JournalView.tsx`** (UI-QOL Część 1 pkt 2, 972 linie) - wydzielone
+      `FindingCard.tsx` (karta widoku), `FindingEditForm.tsx` (karta edycji),
+      `JournalExportMenu.tsx` (menu eksportu/importu + przycisk osiągnięć). 607/607 testów bez
+      zmian - czysta prezentacja nad stanem, który zostaje w `JournalView.tsx`.
+- **Wirtualizacja list** (TanStack Virtual) - sprawdzone ponownie: to NIE jest otwarty punkt,
+  tylko świadomie odłożona decyzja z 2026-09-14 (patrz Faza 11 niżej) - paginacja
+  (`PAGE_SIZE = 100`, "Załaduj więcej") już rozwiązuje pierwotny problem nieograniczonego
+  renderowania DOM. Poprzedni wpis w tej Fazie mylnie nazwał to "otwartym punktem, bez decyzji" -
+  to sprostowanie.
+
+**Jedyne, co zostaje w całym repo: konto+sync/tryb rodzinny (odłożone przez użytkownika) i
+`android.permission.INTERNET` (wymaga jawnej zgody).**
 
 ---
 
