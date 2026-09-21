@@ -1,7 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { LeafIcon, CalendarClockIcon, ChefHatIcon, ChevronDownIcon, CompassIcon, GitCompareIcon, ScaleIcon, SwordsIcon } from 'lucide-react'
+import {
+  LeafIcon,
+  CalendarClockIcon,
+  ChefHatIcon,
+  ChevronDownIcon,
+  CompassIcon,
+  DownloadIcon,
+  GitCompareIcon,
+  ScaleIcon,
+  SwordsIcon,
+} from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
@@ -16,7 +26,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../compo
 import { Input } from '../../components/ui/input'
 import { Toggle } from '../../components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
+import { downloadBlob } from '../../utils/exportImport'
+import { exportSpeciesCardToPdf } from '../../utils/pdfExport'
 import { daysUntilSeasonStart, getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'
+import { HABITAT_TAG_LABELS, matchesHabitatTag, type HabitatTag } from '../../utils/speciesHabitatTags'
 import { SHAPE_GROUP_LABEL, getSpeciesShapeGroup } from '../../utils/speciesShape'
 import { SpeciesShapeIcon } from '../../components/icons/speciesShapeIcons'
 import { ForestAssistant } from './ForestAssistant'
@@ -37,6 +50,7 @@ export function EncyclopediaView() {
   const [filter, setFilter] = useState<EdibilityStatus | 'wszystkie'>('wszystkie')
   const [seasonOnly, setSeasonOnly] = useState(false)
   const [protectedOnly, setProtectedOnly] = useState(false)
+  const [habitatFilter, setHabitatFilter] = useState<HabitatTag | null>(null)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [quizOpen, setQuizOpen] = useState(false)
   const [compareOpen, setCompareOpen] = useState(false)
@@ -67,9 +81,18 @@ export function EncyclopediaView() {
         s.nameLatin.toLowerCase().includes(query.toLowerCase())
       const matchesSeason = !seasonOnly || isInSeason(s.season)
       const matchesProtected = !protectedOnly || !!s.legalProtection
-      return matchesFilter && matchesQuery && matchesSeason && matchesProtected
+      const matchesHabitat = matchesHabitatTag(s.habitat, habitatFilter)
+      return matchesFilter && matchesQuery && matchesSeason && matchesProtected && matchesHabitat
     })
-  }, [species, query, filter, seasonOnly, protectedOnly])
+  }, [species, query, filter, seasonOnly, protectedOnly, habitatFilter])
+
+  // "Karta kieszonkowa" PDF (Część 3 pkt 8 ROZBUDOWA-ROADMAP.md) - jeden gatunek, do wydruku i
+  // zabrania w teren bez telefonu. Best-effort (patrz fetchImageAsDataUrl w pdfExport.ts) - błąd
+  // pobrania zdjęcia nie blokuje eksportu, karta i tak jest użyteczna bez niego.
+  async function handleExportSpeciesCard(s: Species) {
+    const blob = await exportSpeciesCardToPdf(s, species)
+    downloadBlob(blob, `grzybobranie-${s.id}.pdf`)
+  }
 
   return (
     // max-w rośnie na szerszych ekranach (md/lg) - dotąd apka była wszędzie ograniczona do
@@ -159,6 +182,24 @@ export function EncyclopediaView() {
           {FILTERS.map((f) => (
             <ToggleGroupItem key={f.value} value={f.value} className="shrink-0 rounded-full">
               {f.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+
+        {/* Filtr po siedlisku (Część 3 pkt 7 ROZBUDOWA-ROADMAP.md) - osobny rząd chipów, ta sama
+            technika poziomego scrolla co filtr jadalności wyżej. Wielokrotne kliknięcie tego
+            samego chipa czyści filtr (wraca do `null`/"wszystkie") - `ToggleGroup` w trybie
+            pojedynczego wyboru domyślnie nie pozwala odznaczyć jedynej zaznaczonej wartości, stąd
+            ręczna obsługa `onValueChange` zamiast polegania na samym komponencie. */}
+        <ToggleGroup
+          variant="outline"
+          value={habitatFilter ? [habitatFilter] : []}
+          onValueChange={(values) => setHabitatFilter((values[0] as HabitatTag | undefined) ?? null)}
+          className="w-full flex-nowrap overflow-x-auto -mx-4 px-4 pb-1"
+        >
+          {(Object.keys(HABITAT_TAG_LABELS) as HabitatTag[]).map((tag) => (
+            <ToggleGroupItem key={tag} value={tag} className="shrink-0 rounded-full">
+              {HABITAT_TAG_LABELS[tag]}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -294,6 +335,15 @@ export function EncyclopediaView() {
                       <p>{s.preparationTips}</p>
                     </div>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 gap-1.5"
+                    onClick={() => void handleExportSpeciesCard(s)}
+                  >
+                    <DownloadIcon className="size-3.5" />
+                    Karta PDF do druku
+                  </Button>
                 </CollapsibleContent>
               </Collapsible>
             </motion.div>

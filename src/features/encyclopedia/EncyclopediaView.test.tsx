@@ -1,7 +1,8 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
+import { getHabitatTags } from '../../utils/speciesHabitatTags'
 import { EncyclopediaView } from './EncyclopediaView'
 
 // Opis/siedlisko/sobowtóry/przepisy są za przyciskiem "Szczegóły" (Collapsible, domknięty
@@ -53,6 +54,46 @@ describe('EncyclopediaView', () => {
     for (const s of protectedSpecies) {
       expect(screen.getByText(s.legalProtection!)).toBeInTheDocument()
     }
+  })
+
+  it('generuje i pobiera kartę PDF gatunku po kliknięciu "Karta PDF do druku"', async () => {
+    const allSpecies = speciesData as Species[]
+    const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-pdf')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    // Tylko `fetch` - NIE `vi.unstubAllGlobals()` na koniec, bo to zdjęłoby też globalny stub
+    // `matchMedia` z vitest.setup.ts (potrzebny przez ForestAssistant.tsx, wyrenderowany zawsze
+    // w tle tego widoku) dla WSZYSTKICH kolejnych testów w tym pliku.
+    const originalFetch = window.fetch
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+
+    render(<EncyclopediaView />)
+    fireEvent.change(screen.getByPlaceholderText('Szukaj gatunku...'), {
+      target: { value: allSpecies[0].nameCommon },
+    })
+    openAllDetails()
+
+    fireEvent.click(screen.getByRole('button', { name: /Karta PDF do druku/ }))
+
+    await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled())
+    const blobArg = createObjectURLSpy.mock.calls[0][0] as Blob
+    expect(blobArg.type).toBe('application/pdf')
+
+    vi.stubGlobal('fetch', originalFetch)
+  })
+
+  it('filtruje po siedlisku (chip "Lasy iglaste") i pozwala odznaczyć ponownym kliknięciem', () => {
+    const allSpecies = speciesData as Species[]
+    const iglasteCount = allSpecies.filter((s) => getHabitatTags(s.habitat).includes('iglaste')).length
+    expect(iglasteCount).toBeGreaterThan(0)
+    expect(iglasteCount).toBeLessThan(allSpecies.length)
+
+    render(<EncyclopediaView />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Lasy iglaste' }))
+    expect(screen.getByLabelText(`Liczba wyników: ${iglasteCount}`)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Lasy iglaste' }))
+    expect(screen.getByLabelText(`Liczba wyników: ${allSpecies.length}`)).toBeInTheDocument()
   })
 
   it('nie pokazuje ostrzeżenia o ochronie dla gatunków niechronionych', () => {

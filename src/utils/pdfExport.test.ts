@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import type { Finding } from '../db/schema'
-import { exportFindingsToPdf } from './pdfExport'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { Finding, Species } from '../db/schema'
+import speciesData from '../data/species.json'
+import { exportFindingsToPdf, exportSpeciesCardToPdf } from './pdfExport'
 
 function finding(overrides: Partial<Finding> = {}): Finding {
   return {
@@ -47,5 +48,65 @@ describe('exportFindingsToPdf', () => {
     })
 
     expect(blob.size).toBeGreaterThan(0)
+  })
+})
+
+describe('exportSpeciesCardToPdf', () => {
+  const allSpecies = speciesData as Species[]
+  const borowik = allSpecies.find((s) => s.id === 'borowik-szlachetny')!
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('generuje niepusty PDF blob dla gatunku bez dostępnego zdjęcia (offline/fetch padł)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+
+    const blob = await exportSpeciesCardToPdf(borowik, allSpecies)
+
+    expect(blob).toBeInstanceOf(Blob)
+    expect(blob.type).toBe('application/pdf')
+    expect(blob.size).toBeGreaterThan(0)
+  })
+
+  it('generuje PDF ze zdjęciem, gdy fetch się powiedzie', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        blob: async () => new Blob(['dane-obrazka'], { type: 'image/jpeg' }),
+      }),
+    )
+
+    const blob = await exportSpeciesCardToPdf(borowik, allSpecies)
+
+    expect(blob.size).toBeGreaterThan(0)
+  })
+
+  it('nie rzuca błędu dla gatunku bez porad przygotowania/ochrony prawnej/sobowtórów', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+    const bare: Species = {
+      id: 'test',
+      nameCommon: 'Testowy gatunek',
+      nameLatin: 'Testus testicus',
+      edibility: 'niejadalny',
+      description: 'Opis testowy.',
+      habitat: 'Wszędzie',
+      season: 'Cały rok',
+      lookalikes: [],
+      imageUrls: [],
+    }
+
+    const blob = await exportSpeciesCardToPdf(bare, allSpecies)
+
+    expect(blob.size).toBeGreaterThan(0)
+  })
+
+  it('działa dla wszystkich gatunków w species.json bez rzucania błędu', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+    for (const species of allSpecies) {
+      const blob = await exportSpeciesCardToPdf(species, allSpecies)
+      expect(blob.size).toBeGreaterThan(0)
+    }
   })
 })
