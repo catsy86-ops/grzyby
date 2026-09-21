@@ -13,6 +13,20 @@ zakres i priorytet.
 
 ---
 
+## Faza 26 - Rozszerzenie atlasu gatunków (2026-09-21)
+
+- [x] **Rozszerzenie atlasu gatunków** (Część 3 pkt 6, ostatni punkt otwarty z Fazy 25 poza
+      `share_target`) - dodano 9 nowych gatunków do `species.json` (boczniak ostrygowaty, koźlarz
+      czerwony, maślak żółty, mleczaj rydz, muchomor plamisty, pieczarka karbolowa, pieczarka
+      łąkowa, płomiennica zimowa, siedzuń sosnowy) wraz ze zdjęciami w `public/species-images/`.
+      Treść przygotowana i przedstawiona użytkownikowi do weryfikacji przed commitem (zgodnie z
+      zasadą z Fazy 25 - błąd w tej domenie ma konsekwencje bezpieczeństwa), zatwierdzona i
+      wypchnięta. tsc/oxlint/vitest(605, w tym nowy test-strażnik formatu `season`)/build czyste.
+
+**Jedyny pozostały punkt z listy wymagającej decyzji użytkownika: `share_target` (patrz Faza 25).**
+
+---
+
 ## Faza 25 - Domknięcie kodowalnych punktów UI-QOL-ROADMAP.md (2026-09-20, "rób wszystko po kolei")
 
 - [x] **Centralny panel powiadomień** (Część 2 pkt 7) - dzwonek w nagłówku (`NotificationCenter.tsx`,
