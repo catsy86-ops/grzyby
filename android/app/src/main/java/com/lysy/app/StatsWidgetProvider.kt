@@ -43,6 +43,13 @@ class StatsWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_subtitle, context.getString(R.string.widget_idle_subtitle))
             }
 
+            if (stats.mushroomOutlookLabel.isNotEmpty()) {
+                views.setTextViewText(R.id.widget_outlook, "🍄 ${stats.mushroomOutlookLabel}")
+                views.setViewVisibility(R.id.widget_outlook, android.view.View.VISIBLE)
+            } else {
+                views.setViewVisibility(R.id.widget_outlook, android.view.View.GONE)
+            }
+
             val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
                 ?: Intent(context, MainActivity::class.java)
             launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP

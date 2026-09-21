@@ -38,6 +38,16 @@ function isStale(cache: CachedOutlook, lat: number, lon: number, now: number): b
   return tooOld || movedFar
 }
 
+// Odczyt ostatniego znanego wyniku niezależnie od tego, czy MapView jest w ogóle zamontowany -
+// pozwala np. natywnemu widgetowi Androida (useAndroidWidgetSync.ts) pokazać ostatnią znaną
+// prognozę grzybową bez własnego zapytania sieciowego, nawet gdy użytkownik jest akurat na innej
+// zakładce. Celowo BEZ sprawdzania `isStale` - "trochę nieaktualne" wciąż lepsze niż nic w
+// widgecie na ekranie głównym, ten sam kompromis co pierwszy (potencjalnie stary) odczyt z cache
+// w samym hooku niżej.
+export function readCachedMushroomOutlookLabel(): string | null {
+  return readCache()?.outlook.label ?? null
+}
+
 // "Kiedy na grzyby" - wskaźnik wysypu na podstawie opadów/temperatury z ostatniego tygodnia
 // (Open-Meteo, bez klucza API). Cache w localStorage: pierwszy odczyt natychmiastowy (działa
 // offline z ostatnim znanym wynikiem), odświeżenie w tle tylko gdy online i cache

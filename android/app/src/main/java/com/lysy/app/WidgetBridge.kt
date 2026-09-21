@@ -22,6 +22,7 @@ class WidgetBridge(private val context: Context) {
                 .putString(WidgetStats.KEY_TRIP_DURATION, json.optString("tripDurationLabel", ""))
                 .putInt(WidgetStats.KEY_FINDINGS_COUNT, json.optInt("findingsCount", 0))
                 .putInt(WidgetStats.KEY_SPECIES_COUNT, json.optInt("speciesCount", 0))
+                .putString(WidgetStats.KEY_MUSHROOM_OUTLOOK_LABEL, json.optString("mushroomOutlookLabel", ""))
                 .apply()
 
             StatsWidgetProvider.updateAllWidgets(context)

@@ -4,6 +4,7 @@ import { db } from '../db/db'
 import { useActiveTrip } from '../stores/useActiveTrip'
 import { pushWidgetStats } from '../utils/androidWidgetBridge'
 import { countSpeciesDiversity, formatDuration } from '../utils/tripStats'
+import { readCachedMushroomOutlookLabel } from './useMushroomOutlook'
 
 // Utrzymuje natywny widget na ekranie głównym Androida (jeśli apka działa w otoczce
 // WebView z android/) w zgodzie ze stanem aktywnej wyprawy - patrz androidWidgetBridge.ts.
@@ -17,6 +18,12 @@ export function useAndroidWidgetSync(): void {
 
   useEffect(() => {
     function push() {
+      // Niezależne od tego, czy jest aktywna wyprawa - odczyt z cache (nie sieciowy), patrz
+      // uzasadnienie przy readCachedMushroomOutlookLabel. `undefined` zamiast `null`, żeby
+      // pominąć pole w JSON-ie (WidgetBridge.kt czyta je przez `optString`, `undefined` w
+      // JSON.stringify po prostu znika z wyniku - dokładnie to co chcemy zamiast wysyłania
+      // dosłownego "null" jako tekstu).
+      const mushroomOutlookLabel = readCachedMushroomOutlookLabel() ?? undefined
       if (activeTripId != null && activeTrip) {
         pushWidgetStats({
           hasActiveTrip: true,
@@ -24,16 +31,19 @@ export function useAndroidWidgetSync(): void {
           tripDurationLabel: formatDuration(activeTrip.startedAt, null),
           findingsCount: activeTripFindings?.length ?? 0,
           speciesCount: activeTripFindings ? countSpeciesDiversity(activeTripFindings) : 0,
+          mushroomOutlookLabel,
         })
       } else {
-        pushWidgetStats({ hasActiveTrip: false, findingsCount: 0, speciesCount: 0 })
+        pushWidgetStats({ hasActiveTrip: false, findingsCount: 0, speciesCount: 0, mushroomOutlookLabel })
       }
     }
 
     push()
-    if (activeTripId == null) return
-    // Odświeża etykietę czasu trwania w widgecie co minutę, tak jak licznik w TripManager.
-    const interval = setInterval(push, 60_000)
+    // Bez aktywnej wyprawy odświeża rzadziej (10 min, nie 1 min jak licznik czasu trwania
+    // wyprawy niżej) - jedyny powód do ponownego push-a w tym stanie to ewentualne świeże
+    // pobranie prognozy grzybowej przez MapView w międzyczasie (cache w useMushroomOutlook.ts
+    // sam odświeża się góra co kilka godzin, nie potrzeba częściej).
+    const interval = setInterval(push, activeTripId != null ? 60_000 : 10 * 60_000)
     return () => clearInterval(interval)
   }, [activeTripId, activeTrip, activeTripFindings])
 }

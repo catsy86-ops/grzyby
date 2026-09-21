@@ -31,4 +31,17 @@
         android:ellipsize="end"
         tools:text="1 godz. 30 min · 4 znaleziska · 3 gatunki" />
 
+    <TextView
+        android:id="@+id/widget_outlook"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/lysy_green_900"
+        android:textSize="12sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:visibility="gone"
+        tools:text="🍄 Dobry czas na grzyby"
+        tools:visibility="visible" />
+
 </LinearLayout>

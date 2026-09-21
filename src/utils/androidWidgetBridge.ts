@@ -4,6 +4,10 @@ export interface WidgetStats {
   tripDurationLabel?: string
   findingsCount: number
   speciesCount: number
+  // Ostatnia znana etykieta prognozy grzybowej (np. "Dobry czas na grzyby") - patrz
+  // readCachedMushroomOutlookLabel w useMushroomOutlook.ts. Opcjonalne: brak, gdy apka nigdy nie
+  // zdążyła pobrać prognozy (pierwsze uruchomienie, zawsze offline).
+  mushroomOutlookLabel?: string
 }
 
 declare global {
