@@ -37,6 +37,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: "cn-toast",
+          // Lewy pasek akcentu koloru per typ toastu, ta sama 4-stopniowa skala co
+          // EdibilityBadge.tsx/edibilityCardAccentClass (green/yellow/red) - dotąd `--normal-bg`
+          // był tokenowy, ale każdy typ toastu wyglądał identycznie, bez wizualnego rozróżnienia
+          // sukcesu od ostrzeżenia/błędu na pierwszy rzut oka. `richColors` świadomie pominięte
+          // (nadpisałoby całe tło twardymi kolorami zamiast tego subtelnego akcentu).
+          success: "border-l-4 border-l-green-500 [&_[data-icon]]:text-green-600 dark:[&_[data-icon]]:text-green-500",
+          warning: "border-l-4 border-l-yellow-500 [&_[data-icon]]:text-yellow-600 dark:[&_[data-icon]]:text-yellow-500",
+          error: "border-l-4 border-l-red-600 [&_[data-icon]]:text-red-600 dark:[&_[data-icon]]:text-red-500",
         },
       }}
       {...props}

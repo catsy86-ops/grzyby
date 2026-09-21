@@ -3,25 +3,13 @@ import { useMemo, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { toast } from 'sonner'
-import {
-  DownloadIcon,
-  FileTextIcon,
-  ListFilterIcon,
-  MapIcon,
-  MoreVerticalIcon,
-  PencilIcon,
-  Share2Icon,
-  TableIcon,
-  TrashIcon,
-  TrophyIcon,
-  UploadIcon,
-} from 'lucide-react'
+import { ListFilterIcon } from 'lucide-react'
 import { EmptyBasketIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
-import { EdibilityBadge, edibilityChartColor, speciesCardClassName } from '../../components/EdibilityBadge'
+import { edibilityChartColor } from '../../components/EdibilityBadge'
 import { StatTile, StatTileRow } from '../../components/StatTiles'
 import {
   countLikelyDuplicates,
@@ -36,7 +24,6 @@ import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { exportFindingsToPdf } from '../../utils/pdfExport'
 import { exportFindingsToGpx } from '../../utils/gpxExport'
 import { exportFindingsToCsv } from '../../utils/csvExport'
-import { computeDryingRatioPercent } from '../../utils/dryingRatio'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
 import { isWithinDateRange, type SortOrder } from '../../utils/journalFilters'
 import { rankSpotsByFindingCount } from '../../utils/spotStats'
@@ -65,7 +52,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -73,16 +59,15 @@ import {
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu'
 import { Input } from '../../components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { Skeleton } from '../../components/ui/skeleton'
-import { Textarea } from '../../components/ui/textarea'
 import { FirstAidGuide } from '../tools/FirstAidGuide'
 import { NotificationPermissionBanner } from '../../components/NotificationPermissionBanner'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { AchievementsDrawer } from './AchievementsDrawer'
-import { ConsumptionTracker } from './ConsumptionTracker'
-import { FindingThumbnail } from './FindingThumbnail'
+import { FindingCard } from './FindingCard'
+import { FindingEditForm } from './FindingEditForm'
 import { JournalBarChart } from './JournalBarChart'
+import { JournalExportMenu } from './JournalExportMenu'
 import { SeasonSummary } from './SeasonSummary'
 import { TripManager } from './TripManager'
 import { TripsHistory } from './TripsHistory'
@@ -90,7 +75,6 @@ import { formatDateTime } from '../../utils/formatDate'
 import { shareFinding } from '../../utils/shareFinding'
 
 type TripFilter = number | 'wszystkie' | 'bez-wyprawy'
-const NONE_SPECIES = '__none__'
 // Strona listy znalezisk - bez tego `db.findings.toArray()` ładowałby całą historię do pamięci
 // przy każdej zmianie (useLiveQuery), co przy wieloletnim dzienniku zbiorów niepotrzebnie rośnie.
 // Ostrzeżenie o ciężkich reakcjach (patrz `severeReactionFindings` niżej) celowo NIE jest objęte
@@ -381,69 +365,16 @@ export function JournalView() {
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
       <div className="flex items-center justify-between">
         <h1 className="text-heading-md font-semibold tracking-tight">Dziennik zbiorów</h1>
-        <div className="flex items-center gap-2">
-        {/* Trofeum osobno od menu eksportu - to coś do zaglądania "dla przyjemności" (patrz
-            gamifikacja w AchievementsDrawer.tsx), nie akcja zarządzania danymi, więc nie
-            powinno się chować w tym samym menu co eksport/import. */}
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Osiągnięcia"
-          onClick={() => setShowAchievements(true)}
-        >
-          <TrophyIcon className="size-4" />
-        </Button>
-        {/* Trzy osobne przyciski (Eksportuj/Importuj/PDF) skonsolidowane w jedno menu - to akcje
-            okazjonalne (backup, udostępnianie), nie codzienne, więc nie muszą zajmować stałego
-            miejsca w nagłówku obok tytułu widoku. */}
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" size="icon" aria-label="Eksport i import danych" />}
-          >
-            <MoreVerticalIcon className="size-4" />
-          </DropdownMenuTrigger>
-          {/* Podział eksport/import etykietami + separatorem (poprawka z audytu UI) - 4 pozycje
-              w płaskiej liście już dziś mieszają dwa różne kierunki działania (dane wychodzą z
-              apki / wchodzą do apki), a przy kolejnym formacie eksportu (np. CSV) byłoby to
-              jeszcze mniej czytelne bez podziału. */}
-          <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Eksportuj</DropdownMenuLabel>
-              <DropdownMenuItem onClick={handleExport}>
-                <DownloadIcon />
-                JSON
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportPdf}>
-                <FileTextIcon />
-                PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportGpx}>
-                <MapIcon />
-                Trasa (GPX)
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={!filteredFindings} onClick={handleExportCsv}>
-                <TableIcon />
-                CSV (Excel/Arkusze)
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Importuj</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                <UploadIcon />
-                Z pliku JSON
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/json"
-          onChange={handleImportFile}
-          className="hidden"
+        <JournalExportMenu
+          canExport={!!filteredFindings}
+          onExport={handleExport}
+          onExportPdf={handleExportPdf}
+          onExportGpx={handleExportGpx}
+          onExportCsv={handleExportCsv}
+          fileInputRef={fileInputRef}
+          onImportFile={handleImportFile}
+          onOpenAchievements={() => setShowAchievements(true)}
         />
-        </div>
       </div>
 
       <NotificationPermissionBanner />
@@ -651,248 +582,57 @@ export function JournalView() {
       <div ref={listRef} className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 lg:grid-cols-3">
         {filteredFindings?.map((finding, index) => {
           if (finding.id != null && editingId === finding.id) {
-            // Karta w trybie edycji (formularz z kilkoma polami) rozpięta na całą szerokość
-            // siatki, niezależnie od tego w której kolumnie by wypadła - ścieśniony formularz w
-            // jednej kolumnie 1/3 szerokości byłby niewygodny w użyciu.
             return (
-              <Card key={finding.id} size="sm" className="ring-primary/40 md:col-span-2 lg:col-span-3">
-                <CardContent className="flex flex-col gap-2">
-                  <label className="text-sm">
-                    Gatunek
-                    <Select
-                      value={editSpeciesId || NONE_SPECIES}
-                      onValueChange={(value) => setEditSpeciesId(value == null || value === NONE_SPECIES ? '' : value)}
-                    >
-                      <SelectTrigger className="mt-1 w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NONE_SPECIES}>-- nieokreślony --</SelectItem>
-                        {(speciesData as Species[]).map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.nameCommon} ({s.nameLatin})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </label>
-                  <label className="text-sm">
-                    Notatki
-                    <Textarea
-                      value={editNotes}
-                      onChange={(e) => setEditNotes(e.target.value)}
-                      className="mt-1"
-                      rows={2}
-                    />
-                  </label>
-
-                  <label className="text-sm">
-                    Waga (gramy)
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      step={1}
-                      value={editWeightGrams}
-                      onChange={(e) => setEditWeightGrams(e.target.value)}
-                      className="mt-1"
-                    />
-                  </label>
-
-                  <label className="text-sm">
-                    Waga po wysuszeniu (gramy)
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      step={1}
-                      value={editDriedWeightGrams}
-                      onChange={(e) => setEditDriedWeightGrams(e.target.value)}
-                      className="mt-1"
-                      placeholder="Opcjonalnie, gdy zbiór był suszony"
-                    />
-                  </label>
-
-                  <label className="text-sm">
-                    Liczba sztuk
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      step={1}
-                      value={editQuantity}
-                      onChange={(e) => setEditQuantity(e.target.value)}
-                      className="mt-1"
-                    />
-                  </label>
-
-                  <div className="text-sm">
-                    <span>Lokalizacja</span>
-                    <div className="mt-1 flex items-center gap-2">
-                      <p className="flex-1 text-xs text-muted-foreground">
-                        {editLatitude != null && editLongitude != null
-                          ? `${editLatitude.toFixed(5)}, ${editLongitude.toFixed(5)}`
-                          : 'Brak lokalizacji'}
-                      </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={editLocating}
-                        onClick={handleUseCurrentLocation}
-                      >
-                        {editLocating ? 'Ustalanie...' : 'Użyj obecnej (GPS)'}
-                      </Button>
-                      {editLatitude != null && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditLatitude(null)
-                            setEditLongitude(null)
-                          }}
-                        >
-                          Usuń
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <label className="text-sm">
-                    Zdjęcie
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={(e) => {
-                        setEditPhoto(e.target.files?.[0] ?? null)
-                        setEditRemovePhoto(false)
-                      }}
-                      className="mt-1 h-auto"
-                    />
-                  </label>
-                  {!editPhoto && editingPhoto && !editRemovePhoto && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="w-fit text-destructive"
-                      onClick={() => setEditRemovePhoto(true)}
-                    >
-                      Usuń obecne zdjęcie
-                    </Button>
-                  )}
-                  {editRemovePhoto && <p className="text-xs text-muted-foreground">Zdjęcie zostanie usunięte po zapisaniu.</p>}
-
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
-                      Anuluj
-                    </Button>
-                    <Button size="sm" disabled={editSaving} onClick={() => handleSaveEdit(finding.id!)}>
-                      {editSaving ? 'Zapisywanie...' : 'Zapisz'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <FindingEditForm
+                key={finding.id}
+                editSpeciesId={editSpeciesId}
+                onEditSpeciesIdChange={setEditSpeciesId}
+                editNotes={editNotes}
+                onEditNotesChange={setEditNotes}
+                editWeightGrams={editWeightGrams}
+                onEditWeightGramsChange={setEditWeightGrams}
+                editDriedWeightGrams={editDriedWeightGrams}
+                onEditDriedWeightGramsChange={setEditDriedWeightGrams}
+                editQuantity={editQuantity}
+                onEditQuantityChange={setEditQuantity}
+                editLatitude={editLatitude}
+                editLongitude={editLongitude}
+                onClearLocation={() => {
+                  setEditLatitude(null)
+                  setEditLongitude(null)
+                }}
+                editLocating={editLocating}
+                onUseCurrentLocation={handleUseCurrentLocation}
+                onPhotoChange={(file) => {
+                  setEditPhoto(file)
+                  setEditRemovePhoto(false)
+                }}
+                hasExistingPhoto={!editPhoto && !!editingPhoto}
+                editRemovePhoto={editRemovePhoto}
+                onRemovePhoto={() => setEditRemovePhoto(true)}
+                editSaving={editSaving}
+                onCancel={() => setEditingId(null)}
+                onSave={() => handleSaveEdit(finding.id!)}
+              />
             )
           }
 
-          // Kolor lewego paska + delikatny odcień tła wg jadalności gatunku - ta sama skala co w
-          // EncyclopediaView.tsx, patrz uzasadnienie w komentarzu przy edibilityCardAccentClass.
-          // Bez rozpoznanego gatunku (speciesId null/nieznany) karta zostaje bez akcentu.
+          // Bez rozpoznanego gatunku (speciesId null/nieznany) karta zostaje bez akcentu jadalności
+          // (patrz FindingCard.tsx/edibilityCardAccentClass).
           const findingSpecies = finding.speciesId
             ? (speciesData as Species[]).find((sp) => sp.id === finding.speciesId)
             : undefined
-          const dryingPercent =
-            finding.weightGrams != null && finding.driedWeightGrams != null
-              ? computeDryingRatioPercent(finding.weightGrams, finding.driedWeightGrams)
-              : null
 
           return (
-            // Karta jest bezpośrednim dzieckiem kontenera z `useAutoAnimate` (transform-based
-            // pozycjonowanie przy sortowaniu/usuwaniu) - mikrointerakcja `whileTap` (motion) idzie
-            // na wewnętrzny wrapper, nie na `Card`, żeby oba mechanizmy transformacji nie kolidowały.
-            // hover:shadow (nie hover:-translate-y, celowo BEZ transform) - osobny transform z
-            // hover kolidowałby z pozycjonowaniem useAutoAnimate (ten sam powód, dla którego
-            // whileTap idzie na wewnętrzny motion.div, nie na Card - patrz komentarz wyżej).
-            <Card
+            <FindingCard
               key={finding.id}
-              size="sm"
-              style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
-              className={speciesCardClassName(findingSpecies?.edibility)}
-            >
-              <CardContent>
-                <motion.div
-                  className="flex items-start gap-3"
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                >
-                  {finding.id != null && <FindingThumbnail findingId={finding.id} />}
-                  <div className="flex flex-1 items-start justify-between">
-                    <div>
-                      {/* font-[550] (nie font-medium) - patrz ten sam wzorzec i uzasadnienie w
-                          EncyclopediaView.tsx. */}
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <p className="font-[550]">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>
-                        {findingSpecies && <EdibilityBadge edibility={findingSpecies.edibility} />}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDateTime(finding.createdAt)}
-                        {finding.latitude != null && finding.longitude != null && (
-                          <>
-                            {' '}
-                            · {finding.latitude.toFixed(4)}, {finding.longitude.toFixed(4)}
-                          </>
-                        )}
-                        {finding.weightGrams != null && <> · {formatWeight(finding.weightGrams)}</>}
-                        {finding.quantity != null && <> · {finding.quantity} szt.</>}
-                        {finding.driedWeightGrams != null && (
-                          <>
-                            {' '}
-                            · suche {formatWeight(finding.driedWeightGrams)}
-                            {dryingPercent != null && ` (${dryingPercent}%)`}
-                          </>
-                        )}
-                      </p>
-                      {finding.notes && <p className="mt-1 text-sm text-foreground/80">{finding.notes}</p>}
-                      <ConsumptionTracker finding={finding} />
-                    </div>
-                    {/* Ikonowe przyciski zamiast podkreślonych linków tekstowych (poprawka z
-                        audytu UI) - realny cel dotyku (icon-sm, size-7) zamiast paska tekstu
-                        wysokości linii, spójne z ikonowymi akcjami reszty apki (np. TrashIcon w
-                        SpotManager.tsx). */}
-                    <div className="flex shrink-0 gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Udostępnij znalezisko"
-                        onClick={() => handleShare(finding)}
-                      >
-                        <Share2Icon className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Edytuj znalezisko"
-                        onClick={() => handleStartEdit(finding)}
-                      >
-                        <PencilIcon className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Usuń znalezisko"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => setConfirmDeleteId(finding.id ?? null)}
-                      >
-                        <TrashIcon className="size-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              </CardContent>
-            </Card>
+              finding={finding}
+              species={findingSpecies}
+              index={index}
+              onShare={handleShare}
+              onEdit={handleStartEdit}
+              onDeleteRequest={setConfirmDeleteId}
+            />
           )
         })}
         {filteredFindings?.length === 0 && (
