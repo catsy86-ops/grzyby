@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Circle, MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -122,6 +122,28 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
   // odpalenie efektu po takim przejściu.
   const suppressNextRecenterRef = useRef(false)
 
+  // Stabilna referencja - patrz komentarz przy `MapInstanceCapture` w MapLayers.tsx: przekazana
+  // inline lambda odpalałaby efekt tego komponentu (i re-bindowanie nasłuchiwaczy TileLayer
+  // niżej) przy każdym renderze MapView, czyli przy każdym ticku GPS.
+  const handleMapReady = useCallback((map: L.Map | null) => {
+    mapRef.current = map
+  }, [])
+
+  // To samo dla TileLayer.eventHandlers - inline obiekt literalny wymuszałby ponowne
+  // podpięcie nasłuchiwaczy Leaflet przy każdym renderze (patrz komentarz wyżej). `tileload`
+  // czyści `tileLoadIssue`, gdy kafle znowu zaczną ładować się poprawnie (np. użytkownik
+  // wjechał w obszar z cache) - dotąd znikało to tylko po ręcznym "Rozumiem", mimo że problem
+  // mógł już minąć.
+  const tileLayerEventHandlers = useMemo(
+    () => ({
+      tileerror: () => {
+        if (!navigator.onLine) setTileLoadIssue(true)
+      },
+      tileload: () => setTileLoadIssue(false),
+    }),
+    [],
+  )
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('open') === 'add-finding') {
@@ -200,26 +222,14 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
             attribution={activeMapLayer.attribution}
             url={activeMapLayer.urlTemplate}
             maxZoom={activeMapLayer.maxZoom}
-            eventHandlers={{
-              tileerror: () => {
-                if (!navigator.onLine) setTileLoadIssue(true)
-              },
-              // Kafle mapy zaczęły znowu ładować się poprawnie (np. użytkownik wjechał w obszar
-              // z cache) - dotąd `tileLoadIssue` znikał tylko po ręcznym "Rozumiem", mimo że
-              // problem mógł już minąć.
-              tileload: () => setTileLoadIssue(false),
-            }}
+            eventHandlers={tileLayerEventHandlers}
           />
           <RecenterOnLocate
             position={recenterTarget && isInsideRegion(recenterTarget) ? recenterTarget : null}
             suppressNextRef={suppressNextRecenterRef}
           />
           <MapClickHandler enabled={activeSheet === null} onPick={setPinPosition} />
-          <MapInstanceCapture
-            onReady={(map) => {
-              mapRef.current = map
-            }}
-          />
+          <MapInstanceCapture onReady={handleMapReady} />
           {trailPoints.length > 1 && (
             <Polyline
               positions={trailPoints}

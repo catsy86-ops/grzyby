@@ -93,14 +93,22 @@ export const carMarkerIcon = pinDivIcon({
 // Grzybowisko - zapisane, nazwane miejsce zbioru.
 // Wariant z pulsującym pierścieniem sezonowości (MAP-ROADMAP.md #5) - funkcja, nie stała, bo
 // ring jest per-spot (zależy od jego historii znalezisk w bieżącym miesiącu), więc nie da się
-// wypiec go raz jak spotMarkerIcon wyżej.
+// wypiec go raz jak spotMarkerIcon wyżej. Wynik zależy tylko od `seasonalMatch` (dwie możliwe
+// wartości) - cache analogiczny do findingMarkerIconFor/createClusterIcon niżej, bo MapView
+// wywołuje to dla każdego spotu przy każdym renderze (m.in. przy każdym ticku GPS).
+const spotIconCache = new Map<boolean, L.DivIcon>()
+
 export function createSpotMarkerIcon(seasonalMatch: boolean): L.DivIcon {
-  return pinDivIcon({
+  const cached = spotIconCache.get(seasonalMatch)
+  if (cached) return cached
+  const icon = pinDivIcon({
     Glyph: MapPinnedIcon,
     fill: 'var(--color-brand-accent)',
     label: 'Grzybowisko',
     ring: seasonalMatch,
   })
+  spotIconCache.set(seasonalMatch, icon)
+  return icon
 }
 
 // Zweryfikowane, kuratorowane grzybowisko "Szczecin i Okolice" (patrz data/szczecinSpots.json) -
