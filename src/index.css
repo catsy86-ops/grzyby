@@ -512,6 +512,16 @@ body {
   opacity: 0.5;
 }
 
+/* Tryb "W lesie" powiększa cele dotyku wszędzie indziej (patrz .forest-mode a[role='button']
+   wyżej), ale przyciski zoom Leaflet są jedynym elementem, który reguła wyżej (sztywne 34px
+   !important) i tak nadpisuje z powrotem - bez tego zostawałyby poniżej 44px, wbrew deklarowanej
+   intencji trybu terenowego (rękawiczki/zimne ręce). */
+.forest-mode .leaflet-control-zoom a {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  line-height: 2.75rem !important;
+}
+
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background: var(--color-popover) !important;
