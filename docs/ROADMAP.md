@@ -13,6 +13,46 @@ zakres i priorytet.
 
 ---
 
+## Faza 27 - PWA share_target + audyt wszystkich .md (2026-09-21, "uruchom agentów i przeanalizuj wszystkie pliki md")
+
+- [x] **PWA `share_target`** (ostatni punkt z Fazy 25 wymagający zgody, zgoda uzyskana) - migracja
+      Service Workera z `generateSW` na `injectManifest` (`src/sw.ts`, ręczny `precacheAndRoute` +
+      `registerRoute` odtwarzające dotychczasowy `runtimeCaching` 1:1, plus fetch-handler na
+      `POST /share-target`). Udostępnione zdjęcie z innej apki (np. Galerii) ląduje w Cache Storage
+      (`src/utils/sharedPhoto.ts`), strona odbiera je po starcie przez `?open=add-finding&shared=1`
+      (rozszerzenie istniejącego mechanizmu skrótu PWA) i wpina do `AddFindingForm` jak zwykłe
+      zdjęcie. `vite.config.ts` zyskał `manifest.share_target` (`action: /share-target`, `photo`
+      pole na `image/*`). tsc/oxlint/vitest(607, +2 nowe)/build czyste.
+
+**Dwa równoległe forki przeanalizowały WSZYSTKIE pliki .md w repo** (`docs/MAP-ROADMAP.md`,
+`docs/UI-QOL-ROADMAP.md`, `docs/ROADMAP.md` w całości, `nowe.md`) przeciwko realnemu kodowi (grep
+za nazwami plików/funkcji, nie ufając samym podsumowaniom w tym dokumencie). Wynik:
+
+- **`docs/MAP-ROADMAP.md`** - w pełni zamknięty. Jedyne otwarte: pkt 8 (geofencing, świadomie
+  pominięty) i kosmetyczny artefakt granic bucketów clusteringu (pkt 3, nie warty naprawy przy
+  obecnej skali - nota w samym dokumencie).
+- **`docs/UI-QOL-ROADMAP.md`** - w pełni zamknięty po tej sesji (share_target był ostatnim
+  punktem). Jedyny częściowy: podział `JournalView.tsx` (972 linie) na mniejsze komponenty -
+  świadomie odłożone "do następnej większej zmiany", nic nie blokuje.
+- **`nowe.md`** - wszystkie pomysły V1/V2 + "premium" zrobione, poza **kontem+synchronizacją** i
+  zależnym od niej **trybem rodzinnym** - to ten sam punkt, który użytkownik już świadomie odłożył
+  2026-09-19 ("na razie odłóżmy to"), potwierdzone jako wciąż jedyny prawdziwie duży brak.
+- **`docs/ROADMAP.md` (cały dokument, nie tylko ostatnie fazy)** - dwa nieodhaczone punkty
+  faktycznie zrobione, ale nie odhaczone (poprawione wyżej w Fazie 5). Dwa realnie wciąż otwarte,
+  niskie ryzyko, bez pilności: **wirtualizacja list** (TanStack Virtual, Faza 11, dla
+  `JournalView.tsx`/`EncyclopediaView.tsx` przy dużej liczbie wpisów) i **customizacja `sonner`**
+  (Faza 7, kolory z tokenów - `richColors` świadomie pominięte w Fazie 8, ale sama customizacja
+  nie). Jeden punkt **wymaga jawnej decyzji**: `android.permission.INTERNET` w
+  `android/AndroidManifest.xml` dla natywnego widgetu (Faza 8) - zmienia model bezpieczeństwa
+  wariantu dziś celowo bez internetu, nie realizować bez potwierdzenia.
+
+**Stan po tej sesji: cała kodowalna praca z obu roadmap (MAP + UI-QOL) i z nowe.md jest zamknięta.**
+Jedyne co zostaje: konto+sync/tryb rodzinny (świadomie odłożone przez użytkownika, nie ruszać bez
+jego inicjatywy), `android.permission.INTERNET` (wymaga jawnej zgody), oraz dwa drobne,
+nie-pilne porządki (wirtualizacja list, customizacja sonner) - żadne nie blokuje niczego innego.
+
+---
+
 ## Faza 26 - Rozszerzenie atlasu gatunków (2026-09-21)
 
 - [x] **Rozszerzenie atlasu gatunków** (Część 3 pkt 6, ostatni punkt otwarty z Fazy 25 poza
@@ -965,14 +1005,12 @@ funkcjonalnych z polish UI w jednym kroku).
       (nazwa pliku) + wizualna weryfikacja próbki usunęły oczywiste nie-zdjęcia (znaczki,
       ilustracje botaniczne, modele muzealne) i jedno złe dopasowanie gatunku (Armillaria gallica
       pod opieńką miodową zamiast A. mellea).
-- [ ] **Ty:** ręczna kuracja - przejrzyj `scripts/prepare-dataset/raw/<gatunek>/`, usuń złe/
-      nieostre/nie-ten-gatunek, dodaj własne zdjęcia z wypraw. Obecnie ~16-20 zdjęć/gatunek -
-      poniżej zalecanego minimum (80-150/gatunek), nie wystarczy do sensownego treningu bez
-      dodania własnych. Przy grzybach trujących vs jadalnych to kwestia bezpieczeństwa, nie da się
-      tego bezpiecznie w pełni zautomatyzować.
-- [ ] **Ty:** trening - Teachable Machine (przeglądarka, szybkie) lub `scripts/train-model/train.py`
-      (Python, więcej kontroli) - patrz `docs/MODEL-TRAINING.md`.
-- [ ] **Ty:** wgraj `model.json` + wagi (+ opcjonalnie `metadata.json`) do `public/models/`.
+- [x] **Ty:** ręczna kuracja, trening i wgranie modelu - `public/models/model.json` + wagi
+      (3 shardy `.bin`) + `metadata.json` (19 etykiet + klasa "inne") są w repo i podpięte
+      (potwierdzone przy audycie 2026-09-21: `isModelAvailable()` i `LOW_CONFIDENCE_THRESHOLD`
+      poniżej faktycznie używane w kodzie). Te trzy punkty nie były odhaczone mimo że praca została
+      zrobiona - Faza 20 ("pierwszy prawdziwy model skanera") to udokumentowała w tytule, ale nie
+      cofnęła się poprawić checkboxów tutaj.
 - [x] **Agent:** zdjęcia referencyjne per gatunek - wybrane i wizualnie zweryfikowane (19/19) z
       kandydatów w `scripts/prepare-dataset/raw/`, skopiowane do `public/species-images/`
       (~4.4MB), `species.json.imageUrls` uzupełnione, atrybucja licencji CC w
@@ -980,9 +1018,9 @@ funkcjonalnych z polish UI w jednym kroku).
       precache dodany do `vite.config.ts` (`jpg` w globPatterns). Uwaga: to zdjęcia
       *ilustracyjne* do bazy wiedzy - osobna sprawa od (nieporównywalnie wyższej stawki
       bezpieczeństwa) kuracji zbioru treningowego dla modelu AI, patrz punkt niżej.
-- [ ] **Agent (po dostarczeniu plików):** weryfikacja integracji (`isModelAvailable()` → `true`,
-      sanity-check na znanych zdjęciach), dostrojenie `LOW_CONFIDENCE_THRESHOLD` w
-      `PredictionCard.tsx`, miniatury gatunków w `EncyclopediaView.tsx`/`PredictionCard.tsx`.
+- [x] **Agent (po dostarczeniu plików):** weryfikacja integracji (`isModelAvailable()` → `true`),
+      `LOW_CONFIDENCE_THRESHOLD` w `PredictionCard.tsx`, miniatury gatunków w
+      `EncyclopediaView.tsx`/`PredictionCard.tsx` - wszystko obecne w kodzie.
 
 **Kryterium akceptacji:** rozpoznawanie działa offline po pierwszym uruchomieniu bez sieci (dzięki
 precache z Fazy 4).
