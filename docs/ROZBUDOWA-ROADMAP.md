@@ -43,6 +43,7 @@ sesji, nie podnosić bez jego inicjatywy).
    Do rozważenia: podniesienie domyślnego minimum choćby do `icon` (32px→36px) bez czekania na
    forest-mode, albo pozostawienie jak jest (celowy kompromis gęstości UI vs. łatwości dotyku -
    **do decyzji, nie oczywisty fix**). Złożoność: **niska-średnia**. Bezpieczeństwo: nie.
+   **Decyzja (2026-09-21): zostawić jak jest** - forest-mode zostaje jedynym sposobem powiększenia.
 
 5. ✅ **`FindingsListView.tsx` i `SpotManager.tsx` mają gorsze puste stany niż reszta apki.**
    `FindingsListView.tsx:46,68` i `SpotManager.tsx:483` pokazują goły
@@ -70,6 +71,7 @@ sesji, nie podnosić bez jego inicjatywy).
    fragment mapy. Kod `MapView.tsx` nie zakłada nigdzie portrait-only w layoucie - to czysto
    manifestowe ograniczenie, nie techniczny wymóg. **Do decyzji** - może być celowe (spójność UX),
    może być niepotrzebnym ograniczeniem. Złożoność: **niska** (jedna linia), ale wymaga wyboru.
+   **Decyzja (2026-09-21): zostawić blokadę** - portrait-only pozostaje wymuszony dla spójności UX.
 
 *(Drobiazg do samodzielnej weryfikacji wizualnej, nie do zmiany kodu: nowe, dłuższe nazwy gatunków
 dodane w tej sesji - "Pieczarka karbolowa (żółciejąca)", "Muchomor jadowity (Zniszczyciel)" - nie
