@@ -13,7 +13,7 @@ aktualizowany checkmarkami w miarę realizacji (konwencja z `ROZBUDOWA-ROADMAP.m
 
 ## Tier 1: realne bugi, niska złożoność - warte zrobienia od razu
 
-1. **`createSpotMarkerIcon()` nie jest cache'owana - re-renderuje SVG ikonę dla KAŻDEGO
+1. ✅ **`createSpotMarkerIcon()` nie jest cache'owana - re-renderuje SVG ikonę dla KAŻDEGO
    zapisanego grzybowiska przy KAŻDYM ticku GPS.** `mapMarkerIcons.tsx:97-104` woła
    `renderToStaticMarkup` + `L.divIcon(...)` bez cache'a, wywoływana z `MapView.tsx:261-268`
    wewnątrz `spots?.map(...)` - a `MapView` re-renderuje się przy każdej aktualizacji
@@ -24,7 +24,7 @@ aktualizowany checkmarkami w miarę realizacji (konwencja z `ROZBUDOWA-ROADMAP.m
    po `(seasonalMatch: boolean)`, dwuelementowa `Map`, ten sam wzorzec co sąsiednie funkcje.
    Złożoność: **niska**.
 
-2. **`MapInstanceCapture`'s `onReady` łamie własny udokumentowany niezmiennik.**
+2. ✅ **`MapInstanceCapture`'s `onReady` łamie własny udokumentowany niezmiennik.**
    `MapView.tsx:218-222` przekazuje inline lambdę `(map) => { mapRef.current = map }`, mimo że
    komentarz w `MapLayers.tsx:253-256` explicite mówi, że `onReady` musi mieć stabilną referencję,
    bo inline lambda odpala efekt przy każdym renderze rodzica (każdy tick GPS). Obecnie
@@ -32,7 +32,7 @@ aktualizowany checkmarkami w miarę realizacji (konwencja z `ROZBUDOWA-ROADMAP.m
    żywa niespójność z komentarzem i zbędna praca ~1×/s. Fix: `useCallback(() => {...}, [])` w
    `MapView.tsx`. Złożoność: **niska**.
 
-3. **`.forest-mode` nie powiększa natywnych przycisków zoom Leaflet.** `index.css:413-416`
+3. ✅ **`.forest-mode` nie powiększa natywnych przycisków zoom Leaflet.** `index.css:413-416`
    celuje w `a[role='button']`, którym Leaflet faktycznie renderuje przyciski zoom - ale osobny
    blok stylowania kontrolek (`index.css:492-501`, `.leaflet-control-zoom a { width: 34px
    !important; height: 34px !important }`) nadpisuje to na sztywne 34px. Jedyny interaktywny
@@ -41,19 +41,19 @@ aktualizowany checkmarkami w miarę realizacji (konwencja z `ROZBUDOWA-ROADMAP.m
    `.forest-mode .leaflet-control-zoom a { width/height/line-height: 2.75rem !important }`.
    Złożoność: **niska**.
 
-4. **`TileLayer`'s `eventHandlers` to świeży literał obiektu przy każdym renderze.**
+4. ✅ **`TileLayer`'s `eventHandlers` to świeży literał obiektu przy każdym renderze.**
    `MapView.tsx:203-211` (`tileerror`/`tileload`) - ten sam efekt uboczny co pkt 1-2 (rebinding
    nasłuchiwaczy Leaflet ~1×/s). Tani fix przy okazji tych samych GPS-tick-owych poprawek:
    `useMemo`/stała referencja. Złożoność: **niska**.
 
-5. **`SpotRow` w `SpotManager.tsx` robi osobne zapytanie Dexie per wiersz (N+1) zamiast użyć już
+5. ✅ **`SpotRow` w `SpotManager.tsx` robi osobne zapytanie Dexie per wiersz (N+1) zamiast użyć już
    załadowanych danych.** `SpotManager.tsx:98` woła własny `useLiveQuery` per spot, mimo że
    rodzic już ładuje `allFindings` przez pełne zapytanie (`:356`) do rankingu spotów. Przy
    dziesiątkach spotów OK, ale to zbędna duplikacja zapytań przy każdej zmianie w tabeli findings
    gdy Spot Manager jest otwarty. Fix: wyprowadzić per-spot findings z już załadowanego
    `allFindings` zamiast drugiego zapytania. Złożoność: **niska**.
 
-6. **Powtórzona logika formatowania dystans+kierunek (3×) i surowego wyliczenia bearing/dystans
+6. ✅ **Powtórzona logika formatowania dystans+kierunek (3×) i surowego wyliczenia bearing/dystans
    (2×).** Sformatowany string `` `${formatDistance(d)} ${getCardinalDirection(b)}` `` dosłownie
    powtórzony w `MapStatusBadges.tsx:167-169`, `:197-199` i `FindingsListView.tsx:35-40`. Surowe
    `{distanceMeters, bearingDegrees}` liczone niemal identycznym `useMemo` w
@@ -61,20 +61,24 @@ aktualizowany checkmarkami w miarę realizacji (konwencja z `ROZBUDOWA-ROADMAP.m
    wydzielenie (nie dotyka GPS/race-condition logiki) - `useBearingInfo(from, to)` +
    `describeBearing(distance, bearing)`. Złożoność: **niska**.
 
-7. **Niespójne użycie `React.memo`.** `FindingMarkers`/`FindingsHeatmap` są już owinięte w memo
-   z jawnym komentarzem o GPS-tickach - ten sam wzorzec nie objął `MapStatusBadges`,
-   `MapToolbar`, `MapOverlayMessages`, `MapHeaderActions` (portalowane, re-renderują się przy
-   każdym renderze `MapView`) ani zawsze-zamontowanych `SpotManager`/`OfflineAreaDownload`/
-   `SzczecinSpotsPanel`/`CompassPanel` (żyją pod `Drawer` niezależnie od `open`). Przy tej skali
-   nie wąskie gardło, ale tania spójność z już przyjętą konwencją. Złożoność: **niska**.
+7. ⏸️ **Niespójne użycie `React.memo` - świadomie pominięte.** `FindingMarkers`/`FindingsHeatmap`
+   są już owinięte w memo z jawnym komentarzem o GPS-tickach - ten sam wzorzec nie objął
+   `MapStatusBadges`/`MapToolbar`/`MapOverlayMessages`/`MapHeaderActions`/`SpotManager`/
+   `OfflineAreaDownload`/`SzczecinSpotsPanel`/`CompassPanel`. Sprawdzone przy realizacji: samo
+   owinięcie w `memo()` byłoby kosmetycznym non-fixem - `MapView.tsx` przekazuje im ~15 inline
+   lambd jako propsy (`onLocate`, `onOpenSheet`, `onToggleHeatmapView` itd.), więc referencje
+   propsów i tak zmieniają się przy każdym renderze rodzica, memo nic by nie ucięło. Realna
+   naprawa wymagałaby `useCallback` na każdym z tych ~15 callbacków - więcej ryzyka (możliwość
+   przypadkowego złapania stale closure) niż uzasadnia realny zysk przy tej skali. Zostawione
+   bez zmian.
 
-8. **Brak testu ścieżki błędu `watchPosition` (np. `PERMISSION_DENIED`) w `useMapGeolocation`.**
+8. ✅ **Brak testu ścieżki błędu `watchPosition` (np. `PERMISSION_DENIED`) w `useMapGeolocation`.**
    `useMapGeolocation.test.ts` testuje `reportError`/`clearLocateError` z zewnątrz, ale nigdy nie
    emituje błędu przez faktyczny callback `onError` przekazany do `watchPosition`
    (`useMapGeolocation.ts:66`) - realny scenariusz "użytkownik cofnął zgodę na GPS w trakcie"
    nie jest zweryfikowany end-to-end na poziomie hooka. Złożoność: **niska**.
 
-9. **Doc-only: `docs/MAP-ROADMAP.md` Część 2 pkt 2 jest nieaktualny** - mówi o braku testów dla
+9. ✅ **Doc-only: `docs/MAP-ROADMAP.md` Część 2 pkt 2 jest nieaktualny** - mówi o braku testów dla
    `OfflineAreaDownload`/`SzczecinSpotsPanel`, ale oba mają dziś solidne testy (retry/abort/
    progress, stany offline/błędów). Do poprawki przy najbliższej okazji edycji tego dokumentu.
 

@@ -94,6 +94,27 @@ describe('useMapGeolocation', () => {
     unmount()
   })
 
+  it('ustawia locateError, gdy przeglądarka odmówi dostępu do GPS (PERMISSION_DENIED) w trakcie śledzenia', () => {
+    let emitError: PositionErrorCallback | null | undefined = null
+    mockWatchGeolocation((_success, error) => {
+      emitError = error
+    })
+    const { result, unmount } = renderHook(() => useMapGeolocation())
+
+    act(() => {
+      emitError?.({
+        code: 1,
+        message: 'mock',
+        PERMISSION_DENIED: 1,
+        POSITION_UNAVAILABLE: 2,
+        TIMEOUT: 3,
+      } as GeolocationPositionError)
+    })
+
+    expect(result.current.locateError).toMatch(/zgody na dostęp do lokalizacji/)
+    unmount()
+  })
+
   it('reportError i clearLocateError sterują locateError niezależnie od GPS', () => {
     mockWatchGeolocation(() => {})
     const { result, unmount } = renderHook(() => useMapGeolocation())

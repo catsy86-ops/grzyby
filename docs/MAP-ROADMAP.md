@@ -77,11 +77,9 @@ opisanych tu mechanizmów.
    `enableHighAccuracy: false` gdy pozycja się nie zmienia) lub pauza przez Page Visibility API
    gdy karta w tle. Nakład: **średni**.
 
-2. **Brak testów dla `OfflineAreaDownload.tsx` i `SzczecinSpotsPanel.tsx`** - jedyne dwa pliki w
-   `features/map/` bez dedykowanego `*.test.tsx`, mimo realnej logiki (retry/abort/progress
-   pobierania kafelków; filtrowanie i "Pokaż na mapie"). `OfflineAreaDownload` jest krytyczna dla
-   użycia bez zasięgu w lesie - cicha regresja tu boli najbardziej. Nakład: **średni** (offline,
-   mock Cache API/fetch), **mały** (panel).
+2. ✅ **Brak testów dla `OfflineAreaDownload.tsx` i `SzczecinSpotsPanel.tsx`** - zrobione w
+   międzyczasie, oba pliki mają dziś solidne testy (retry/abort/progress pobierania, blokada
+   offline, stany błędów) - potwierdzone przy audycie `docs/MAP-AUDIT-ROADMAP.md` (2026-09-21).
 
 ### Niski priorytet / czysto kosmetyczne
 
