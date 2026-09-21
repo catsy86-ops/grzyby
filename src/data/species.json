@@ -42,7 +42,8 @@
     "lookalikes": [
       "czubajka-kania",
       "gaska-zielonka",
-      "purchawka-olbrzymia"
+      "purchawka-olbrzymia",
+      "pieczarka-lakowa"
     ],
     "imageUrls": [
       "/species-images/muchomor-sromotnikowy.jpg"
@@ -291,5 +292,144 @@
       "/species-images/purchawka-olbrzymia.jpg"
     ],
     "preparationTips": "Czyszczenie: obierz cienką zewnętrzną skórkę, pokrój w plastry. Suszenie: niepolecane - zmienia strukturę miąższu i traci walory smakowe. Mrożenie: pokrojoną w plastry można zamrozić po krótkim podsmażeniu. Gotowanie: plastry panierowane i smażone jak kotlety - popularny sposób podania."
+  },
+  {
+    "id": "boczniak-ostrygowaty",
+    "nameCommon": "Boczniak ostrygowaty",
+    "nameLatin": "Pleurotus ostreatus",
+    "edibility": "jadalny",
+    "description": "Rośnie kępkami na pniach i kłodach drzew liściastych (zwłaszcza buka, topoli, wierzby), nakładając się jak dachówki. Kapelusz w kształcie muszli, szaroniebieski do brązowego, blaszki białe zbiegające na krótki, boczny trzon.",
+    "habitat": "Martwe i osłabione drzewa liściaste, pniaki, powalone kłody - w lasach i parkach",
+    "season": "Wrzesień - kwiecień",
+    "lookalikes": [],
+    "imageUrls": [
+      "/species-images/boczniak-ostrygowaty.jpg"
+    ],
+    "preparationTips": "Czyszczenie: usuń twardą nasadę trzonu, otrzep z zanieczyszczeń, zwykle nie wymaga mycia. Suszenie: dobrze się suszy, zachowuje aromat. Mrożenie: krótko podsmażyć przed zamrożeniem. Gotowanie: uniwersalny - smażony, duszony, w zupach; popularny też jako mięsny substytut."
+  },
+  {
+    "id": "kozlarz-czerwony",
+    "nameCommon": "Koźlarz czerwony",
+    "nameLatin": "Leccinum aurantiacum",
+    "edibility": "jadalny",
+    "description": "Kapelusz pomarańczowo-ceglasty, rurki szarawe, wysoki smukły trzon pokryty ciemnymi, sterczącymi łuseczkami (kosmkami). Miąższ na przekroju sinieje, a potem czernieje.",
+    "habitat": "Lasy liściaste i mieszane, głównie pod topolami i osikami",
+    "season": "Czerwiec - październik",
+    "lookalikes": [
+      "kozlarz-babka"
+    ],
+    "imageUrls": [
+      "/species-images/kozlarz-czerwony.jpg"
+    ],
+    "preparationTips": "Czyszczenie: oczyść trzon ze łuseczek u nasady, przetrzyj kapelusz. Suszenie: dobrze się suszy, miąższ ciemnieje ale zachowuje smak. Mrożenie: podsmażyć przed zamrożeniem, bo po ugotowaniu robi się śluzowaty na surowo. Gotowanie: dusić, smażyć - miąższ szybko czernieje po pokrojeniu, to normalne."
+  },
+  {
+    "id": "maslak-zolty",
+    "nameCommon": "Maślak żółty (sitarz)",
+    "nameLatin": "Suillus grevillei",
+    "edibility": "jadalny",
+    "description": "Kapelusz żółto-pomarańczowy, wyraźnie śluzowaty we wilgotną pogodę, rurki żółte. Trzon z żółtym, błoniastym pierścieniem. Rośnie zawsze pod modrzewiami (mikoryza specyficzna).",
+    "habitat": "Wyłącznie pod modrzewiami - nasadzenia leśne i parki",
+    "season": "Czerwiec - listopad",
+    "lookalikes": [
+      "maslak-zwyczajny"
+    ],
+    "imageUrls": [
+      "/species-images/maslak-zolty.jpg"
+    ],
+    "preparationTips": "Czyszczenie: koniecznie obierz śluzowatą skórkę kapelusza - u niektórych osób powoduje dolegliwości żołądkowe jeśli zostawiona. Suszenie: dobrze się suszy po obraniu skórki. Mrożenie: podsmażyć przed zamrożeniem. Gotowanie: dusić, do zup - łagodny smak."
+  },
+  {
+    "id": "mleczaj-rydz",
+    "nameCommon": "Mleczaj rydz (Rydz)",
+    "nameLatin": "Lactarius deliciosus",
+    "edibility": "jadalny",
+    "description": "Kapelusz pomarańczowy z koncentrycznymi, ciemniejszymi kręgami, przy przełamaniu wydziela pomarańczowe mleczko, które na powietrzu zielenieje. Jeden z najbardziej cenionych grzybów jadalnych, wysoko ceniony w kuchni.",
+    "habitat": "Młodniki sosnowe, lasy iglaste na piaszczystym podłożu",
+    "season": "Sierpień - październik",
+    "lookalikes": [],
+    "imageUrls": [
+      "/species-images/mleczaj-rydz.jpg"
+    ],
+    "preparationTips": "Czyszczenie: oczyść szczoteczką, nie mocz długo w wodzie. Suszenie: mniej polecane - miąższ robi się gorzkawy po suszeniu. Mrożenie: podsmażyć przed zamrożeniem. Gotowanie: świetny krótko smażony na maśle lub grillowany w całości - tradycyjnie solony/kiszony w wielu regionach Europy."
+  },
+  {
+    "id": "muchomor-plamisty",
+    "nameCommon": "Muchomor plamisty",
+    "nameLatin": "Amanita excelsa",
+    "edibility": "warunkowo-jadalny",
+    "description": "Kapelusz szarobrązowy z szarawymi, łatwo znikającymi płatkami, trzon z pierścieniem i bulwiastą, bezkołnierzykową nasadą (bez wyraźnej wolwy jak u trujących muchomorów). Mało atrakcyjny kulinarnie i łatwy do pomylenia z niebezpiecznymi gatunkami - w praktyce odradza się zbierania przez początkujących.",
+    "habitat": "Lasy liściaste i iglaste, na żyznych glebach",
+    "season": "Lipiec - październik",
+    "lookalikes": [
+      "muchomor-sromotnikowy",
+      "muchomor-jadowity",
+      "muchomor-czerwony"
+    ],
+    "imageUrls": [
+      "/species-images/muchomor-plamisty.jpg"
+    ],
+    "preparationTips": "Ze względu na duże ryzyko pomyłki z trującymi muchomorami i niską wartość kulinarną, zbieranie tego gatunku nie jest polecane nawet doświadczonym grzybiarzom."
+  },
+  {
+    "id": "pieczarka-karbolowa",
+    "nameCommon": "Pieczarka karbolowa (żółciejąca)",
+    "nameLatin": "Agaricus xanthodermus",
+    "edibility": "trujący",
+    "description": "Wyglądem przypomina jadalne pieczarki, ale u nasady trzonu (po przekrojeniu lub potarciu) intensywnie żółknie i wydziela nieprzyjemny, karbolowy/atramentowy zapach. Powoduje dolegliwości żołądkowo-jelitowe (nudności, wymioty, biegunka).",
+    "habitat": "Parki, ogrody, przydroża, skraje lasów liściastych - lubi żyzne, nawożone gleby",
+    "season": "Czerwiec - październik",
+    "lookalikes": [
+      "pieczarka-lakowa"
+    ],
+    "imageUrls": [
+      "/species-images/pieczarka-karbolowa.jpg"
+    ],
+    "preparationTips": "Niejadalna/trująca - zawsze sprawdzaj zapach i żółknięcie u nasady trzonu przed zbiorem jakiejkolwiek pieczarki."
+  },
+  {
+    "id": "pieczarka-lakowa",
+    "nameCommon": "Pieczarka łąkowa (polna)",
+    "nameLatin": "Agaricus campestris",
+    "edibility": "jadalny",
+    "description": "Kapelusz biały do kremowego, blaszki różowe u młodych owocników, ciemniejące do brązu z wiekiem, trzon z pojedynczym, cienkim pierścieniem. Nasada trzonu nie żółknie po przekrojeniu (w odróżnieniu od trującej pieczarki karbolowej).",
+    "habitat": "Łąki, pastwiska, przydomowe trawniki - poza lasem",
+    "season": "Maj - październik",
+    "lookalikes": [
+      "pieczarka-karbolowa",
+      "muchomor-sromotnikowy"
+    ],
+    "imageUrls": [
+      "/species-images/pieczarka-lakowa.jpg"
+    ],
+    "preparationTips": "Czyszczenie: przetrzyj wilgotną szmatką, obierz cienką skórkę kapelusza jeśli zabrudzona. Zawsze sprawdź różowe/brązowe blaszki (nigdy białe jak u młodych muchomorów) i brak wolwy u nasady. Gotowanie: smażyć, dusić, świetna też na surowo w sałatkach."
+  },
+  {
+    "id": "plomiennica-zimowa",
+    "nameCommon": "Płomiennica zimowa (Enoki)",
+    "nameLatin": "Flammulina velutipes",
+    "edibility": "jadalny",
+    "description": "Rośnie kępkami na pniach i kłodach drzew liściastych, głównie zimą i wczesną wiosną, często po odwilży po mrozach. Kapelusz pomarańczowo-brązowy, śluzowaty, trzon aksamitnie owłosiony, ciemniejący ku dołowi.",
+    "habitat": "Martwe drzewa liściaste, zwłaszcza wierzby i topole, pniaki, powalone kłody",
+    "season": "Listopad - marzec",
+    "lookalikes": [],
+    "imageUrls": [
+      "/species-images/plomiennica-zimowa.jpg"
+    ],
+    "preparationTips": "Czyszczenie: usuń owłosiony, ciemny dolny odcinek trzonu, opłucz kapelusze ze śluzu. Gotowanie: dodawana do zup, duszona - popularna w kuchni azjatyckiej jako hodowana odmiana (enoki, biała i cienka - dziko rosnąca postać wygląda inaczej)."
+  },
+  {
+    "id": "siedzun-sosnowy",
+    "nameCommon": "Siedzuń sosnowy (Szmaciak gałęzisty)",
+    "nameLatin": "Sparassis crispa",
+    "edibility": "jadalny",
+    "description": "Duży, nietypowy grzyb w kształcie kalafiora złożonego z pofalowanych, płatkowatych lamelek, kremowo-żółtawy. Rośnie u podstawy pni sosnowych. Gatunek objęty częściową ochroną w Polsce w niektórych regionach - sprawdź lokalne przepisy przed zbiorem.",
+    "habitat": "Nasada pni starych sosen, rzadko innych drzew iglastych",
+    "season": "Sierpień - październik",
+    "lookalikes": [],
+    "imageUrls": [
+      "/species-images/siedzun-sosnowy.jpg"
+    ],
+    "preparationTips": "Czyszczenie: wymaga dokładnego mycia - w fałdach zbiera się piasek i igliwie, namocz na chwilę i wypłucz. Suszenie: dobrze się suszy, zachowuje strukturę. Gotowanie: smażony, duszony - ceniony za chrupką, mięsistą konsystencję; sprawdź lokalny status ochronny przed zbiorem."
   }
 ]
