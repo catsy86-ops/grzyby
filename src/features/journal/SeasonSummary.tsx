@@ -4,6 +4,7 @@ import { db } from '../../db/db'
 import { StatTile, StatTileRow } from '../../components/StatTiles'
 import { Card, CardContent } from '../../components/ui/card'
 import {
+  computeRainyTripInsight,
   countSpeciesDiversity,
   formatWeight,
   groupFindingsByYear,
@@ -30,6 +31,14 @@ function DeltaLabel({ delta, unit }: { delta: number | null; unit: string }) {
 // z bieżącego roku - pusty sezon i tak pokazuje EmptyBasketIllustration niżej w liście.
 export function SeasonSummary() {
   const allFindings = useLiveQuery(() => db.findings.toArray(), [])
+  // Osobne od `stats` niżej (który celowo patrzy tylko na bieżący rok) - ten insight jest
+  // historyczny, całościowy, żeby w ogóle miał szansę zebrać wystarczająco dużo wypraw w obu
+  // grupach (deszczowe/suche, próg w computeRainyTripInsight).
+  const allTrips = useLiveQuery(() => db.trips.toArray(), [])
+  const rainyInsight = useMemo(
+    () => (allTrips && allFindings ? computeRainyTripInsight(allTrips, allFindings) : null),
+    [allTrips, allFindings],
+  )
 
   const stats = useMemo(() => {
     if (!allFindings) return null
@@ -64,6 +73,13 @@ export function SeasonSummary() {
             vs {stats.year - 1}
             <DeltaLabel delta={stats.countDelta} unit="znalezisk" />
             <DeltaLabel delta={stats.weightDelta} unit="wagi" />
+          </p>
+        )}
+        {rainyInsight && (
+          <p className="text-xs text-muted-foreground">
+            {rainyInsight.avgFindingsRainy > rainyInsight.avgFindingsDry
+              ? `🌧️ Podczas deszczowych wypraw znajdujesz średnio ${rainyInsight.avgFindingsRainy.toFixed(1)} znalezisk, w suchych ${rainyInsight.avgFindingsDry.toFixed(1)}.`
+              : `☀️ Podczas suchych wypraw znajdujesz średnio ${rainyInsight.avgFindingsDry.toFixed(1)} znalezisk, w deszczowych ${rainyInsight.avgFindingsRainy.toFixed(1)}.`}
           </p>
         )}
       </CardContent>

@@ -14,6 +14,7 @@ vi.mock('../../utils/mushroomWeather', async () => {
   return {
     ...actual,
     fetchMushroomOutlook: vi.fn(),
+    fetchMushroomForecast: vi.fn(),
   }
 })
 
@@ -25,6 +26,7 @@ describe('ForestAssistant', () => {
     })
     vi.mocked(geolocation.getCurrentPosition).mockReset()
     vi.mocked(mushroomWeather.fetchMushroomOutlook).mockReset()
+    vi.mocked(mushroomWeather.fetchMushroomForecast).mockReset().mockResolvedValue([])
     useAppStore.setState({ navigationTargetSpotId: null, activeTab: 'baza-wiedzy' })
   })
 
@@ -57,6 +59,7 @@ describe('ForestAssistant', () => {
       avgTempC: 15,
       score: 'dobry',
       label: 'Dobry czas na grzyby',
+      soilMoisturePercent: null,
     })
     render(<ForestAssistant open onOpenChange={vi.fn()} />)
 

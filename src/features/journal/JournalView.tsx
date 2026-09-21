@@ -25,6 +25,7 @@ import { exportFindingsToPdf } from '../../utils/pdfExport'
 import { exportFindingsToGpx } from '../../utils/gpxExport'
 import { exportFindingsToCsv } from '../../utils/csvExport'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
+import { filterIncompleteFindings, isIncompleteFinding } from '../../utils/findingCompleteness'
 import { isWithinDateRange, type SortOrder } from '../../utils/journalFilters'
 import { rankSpotsByFindingCount } from '../../utils/spotStats'
 import {
@@ -102,6 +103,13 @@ export function JournalView() {
   const [searchQuery, setSearchQuery] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  // "Do uzupełnienia" (ROZBUDOWA-ROADMAP.md Część 2 pkt 3) - znaleziska bez gatunku lub bez
+  // zdjęcia, częste przy szybkim dyktowaniu głosowym w terenie. Zakres celowo ograniczony do
+  // aktualnie wczytanej strony (ta sama `PAGE_SIZE`-owa logika co reszta widoku) - pełne
+  // przeszukanie całej historii kłóciłoby się z powodem, dla którego paginacja w ogóle istnieje
+  // (patrz komentarz przy PAGE_SIZE wyżej), a najświeższe wpisy to i tak te najbardziej warte
+  // domknięcia.
+  const [showIncompleteOnly, setShowIncompleteOnly] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editSpeciesId, setEditSpeciesId] = useState('')
   const [editNotes, setEditNotes] = useState('')
@@ -131,6 +139,15 @@ export function JournalView() {
     [tripFilter],
   )
 
+  // Tylko klucze indeksu `findingId` (patrz db.ts), nie pełne rekordy - unika wczytywania
+  // blobów zdjęć tylko po to, by sprawdzić ich istnienie.
+  const photoFindingIds = useLiveQuery(() => db.photos.orderBy('findingId').uniqueKeys(), [])
+  const photoFindingIdSet = useMemo(() => new Set((photoFindingIds ?? []) as number[]), [photoFindingIds])
+  const incompleteFindings = useMemo(
+    () => (findings ? filterIncompleteFindings(findings, photoFindingIdSet) : []),
+    [findings, photoFindingIdSet],
+  )
+
   const filteredFindings = useMemo(() => {
     if (!findings) return findings
     let result = findings
@@ -147,8 +164,9 @@ export function JournalView() {
     if (dateFrom || dateTo) {
       result = result.filter((f) => isWithinDateRange(f.createdAt, dateFrom, dateTo))
     }
+    if (showIncompleteOnly) result = result.filter((f) => isIncompleteFinding(f, photoFindingIdSet))
     return result
-  }, [findings, tripFilter, searchQuery, dateFrom, dateTo])
+  }, [findings, tripFilter, searchQuery, dateFrom, dateTo, showIncompleteOnly, photoFindingIdSet])
 
   const confirmDeleteFinding = useMemo(
     () => (confirmDeleteId != null ? findings?.find((f) => f.id === confirmDeleteId) : undefined),
@@ -379,6 +397,19 @@ export function JournalView() {
 
       <NotificationPermissionBanner />
       <BackupReminderBanner onExport={handleExport} />
+
+      {incompleteFindings.length > 0 && (
+        <Alert className="flex items-center justify-between gap-2">
+          <AlertDescription className="text-current">
+            {showIncompleteOnly
+              ? `Pokazano ${incompleteFindings.length} ${incompleteFindings.length === 1 ? 'znalezisko' : 'znalezisk'} bez gatunku lub zdjęcia (z ostatnio wczytanych).`
+              : `${incompleteFindings.length} ${incompleteFindings.length === 1 ? 'znalezisko' : 'znalezisk'} bez gatunku lub zdjęcia wśród ostatnio wczytanych.`}
+          </AlertDescription>
+          <Button size="sm" variant={showIncompleteOnly ? 'outline' : 'default'} onClick={() => setShowIncompleteOnly((v) => !v)}>
+            {showIncompleteOnly ? 'Pokaż wszystkie' : 'Pokaż'}
+          </Button>
+        </Alert>
+      )}
 
       {severeReactionFindings.length > 0 && (
         <Alert variant="destructive-soft">

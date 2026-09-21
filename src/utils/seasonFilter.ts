@@ -93,6 +93,23 @@ export function getCurrentSeason(date: Date = new Date()): MeteorologicalSeason 
   return METEOROLOGICAL_SEASONS[Math.floor(((month + 1) % 12) / 3)]
 }
 
+// "Za X dni zaczyna się sezon" (ROZBUDOWA-ROADMAP.md Część 2 pkt 5) - liczy dni do najbliższego
+// 1. dnia miesiąca startowego zakresu sezonu, licząc od dzisiejszej daty (dzień, nie moment -
+// obie daty sprowadzone do północy, żeby "jutro" zawsze dawało dokładnie 1, niezależnie o której
+// godzinie apka jest otwarta). `null`, gdy już jest sezon (to nie jest "nadchodzące") albo gdy
+// tekst sezonu się nie parsuje.
+export function daysUntilSeasonStart(season: string, date: Date = new Date()): number | null {
+  const range = parseSeasonRange(season)
+  if (!range) return null
+  if (isInSeason(season, date)) return null
+
+  const today = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  let target = new Date(today.getFullYear(), range.startMonth, 1)
+  if (target < today) target = new Date(today.getFullYear() + 1, range.startMonth, 1)
+
+  return Math.round((target.getTime() - today.getTime()) / (24 * 60 * 60 * 1000))
+}
+
 // Fail-open: nieparsowalny/nietypowy format sezonu nigdy nie ukrywa gatunku (bezpieczniej pokazać
 // za dużo niż przypadkiem odfiltrować coś, co akurat rośnie).
 export function isInSeason(season: string, date: Date = new Date()): boolean {

@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import { useActiveTrip } from '../../stores/useActiveTrip'
-import { countSpeciesDiversity, formatDuration, formatWeight, isLongTrip, sumWeightGrams } from '../../utils/tripStats'
+import { countSpeciesDiversity, daysSinceLastTrip, formatDuration, formatWeight, isLongTrip, sumWeightGrams } from '../../utils/tripStats'
 import { showLocalNotification } from '../../utils/notifications'
 import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { getCurrentPosition } from '../../utils/geolocation'
@@ -49,6 +49,11 @@ export function TripManager() {
     () => (activeTripId != null ? db.findings.where('tripId').equals(activeTripId).toArray() : []),
     [activeTripId],
   )
+  // Tylko do "ile dni od ostatniej wyprawy" niżej - liczba wypraw jest zwykle niewielka (w
+  // odróżnieniu od znalezisk), więc pełne `toArray()` bez paginacji jest tu w porządku (ten sam
+  // kompromis co SeasonSummary.tsx).
+  const allTrips = useLiveQuery(() => db.trips.toArray(), [])
+  const daysSinceLast = allTrips ? daysSinceLastTrip(allTrips, now) : null
 
   useEffect(() => {
     if (activeTripId == null || !activeTrip) return
@@ -200,9 +205,16 @@ export function TripManager() {
             </div>
           </div>
         ) : (
-          <Button className="w-full" onClick={() => setShowNewTripInput(true)}>
-            🥾 Rozpocznij wyprawę
-          </Button>
+          <div className="flex flex-col gap-1.5">
+            <Button className="w-full" onClick={() => setShowNewTripInput(true)}>
+              🥾 Rozpocznij wyprawę
+            </Button>
+            {daysSinceLast != null && daysSinceLast > 0 && (
+              <p className="text-center text-xs text-muted-foreground">
+                {daysSinceLast === 1 ? '1 dzień' : `${daysSinceLast} dni`} od ostatniej wyprawy
+              </p>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

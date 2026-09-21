@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getCurrentSeason, getSeasonMonths, isInSeason, parseSeasonRange } from './seasonFilter'
+import { daysUntilSeasonStart, getCurrentSeason, getSeasonMonths, isInSeason, parseSeasonRange } from './seasonFilter'
 import speciesData from '../data/species.json'
 
 describe('parseSeasonRange', () => {
@@ -84,5 +84,31 @@ describe('getCurrentSeason', () => {
   it('rozpoznaje jesień (wrzesień-listopad)', () => {
     expect(getCurrentSeason(new Date(2026, 8, 1))).toBe('jesien')
     expect(getCurrentSeason(new Date(2026, 10, 30))).toBe('jesien')
+  })
+})
+
+describe('daysUntilSeasonStart', () => {
+  it('zwraca null, gdy sezon już trwa', () => {
+    expect(daysUntilSeasonStart('Czerwiec - Październik', new Date(2026, 7, 15))).toBeNull()
+  })
+
+  it('zwraca null dla nieparsowalnego formatu', () => {
+    expect(daysUntilSeasonStart('cały rok', new Date(2026, 0, 1))).toBeNull()
+  })
+
+  it('liczy dni do najbliższego startu sezonu w tym samym roku', () => {
+    // 1 stycznia -> sezon zaczyna się 1 czerwca (miesiąc 5) tego samego roku
+    expect(daysUntilSeasonStart('Czerwiec - Październik', new Date(2026, 0, 1))).toBe(151)
+  })
+
+  it('zawija na następny rok, gdy sezon w tym roku już minął', () => {
+    // 15 listopada, sezon Czerwiec-Październik już minął -> licz do 1 czerwca przyszłego roku
+    const result = daysUntilSeasonStart('Czerwiec - Październik', new Date(2026, 10, 15))
+    expect(result).toBeGreaterThan(180)
+    expect(result).toBeLessThan(220)
+  })
+
+  it('zwraca 1 dzień przed startem sezonu', () => {
+    expect(daysUntilSeasonStart('Czerwiec - Październik', new Date(2026, 4, 31))).toBe(1)
   })
 })

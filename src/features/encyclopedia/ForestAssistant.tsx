@@ -5,10 +5,10 @@ import type { Species } from '../../db/schema'
 import { useAppStore } from '../../stores/appStore'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { getCurrentPosition } from '../../utils/geolocation'
-import { fetchMushroomOutlook, type MushroomOutlook } from '../../utils/mushroomWeather'
+import { fetchMushroomForecast, fetchMushroomOutlook, type MushroomDayOutlook, type MushroomOutlook } from '../../utils/mushroomWeather'
 import { getSpeciesSpotHistory, type SpeciesSpotHistory } from '../../utils/speciesSpotHistory'
 import { isInSeason } from '../../utils/seasonFilter'
-import { formatDate } from '../../utils/formatDate'
+import { formatDate, formatWeekdayShort } from '../../utils/formatDate'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
 import { Badge } from '../../components/ui/badge'
@@ -35,6 +35,10 @@ export function ForestAssistant({ open, onOpenChange }: ForestAssistantProps) {
   const [selected, setSelected] = useState<Species | null>(null)
   const [outlook, setOutlook] = useState<MushroomOutlook | null>(null)
   const [outlookStatus, setOutlookStatus] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle')
+  // Prognoza na kilka najbliższych dni - osobny, niekrytyczny fetch (patrz komentarz przy
+  // `void fetchMushroomForecast` niżej): błąd/offline nie blokuje reszty asystenta, sekcja
+  // po prostu się nie pokazuje.
+  const [forecast, setForecast] = useState<MushroomDayOutlook[] | null>(null)
   const [spotHistory, setSpotHistory] = useState<SpeciesSpotHistory[] | null>(null)
   const setNavigationTargetSpotId = useAppStore((s) => s.setNavigationTargetSpotId)
   const setActiveTab = useAppStore((s) => s.setActiveTab)
@@ -54,6 +58,7 @@ export function ForestAssistant({ open, onOpenChange }: ForestAssistantProps) {
     setQuery('')
     setOutlookStatus('loading')
     setOutlook(null)
+    setForecast(null)
     setSpotHistory(null)
 
     void getSpeciesSpotHistory(s.id).then(setSpotHistory)
@@ -63,6 +68,10 @@ export function ForestAssistant({ open, onOpenChange }: ForestAssistantProps) {
       const result = await fetchMushroomOutlook(coords.latitude, coords.longitude)
       setOutlook(result)
       setOutlookStatus('ready')
+      // Osobny, niekrytyczny fetch - GPS już mamy z linii wyżej, więc to tylko druga zapytanie do
+      // Open-Meteo. Błąd tutaj nie cofa `outlookStatus` do 'unavailable' (dzisiejsza pogoda już
+      // się pokazała) - pasek "kilka najbliższych dni" po prostu się nie pojawi.
+      void fetchMushroomForecast(coords.latitude, coords.longitude).then(setForecast).catch(() => {})
     } catch {
       // Brak GPS/offline/API padło - sekcja pogodowa po prostu się nie pokazuje, jak w
       // useMushroomOutlook.ts. Sezon i historia własna nie zależą od pogody, więc reszta
@@ -76,6 +85,7 @@ export function ForestAssistant({ open, onOpenChange }: ForestAssistantProps) {
     setQuery('')
     setOutlook(null)
     setOutlookStatus('idle')
+    setForecast(null)
     setSpotHistory(null)
   }
 
@@ -182,6 +192,35 @@ export function ForestAssistant({ open, onOpenChange }: ForestAssistantProps) {
                       ? 'Jest sezon, ale warunki pogodowe ostatnio nie są sprzyjające.'
                       : 'Poza typowym sezonem tego gatunku - szanse mniejsze niezależnie od pogody.'}
                 </p>
+              )}
+
+              {outlookStatus === 'ready' && outlook?.soilMoisturePercent != null && (
+                <p className="text-xs text-muted-foreground">
+                  Wilgotność wierzchniej warstwy gleby: ~{Math.round(outlook.soilMoisturePercent)}%
+                </p>
+              )}
+
+              {/* Prognoza na kilka najbliższych dni - dokłada wymiar "czy warto wybrać się za
+                  kilka dni", nie tylko "czy warto dziś" (samo `outlook` wyżej). Niekrytyczna -
+                  brak (np. offline po udanym pierwszym zapytaniu, albo drugi fetch akurat padł)
+                  po prostu nie pokazuje tej sekcji, reszta asystenta działa normalnie. */}
+              {forecast && forecast.length > 1 && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Najbliższe dni</p>
+                  <div className="mt-1 flex gap-1">
+                    {forecast.map((day) => (
+                      <div
+                        key={day.date}
+                        title={day.label}
+                        className={`flex flex-1 flex-col items-center gap-1 rounded-md py-1.5 text-[10px] font-medium text-white ${
+                          day.score === 'dobry' ? 'bg-green-500' : day.score === 'sredni' ? 'bg-yellow-500' : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        <span className="capitalize">{formatWeekdayShort(day.date)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
               <div>

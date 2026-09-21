@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { Finding } from '../db/schema'
+import type { Finding, Trip } from '../db/schema'
 import {
+  computeRainyTripInsight,
   countSpeciesDiversity,
+  daysSinceLastTrip,
   formatDuration,
   formatWeight,
   groupFindingsBySpeciesCount,
@@ -11,6 +13,10 @@ import {
   sumWeightGrams,
   yearOverYearDelta,
 } from './tripStats'
+
+function makeTrip(overrides: Partial<Trip> = {}): Trip {
+  return { startedAt: Date.now(), endedAt: null, name: 'Wyprawa', notes: '', ...overrides }
+}
 
 function makeFinding(overrides: Partial<Finding> = {}): Finding {
   return {
@@ -143,5 +149,79 @@ describe('yearOverYearDelta', () => {
 
   it('zwraca null, gdy brak danych z poprzedniego roku', () => {
     expect(yearOverYearDelta(5, 0)).toBeNull()
+  })
+})
+
+describe('daysSinceLastTrip', () => {
+  const DAY_MS = 24 * 60 * 60 * 1000
+  const now = new Date('2026-09-21T12:00:00Z').getTime()
+
+  it('zwraca null, gdy brak wypraw', () => {
+    expect(daysSinceLastTrip([], now)).toBeNull()
+  })
+
+  it('liczy dni od najnowszej (najpóźniej rozpoczętej) wyprawy, ignorując starsze', () => {
+    const trips = [
+      makeTrip({ startedAt: now - 10 * DAY_MS }),
+      makeTrip({ startedAt: now - 3 * DAY_MS }),
+      makeTrip({ startedAt: now - 20 * DAY_MS }),
+    ]
+    expect(daysSinceLastTrip(trips, now)).toBe(3)
+  })
+
+  it('zwraca 0 dla wyprawy rozpoczętej dziś', () => {
+    expect(daysSinceLastTrip([makeTrip({ startedAt: now })], now)).toBe(0)
+  })
+})
+
+describe('computeRainyTripInsight', () => {
+  function tripWithFindings(id: number, wasRainy: boolean | undefined, findingCount: number) {
+    const trip = makeTrip({ id, wasRainy })
+    const findings = Array.from({ length: findingCount }, () => makeFinding({ tripId: id }))
+    return { trip, findings }
+  }
+
+  it('zwraca null, gdy za mało wypraw w którejś grupie (próg 3)', () => {
+    const rainy = [tripWithFindings(1, true, 5), tripWithFindings(2, true, 5)]
+    const dry = [tripWithFindings(3, false, 1), tripWithFindings(4, false, 1), tripWithFindings(5, false, 1)]
+    const all = [...rainy, ...dry]
+    expect(computeRainyTripInsight(all.map((x) => x.trip), all.flatMap((x) => x.findings))).toBeNull()
+  })
+
+  it('zwraca null, gdy żadna wyprawa nie ma zapisanego wasRainy', () => {
+    const trips = [makeTrip({ id: 1 }), makeTrip({ id: 2 }), makeTrip({ id: 3 })]
+    expect(computeRainyTripInsight(trips, [])).toBeNull()
+  })
+
+  it('liczy średnią liczbę znalezisk per wyprawa osobno dla deszczowych i suchych', () => {
+    const entries = [
+      tripWithFindings(1, true, 6),
+      tripWithFindings(2, true, 4),
+      tripWithFindings(3, true, 8),
+      tripWithFindings(4, false, 2),
+      tripWithFindings(5, false, 0),
+      tripWithFindings(6, false, 1),
+    ]
+    const result = computeRainyTripInsight(entries.map((e) => e.trip), entries.flatMap((e) => e.findings))
+    expect(result).not.toBeNull()
+    expect(result!.avgFindingsRainy).toBe(6)
+    expect(result!.avgFindingsDry).toBe(1)
+    expect(result!.rainyTripCount).toBe(3)
+    expect(result!.dryTripCount).toBe(3)
+  })
+
+  it('ignoruje wyprawy bez id lub bez zapisanego wasRainy', () => {
+    const entries = [
+      tripWithFindings(1, true, 5),
+      tripWithFindings(2, true, 5),
+      tripWithFindings(3, true, 5),
+      tripWithFindings(4, false, 1),
+      tripWithFindings(5, false, 1),
+      tripWithFindings(6, false, 1),
+      tripWithFindings(7, undefined, 100),
+    ]
+    const result = computeRainyTripInsight(entries.map((e) => e.trip), entries.flatMap((e) => e.findings))
+    expect(result!.rainyTripCount).toBe(3)
+    expect(result!.dryTripCount).toBe(3)
   })
 })

@@ -10,3 +10,9 @@ export function formatDate(value: string | number | Date): string {
 export function formatDateTime(value: string | number | Date): string {
   return new Date(value).toLocaleString('pl-PL')
 }
+
+// Skrócona nazwa dnia tygodnia ("pon", "wt"...) - do kompaktowych pasków wieloelementowych
+// (np. prognoza na kilka dni w ForestAssistant.tsx), gdzie pełna data zajęłaby za dużo miejsca.
+export function formatWeekdayShort(value: string | number | Date): string {
+  return new Date(value).toLocaleDateString('pl-PL', { weekday: 'short' })
+}

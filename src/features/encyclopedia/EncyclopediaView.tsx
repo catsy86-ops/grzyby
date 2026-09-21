@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { LeafIcon, ChefHatIcon, ChevronDownIcon, CompassIcon, GitCompareIcon, ScaleIcon, SwordsIcon } from 'lucide-react'
+import { LeafIcon, CalendarClockIcon, ChefHatIcon, ChevronDownIcon, CompassIcon, GitCompareIcon, ScaleIcon, SwordsIcon } from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
 import speciesData from '../../data/species.json'
 import type { EdibilityStatus, Species } from '../../db/schema'
@@ -16,7 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../compo
 import { Input } from '../../components/ui/input'
 import { Toggle } from '../../components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
-import { getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'
+import { daysUntilSeasonStart, getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'
 import { SHAPE_GROUP_LABEL, getSpeciesShapeGroup } from '../../utils/speciesShape'
 import { SpeciesShapeIcon } from '../../components/icons/speciesShapeIcons'
 import { ForestAssistant } from './ForestAssistant'
@@ -43,6 +43,20 @@ export function EncyclopediaView() {
   const [listRef] = useAutoAnimate()
 
   const species = speciesData as Species[]
+
+  // "Za X dni zaczyna się sezon na [gatunek]" (ROZBUDOWA-ROADMAP.md Część 2 pkt 5) - jeden,
+  // najbliższy nadchodzący sezon spośród wszystkich gatunków, nie lista - to skrót/ciekawostka na
+  // start widoku, nie kolejny filtr. Próg 45 dni: dalej niż to i tak nie jest "już blisko", więc
+  // nie pokazujemy banera cały rok dla czegoś, co zacznie się za pół roku.
+  const upcomingSeason = useMemo(() => {
+    let best: { species: Species; days: number } | null = null
+    for (const s of species) {
+      const days = daysUntilSeasonStart(s.season)
+      if (days == null || days > 45) continue
+      if (best == null || days < best.days) best = { species: s, days }
+    }
+    return best
+  }, [species])
 
   const filtered = useMemo(() => {
     return species.filter((s) => {
@@ -79,6 +93,19 @@ export function EncyclopediaView() {
           </Button>
         </div>
       </div>
+
+      {upcomingSeason && (
+        <Alert className="flex items-center justify-between gap-2">
+          <AlertDescription className="flex items-center gap-1.5 text-current">
+            <CalendarClockIcon className="size-4 shrink-0" />
+            Za {upcomingSeason.days} {upcomingSeason.days === 1 ? 'dzień' : 'dni'} zaczyna się sezon na{' '}
+            {upcomingSeason.species.nameCommon}.
+          </AlertDescription>
+          <Button size="sm" variant="outline" onClick={() => setQuery(upcomingSeason.species.nameCommon)}>
+            Pokaż
+          </Button>
+        </Alert>
+      )}
 
       {/* Sticky pasek wyszukiwania/filtrów - przy przewijaniu 19 gatunków w dół wracanie na
           górę tylko po to, żeby zmienić filtr, jest niewygodne na telefonie. Ujemny margines +

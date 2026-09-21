@@ -456,3 +456,53 @@ describe('JournalView - ostrzeżenie o ciężkiej reakcji', () => {
     })
   })
 })
+
+describe('JournalView - "do uzupełnienia" (brak gatunku lub zdjęcia)', () => {
+  beforeEach(async () => {
+    await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
+      await db.findings.clear()
+      await db.trips.clear()
+      await db.photos.clear()
+    })
+  })
+
+  afterEach(() => cleanup())
+
+  it('pokazuje baner z liczbą znalezisk bez gatunku lub zdjęcia', async () => {
+    await addFinding({ speciesId: null })
+    await addFinding({ speciesId: null })
+    const completeId = await addFinding({ speciesId: 'borowik-szlachetny' })
+    await db.photos.add({ findingId: completeId as number, blob: new Blob(['x']), thumbnailBlob: new Blob(['x']) })
+
+    render(<JournalView />)
+
+    expect(await screen.findByText(/2 znalezisk bez gatunku lub zdjęcia/)).toBeInTheDocument()
+  })
+
+  it('nie pokazuje banera, gdy wszystkie znaleziska mają gatunek i zdjęcie', async () => {
+    const id = await addFinding({ speciesId: 'borowik-szlachetny' })
+    await db.photos.add({ findingId: id as number, blob: new Blob(['x']), thumbnailBlob: new Blob(['x']) })
+
+    render(<JournalView />)
+
+    await waitFor(() => {
+      expect(screen.queryByText(/bez gatunku lub zdjęcia/)).not.toBeInTheDocument()
+    })
+  })
+
+  it('przycisk "Pokaż" filtruje listę do samych niekompletnych znalezisk', async () => {
+    await addFinding({ speciesId: null, speciesNameGuess: 'Niekompletne' })
+    const completeId = await addFinding({ speciesId: 'borowik-szlachetny', speciesNameGuess: 'Kompletne' })
+    await db.photos.add({ findingId: completeId as number, blob: new Blob(['x']), thumbnailBlob: new Blob(['x']) })
+
+    render(<JournalView />)
+
+    expect(await screen.findByText('Kompletne')).toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: 'Pokaż' }))
+
+    await waitFor(() => {
+      expect(screen.queryByText('Kompletne')).not.toBeInTheDocument()
+    })
+    expect(screen.getByText('Niekompletne')).toBeInTheDocument()
+  })
+})

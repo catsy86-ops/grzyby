@@ -44,7 +44,7 @@ describe('MapStatusBadges', () => {
     render(
       <MapStatusBadges
         {...baseProps}
-        mushroomOutlook={{ recentRainMm: 5, avgTempC: 14, score: 'dobry', label: 'Dobre warunki' }}
+        mushroomOutlook={{ recentRainMm: 5, avgTempC: 14, score: 'dobry', label: 'Dobre warunki', soilMoisturePercent: null }}
       />,
     )
     expect(screen.getByText('Dobre warunki')).toBeInTheDocument()

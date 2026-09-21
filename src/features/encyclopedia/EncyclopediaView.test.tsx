@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { EncyclopediaView } from './EncyclopediaView'
@@ -61,5 +61,41 @@ describe('EncyclopediaView', () => {
     const total = (speciesData as Species[]).length
     expect(unprotectedCount).toBeLessThan(total)
     expect(screen.getAllByText('Chroniony')).toHaveLength(total - unprotectedCount)
+  })
+})
+
+describe('EncyclopediaView - "za X dni zaczyna się sezon"', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+  })
+
+  it('pokazuje baner z najbliższym nadchodzącym sezonem i filtruje po kliknięciu "Pokaż"', () => {
+    // 1 lutego: jedyny gatunek z sezonem startującym w ciągu 45 dni to piestrzenica kasztanowata
+    // (sezon "Marzec - maj", start 1 marca = 28 dni) - reszta zaczyna się później albo już trwa.
+    vi.setSystemTime(new Date(2026, 1, 1))
+    render(<EncyclopediaView />)
+
+    expect(
+      screen.getByText(
+        (_, element) => element?.textContent === 'Za 28 dni zaczyna się sezon na Piestrzenica kasztanowata.',
+      ),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pokaż' }))
+    expect(screen.getByLabelText('Liczba wyników: 1')).toBeInTheDocument()
+  })
+
+  it('nie pokazuje banera, gdy żaden sezon nie zaczyna się w ciągu 45 dni', () => {
+    // 15 listopada: sezony jesienne wciąż trwają, następne (zimowe/wiosenne) zaczynają się
+    // później niż za 45 dni.
+    vi.setSystemTime(new Date(2026, 10, 15))
+    render(<EncyclopediaView />)
+
+    expect(screen.queryByText(/zaczyna się sezon/)).not.toBeInTheDocument()
   })
 })

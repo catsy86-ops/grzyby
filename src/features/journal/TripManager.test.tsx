@@ -58,6 +58,23 @@ describe('TripManager', () => {
     expect(useAppStore.getState().activeTripId).toBeNull()
   })
 
+  it('pokazuje liczbę dni od ostatniej wyprawy, gdy nie ma aktywnej', async () => {
+    const threeDaysAgo = Date.now() - 3 * 24 * 60 * 60 * 1000
+    await db.trips.add({ name: 'Stara wyprawa', startedAt: threeDaysAgo, endedAt: threeDaysAgo + 1000, notes: '' })
+
+    render(<TripManager />)
+
+    expect(await screen.findByText('3 dni od ostatniej wyprawy')).toBeInTheDocument()
+  })
+
+  it('nie pokazuje licznika dni, gdy brak jakiejkolwiek wyprawy w historii', async () => {
+    render(<TripManager />)
+
+    await waitFor(() => {
+      expect(screen.queryByText(/od ostatniej wyprawy/)).not.toBeInTheDocument()
+    })
+  })
+
   it('pokazuje ostrzeżenie o przeciągającej się wyprawie, gdy minął planowany czas powrotu', async () => {
     const tripId = await db.trips.add({
       name: 'Wyprawa testowa',

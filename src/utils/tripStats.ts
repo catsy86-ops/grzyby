@@ -1,9 +1,20 @@
-import type { Finding } from '../db/schema'
+import type { Finding, Trip } from '../db/schema'
 
 export const LONG_TRIP_THRESHOLD_MS = 4 * 60 * 60 * 1000
 
 export function isLongTrip(startedAt: number, now: number = Date.now()): boolean {
   return now - startedAt >= LONG_TRIP_THRESHOLD_MS
+}
+
+// "Ile dni od ostatniego wyjścia" (ROZBUDOWA-ROADMAP.md Część 2 pkt 4) - czysto motywacyjny
+// licznik, zero nowej treści merytorycznej, tylko agregacja już zbieranych `Trip`. Liczy od
+// `startedAt` (nie `endedAt`) - to data faktycznego wyjścia w las, którą użytkownik pamięta i
+// szuka ("kiedy ostatnio byłem"), niezależnie od tego, czy wyprawa jeszcze trwa. `null`, gdy nie
+// ma jeszcze żadnej wyprawy w historii.
+export function daysSinceLastTrip(trips: Trip[], now: number = Date.now()): number | null {
+  if (trips.length === 0) return null
+  const lastStartedAt = Math.max(...trips.map((t) => t.startedAt))
+  return Math.max(0, Math.floor((now - lastStartedAt) / (24 * 60 * 60 * 1000)))
 }
 
 export function countSpeciesDiversity(findings: Finding[]): number {
@@ -81,6 +92,51 @@ export function groupFindingsByMonth(findings: Finding[], year: number = new Dat
 export function yearOverYearDelta(current: number, previous: number): number | null {
   if (previous === 0) return null
   return Math.round(((current - previous) / previous) * 100)
+}
+
+export interface RainyTripInsight {
+  avgFindingsRainy: number
+  avgFindingsDry: number
+  rainyTripCount: number
+  dryTripCount: number
+}
+
+// Minimalna liczba wypraw w KAŻDEJ z grup (deszczowe/suche), żeby wynik nie opierał się na
+// jednym przypadkowym dniu - z jedną wyprawą per grupa "70% więcej" mogłoby znaczyć "raz było
+// więcej, raz mniej", nie realny wzorzec.
+const MIN_TRIPS_PER_GROUP = 3
+
+// "Warunki Twoich udanych wypraw" (ROZBUDOWA-ROADMAP.md Część 2 pkt 6) - porównuje średnią
+// liczbę znalezisk na wyprawę między wyprawami zakończonymi w deszczu (`Trip.wasRainy`, Faza 20)
+// a resztą. Celowo NIE twierdzi nic o "X dni po deszczu" (mielibyśmy do tego tylko jeden
+// jednorazowy odczyt pogody z KOŃCA wyprawy, nie historię opadów z poprzednich dni) - to czysto
+// własna, zweryfikowalna korelacja z danych użytkownika, zero nowych twierdzeń mykologicznych.
+// `null`, gdy za mało danych w którejś grupie (patrz MIN_TRIPS_PER_GROUP) - w tym gdy `wasRainy`
+// nigdy nie zostało zapisane (starsze wyprawy sprzed Fazy 20, albo zawsze failed best-effort
+// odczyt pogody).
+export function computeRainyTripInsight(trips: Trip[], findings: Finding[]): RainyTripInsight | null {
+  const findingCountByTripId = new Map<number, number>()
+  for (const f of findings) {
+    if (f.tripId == null) continue
+    findingCountByTripId.set(f.tripId, (findingCountByTripId.get(f.tripId) ?? 0) + 1)
+  }
+
+  const rainy: number[] = []
+  const dry: number[] = []
+  for (const trip of trips) {
+    if (trip.wasRainy == null || trip.id == null) continue
+    const count = findingCountByTripId.get(trip.id) ?? 0
+    ;(trip.wasRainy ? rainy : dry).push(count)
+  }
+
+  if (rainy.length < MIN_TRIPS_PER_GROUP || dry.length < MIN_TRIPS_PER_GROUP) return null
+
+  return {
+    avgFindingsRainy: rainy.reduce((sum, v) => sum + v, 0) / rainy.length,
+    avgFindingsDry: dry.reduce((sum, v) => sum + v, 0) / dry.length,
+    rainyTripCount: rainy.length,
+    dryTripCount: dry.length,
+  }
 }
 
 export function formatDuration(startedAt: number, endedAt: number | null): string {

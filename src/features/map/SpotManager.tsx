@@ -254,13 +254,20 @@ function SpotRow({
       {outlookExpanded && (
         <CardContent className="pt-0">
           {outlook ? (
-            <Badge
-              variant={outlook.score === 'dobry' ? 'secondary' : 'outline'}
-              className="gap-1.5 px-2.5 py-1 text-xs"
-            >
-              <CloudRainIcon className="size-3.5" />
-              {outlook.label}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant={outlook.score === 'dobry' ? 'secondary' : 'outline'}
+                className="gap-1.5 px-2.5 py-1 text-xs"
+              >
+                <CloudRainIcon className="size-3.5" />
+                {outlook.label}
+              </Badge>
+              {outlook.soilMoisturePercent != null && (
+                <span className="text-xs text-muted-foreground">
+                  Wilgotność gleby: ~{Math.round(outlook.soilMoisturePercent)}%
+                </span>
+              )}
+            </div>
           ) : (
             <p className="text-xs text-muted-foreground">
               {isOutlookLoading ? 'Sprawdzanie prognozy…' : 'Prognoza niedostępna (brak sieci lub danych).'}
