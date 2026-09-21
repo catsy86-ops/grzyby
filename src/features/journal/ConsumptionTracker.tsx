@@ -57,6 +57,11 @@ export function ConsumptionTracker({ finding }: { finding: Finding }) {
       reactionSeverity: null,
       reactionNotes: '',
     })
+    // `reactionNotes` local state (zainicjalizowany raz z `finding.reactionNotes` przy pierwszym
+    // renderze) nie synchronizuje się automatycznie ze zmianą propsa - bez tego, ponowne
+    // oznaczenie "zjedzone" tej samej karty pokazałoby starą treść notatki, mimo że baza ma już
+    // pusty string.
+    setReactionNotes('')
   }
 
   async function setSeverity(severity: ReactionSeverity) {

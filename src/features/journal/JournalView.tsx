@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useMemo, useRef, useState } from 'react'
+import { Suspense, useMemo, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { toast } from 'sonner'
@@ -12,6 +12,7 @@ import type { Finding, Species } from '../../db/schema'
 import { edibilityChartColor } from '../../components/EdibilityBadge'
 import { StatTile, StatTileRow } from '../../components/StatTiles'
 import {
+  buildExportFilename,
   countLikelyDuplicates,
   downloadBlob,
   exportData,
@@ -64,16 +65,26 @@ import { Skeleton } from '../../components/ui/skeleton'
 import { FirstAidGuide } from '../tools/FirstAidGuide'
 import { NotificationPermissionBanner } from '../../components/NotificationPermissionBanner'
 import { BackupReminderBanner } from '../../components/BackupReminderBanner'
+import { lazyRetry } from '../../utils/lazyRetry'
 import { AchievementsDrawer } from './AchievementsDrawer'
 import { FindingCard } from './FindingCard'
 import { FindingEditForm } from './FindingEditForm'
-import { JournalBarChart } from './JournalBarChart'
 import { JournalExportMenu } from './JournalExportMenu'
 import { SeasonSummary } from './SeasonSummary'
 import { TripManager } from './TripManager'
 import { TripsHistory } from './TripsHistory'
 import { formatDateTime } from '../../utils/formatDate'
 import { shareFinding } from '../../utils/shareFinding'
+
+// recharts (wewnątrz JournalBarChart) leżałoby w głównym module-graph tego widoku, blokując
+// pierwsze wyrenderowanie listy znalezisk (główna treść) na czas parsowania/wykonania biblioteki
+// wykresów - nawet dla użytkownika z 0-2 wpisami, dla którego wykresy i tak się nie pokażą
+// (`chartData.length > 0` itd. niżej). `Suspense fallback={null}` zamiast skeletonu - wykresy
+// pojawiają się chwilę po liście, nie ma sensu rezerwować dla nich miejsca zanim wiadomo, czy w
+// ogóle będzie co pokazać.
+const JournalBarChart = lazyRetry(() =>
+  import('./JournalBarChart').then((m) => ({ default: m.JournalBarChart })),
+)
 
 type TripFilter = number | 'wszystkie' | 'bez-wyprawy'
 // Strona listy znalezisk - bez tego `db.findings.toArray()` ładowałby całą historię do pamięci
@@ -230,19 +241,19 @@ export function JournalView() {
       subtitle: searchQuery.trim() ? `Filtr: "${searchQuery.trim()}"` : undefined,
       tripInfo: selectedTrip ? { startedAt: selectedTrip.startedAt, endedAt: selectedTrip.endedAt } : undefined,
     })
-    downloadBlob(blob, `lysy-${selectedTrip ? selectedTrip.name.replace(/\s+/g, '-').toLowerCase() : 'dziennik'}-${new Date().toISOString().slice(0, 10)}.pdf`)
+    downloadBlob(blob, buildExportFilename(selectedTrip?.name, 'pdf'))
   }
 
   function handleExportGpx() {
     if (!filteredFindings) return
     const blob = exportFindingsToGpx(filteredFindings)
-    downloadBlob(blob, `lysy-${selectedTrip ? selectedTrip.name.replace(/\s+/g, '-').toLowerCase() : 'dziennik'}-${new Date().toISOString().slice(0, 10)}.gpx`)
+    downloadBlob(blob, buildExportFilename(selectedTrip?.name, 'gpx'))
   }
 
   function handleExportCsv() {
     if (!filteredFindings) return
     const blob = exportFindingsToCsv(filteredFindings)
-    downloadBlob(blob, `lysy-${selectedTrip ? selectedTrip.name.replace(/\s+/g, '-').toLowerCase() : 'dziennik'}-${new Date().toISOString().slice(0, 10)}.csv`)
+    downloadBlob(blob, buildExportFilename(selectedTrip?.name, 'csv'))
   }
 
   async function finishImport(payload: ExportPayload) {
@@ -333,7 +344,26 @@ export function JournalView() {
     }
   }
 
+  // Zwraca `undefined` dla pustego pola (nic nie podano), skończoną nieujemną liczbę dla
+  // poprawnego wpisu, albo `null` dla błędnego wpisu (np. "12,5" z przecinkiem zamiast kropki,
+  // częste przy polskiej lokalizacji klawiatury - `Number()` dałoby ciche `NaN` zapisane wprost
+  // do bazy, bez natywnej walidacji formularza - tu nie ma `<form>`/submit, więc `min`/`type`
+  // HTML5 na inputach są tylko kosmetyczne, nie blokują wpisania).
+  function parseOptionalNonNegative(value: string): number | undefined | null {
+    if (value.trim() === '') return undefined
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed) || parsed < 0) return null
+    return parsed
+  }
+
   async function handleSaveEdit(id: number) {
+    const weightGrams = parseOptionalNonNegative(editWeightGrams)
+    const driedWeightGrams = parseOptionalNonNegative(editDriedWeightGrams)
+    const quantity = parseOptionalNonNegative(editQuantity)
+    if (weightGrams === null || driedWeightGrams === null || quantity === null) {
+      toast.error('Waga i liczba sztuk muszą być poprawnymi, nieujemnymi liczbami.')
+      return
+    }
     setEditSaving(true)
     try {
       const species = (speciesData as Species[]).find((s) => s.id === editSpeciesId) ?? null
@@ -351,9 +381,9 @@ export function JournalView() {
           speciesId: species?.id ?? null,
           speciesNameGuess: species?.nameCommon ?? null,
           notes: editNotes,
-          weightGrams: editWeightGrams.trim() === '' ? undefined : Number(editWeightGrams),
-          driedWeightGrams: editDriedWeightGrams.trim() === '' ? undefined : Number(editDriedWeightGrams),
-          quantity: editQuantity.trim() === '' ? undefined : Number(editQuantity),
+          weightGrams,
+          driedWeightGrams,
+          quantity,
           latitude: editLatitude,
           longitude: editLongitude,
         })
@@ -366,9 +396,12 @@ export function JournalView() {
       })
       setEditingId(null)
     } catch (err) {
-      const errorName = err != null && typeof err === 'object' && 'name' in err ? (err as { name: unknown }).name : undefined
+      // Dexie przechwytuje natywne błędy IndexedDB (w tym QuotaExceededError) i remapuje je na
+      // własne klasy dziedziczące po `Error` (`mapError` w dexie.js), NIE po `DOMException` -
+      // `err instanceof DOMException` nigdy by tu nie złapało realnego przepełnienia limitu
+      // pamięci zgłoszonego przez Dexie (zweryfikowane testem mockującym `db.findings.update`).
       toast.error(
-        errorName === 'QuotaExceededError'
+        err instanceof Error && err.name === 'QuotaExceededError'
           ? 'Brak miejsca na urządzeniu - zwolnij pamięć (np. w "Pamięć i dane") i spróbuj ponownie.'
           : 'Nie udało się zapisać zmian. Spróbuj ponownie.',
       )
@@ -585,22 +618,27 @@ export function JournalView() {
         </Card>
       )}
 
-      {/* Kolor słupka wg jadalności gatunku (skala z EdibilityBadge, patrz `chartData`) zamiast
-          płaskiego zielonego - wykres pokazuje na pierwszy rzut oka nie tylko liczbę zbiorów, ale
-          i to, czy sezon był "bezpieczny" (przewaga zielonych słupków) czy nie. */}
-      {chartData.length > 0 && <JournalBarChart data={chartData} angledLabels />}
+      {/* recharts dociąga się osobnym chunkiem (patrz komentarz przy lazyRetry(JournalBarChart)
+          wyżej) - `fallback={null}` zamiast skeletonu, wykresy po prostu pojawiają się chwilę po
+          reszcie strony. */}
+      <Suspense fallback={null}>
+        {/* Kolor słupka wg jadalności gatunku (skala z EdibilityBadge, patrz `chartData`) zamiast
+            płaskiego zielonego - wykres pokazuje na pierwszy rzut oka nie tylko liczbę zbiorów, ale
+            i to, czy sezon był "bezpieczny" (przewaga zielonych słupków) czy nie. */}
+        {chartData.length > 0 && <JournalBarChart data={chartData} angledLabels />}
 
-      {/* Rozkład znalezisk wg miesiąca bieżącego roku - inny wymiar niż wykres po gatunkach
-          wyżej (ten pokazuje "kiedy", nie "co"). Ukryty gdy cały rok jest pusty (np. świeże
-          konto), żeby nie pokazywać samych zer. */}
-      {hasMonthlyFindings && (
-        <JournalBarChart data={monthlyChartData.map((m) => ({ name: m.month, count: m.count }))} />
-      )}
+        {/* Rozkład znalezisk wg miesiąca bieżącego roku - inny wymiar niż wykres po gatunkach
+            wyżej (ten pokazuje "kiedy", nie "co"). Ukryty gdy cały rok jest pusty (np. świeże
+            konto), żeby nie pokazywać samych zer. */}
+        {hasMonthlyFindings && (
+          <JournalBarChart data={monthlyChartData.map((m) => ({ name: m.month, count: m.count }))} />
+        )}
 
-      {/* "Najlepsze miejscówki" - inny wymiar niż wykres po gatunkach/miesiącach wyżej (ten
-          pokazuje "gdzie"). Ukryty przy braku znalezisk powiązanych z zapisanym grzybowiskiem
-          (np. świeże konto bez zapisanych spotów). */}
-      {spotChartData.length > 0 && <JournalBarChart data={spotChartData} angledLabels />}
+        {/* "Najlepsze miejscówki" - inny wymiar niż wykres po gatunkach/miesiącach wyżej (ten
+            pokazuje "gdzie"). Ukryty przy braku znalezisk powiązanych z zapisanym grzybowiskiem
+            (np. świeże konto bez zapisanych spotów). */}
+        {spotChartData.length > 0 && <JournalBarChart data={spotChartData} angledLabels />}
+      </Suspense>
 
       {filteredFindings === undefined && (
         <div className="flex flex-col gap-3">

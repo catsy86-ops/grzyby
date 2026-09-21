@@ -2,7 +2,17 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../db/db'
 import { JournalView } from './JournalView'
+import { Toaster } from '../../components/ui/sonner'
 import * as geolocation from '../../utils/geolocation'
+
+function renderWithToaster() {
+  return render(
+    <>
+      <JournalView />
+      <Toaster />
+    </>,
+  )
+}
 
 vi.mock('../../utils/geolocation', () => ({
   getCurrentPosition: vi.fn(),
@@ -147,6 +157,50 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Użyj obecnej (GPS)' }))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Użyj obecnej (GPS)' })).not.toBeDisabled())
+  })
+})
+
+describe('JournalView - walidacja i błędy zapisu edycji', () => {
+  beforeEach(async () => {
+    await db.transaction('rw', db.findings, db.trips, db.photos, async () => {
+      await db.findings.clear()
+      await db.trips.clear()
+      await db.photos.clear()
+    })
+  })
+
+  afterEach(() => cleanup())
+
+  it('nie zapisuje ujemnej wagi i pokazuje błąd', async () => {
+    const id = await addFinding()
+
+    renderWithToaster()
+    fireEvent.click(await screen.findByRole('button', { name: 'Edytuj znalezisko' }))
+    fireEvent.change(screen.getByLabelText('Waga (gramy)'), { target: { value: '-5' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+
+    expect(
+      await screen.findByText('Waga i liczba sztuk muszą być poprawnymi, nieujemnymi liczbami.'),
+    ).toBeInTheDocument()
+    const finding = await db.findings.get(id)
+    expect(finding?.weightGrams).toBeUndefined()
+    // Formularz zostaje otwarty (walidacja przerywa zapis przed transakcją) - użytkownik może
+    // poprawić wartość bez ponownego wchodzenia w tryb edycji.
+    expect(screen.getByRole('button', { name: 'Zapisz' })).toBeInTheDocument()
+  })
+
+  it('pokazuje komunikat o braku miejsca na urządzeniu przy QuotaExceededError z Dexie', async () => {
+    await addFinding()
+    const updateSpy = vi
+      .spyOn(db.findings, 'update')
+      .mockRejectedValueOnce(new DOMException('Brak miejsca', 'QuotaExceededError'))
+
+    renderWithToaster()
+    fireEvent.click(await screen.findByRole('button', { name: 'Edytuj znalezisko' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+
+    expect(await screen.findByText(/Brak miejsca na urządzeniu/)).toBeInTheDocument()
+    updateSpy.mockRestore()
   })
 })
 
@@ -312,6 +366,17 @@ describe('JournalView - ostrzeżenie o duplikatach przy imporcie', () => {
 
     await waitFor(() => expect(screen.queryByText('Możliwe duplikaty w pliku')).not.toBeInTheDocument())
     expect(await db.findings.count()).toBe(1)
+  })
+
+  it('pokazuje błąd i nie importuje niczego, gdy plik jest uszkodzony (niepoprawny JSON)', async () => {
+    renderWithToaster()
+    const file = new File(['{niepoprawny json'], 'export.json', { type: 'application/json' })
+
+    const input = document.querySelector('input[type="file"]')!
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByText(/Błąd importu/)).toBeInTheDocument()
+    expect(await db.findings.count()).toBe(0)
   })
 })
 

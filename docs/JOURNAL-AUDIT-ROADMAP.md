@@ -71,11 +71,14 @@ mechaniczna ekstrakcja jak reszta Tier 1 niżej.
    przez IndexedDB/Dexie JEST `DOMException` - `err instanceof DOMException && err.name ===
    'QuotaExceededError'` jest węższe i poprawniejsze. Złożoność: **niska**.
 
-4. **`AchievementsDrawer` subskrybuje pełną tabelę `findings`/`trips` zawsze, nawet gdy zamknięty.**
-   `AchievementsDrawer.tsx:56-60` jest zamontowany na stałe w `JournalView.tsx:740`, jego
-   `useLiveQuery` (w tym pełne `db.findings.toArray()`) działa niezależnie od `open`. Przy tej skali
-   koszt jest znikomy (submilisekundowy), ale to zbędna praca/subskrypcja bez korzyści. Fix:
-   `useLiveQuery(() => open ? db.findings.toArray() : undefined, [open])`. Złożoność: **niska**.
+4. ❌ **`AchievementsDrawer` subskrybuje pełną tabelę `findings`/`trips` zawsze, nawet gdy
+   zamknięty - SPRAWDZONE PRZY REALIZACJI, to NIE jest bug, świadomie pominięte.**
+   `AchievementsDrawer.tsx:51-55` ma jawny komentarz: toast odblokowania odznaki musi pojawić się
+   niezależnie od tego, czy panel jest otwarty - `useEffect` porównujący `achievements`
+   (`:70-88`) właśnie to robi. Zgaszenie zapytania na `open` (jak sugerował audyt wydajności)
+   złamałoby tę funkcję - odznaki przestałyby "wystrzeliwać" toastem, dopóki użytkownik ręcznie
+   nie otworzy panelu. Performance-audyt sam oznaczył to jako "teoretyczny, złożoność niska" bez
+   realnego wpływu przy tej skali - zostawione bez zmian.
 
 5. **`recharts` (wykresy Dziennika) ładowany eagerly, statycznym importem, zawsze - nawet dla
    użytkownika z 0-2 znaleziskami, gdzie wykresy i tak się nie pokażą.** `JournalBarChart.tsx:1` +

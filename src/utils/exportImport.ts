@@ -171,6 +171,15 @@ export async function importData(file: File): Promise<{ findingsImported: number
   return importPayload(payload)
 }
 
+// Wspólny wzorzec nazwy pliku eksportu - dotąd powtórzony osobno w handleExportPdf/Gpx/Csv w
+// JournalView.tsx. `tripName` to nazwa aktualnie wybranej wyprawy (filtr Dziennika), `undefined`
+// gdy eksport dotyczy całego dziennika (bez filtra po wyprawie).
+export function buildExportFilename(tripName: string | undefined, extension: string): string {
+  const base = tripName ? tripName.replace(/\s+/g, '-').toLowerCase() : 'dziennik'
+  const date = new Date().toISOString().slice(0, 10)
+  return `lysy-${base}-${date}.${extension}`
+}
+
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
