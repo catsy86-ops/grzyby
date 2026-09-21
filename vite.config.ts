@@ -31,6 +31,19 @@ export default defineConfig({
       // nowego wdrożenia nigdy się nie odświeżała i kończyła na "error loading dynamically
       // imported module" przy leniwie ładowanym widoku (patrz uzasadnienie w tamtym pliku).
       injectRegister: false,
+      // `injectManifest` (własny src/sw.ts) zamiast domyślnego `generateSW` - jedyny powód:
+      // `share_target` poniżej wymaga ręcznego fetch-handlera na POST multipart/form-data, co jest
+      // niemożliwe w deklaratywnym `generateSW`. Precache app-shellu i runtimeCaching (kafle mapy,
+      // model AI) w src/sw.ts odtwarzają dokładnie to, co wcześniej robił `workbox` config niżej
+      // (ta sekcja jest teraz nieużywana przez `generateSW`, ale zostawiona jako odniesienie -
+      // patrz komentarze w src/sw.ts).
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,json,ico,png,svg,webp,bin,jpg}'],
+        maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
+      },
       includeAssets: ['icons/*.png'],
       manifest: {
         name: 'Grzybobranie - dziennik grzybiarza',
@@ -57,38 +70,19 @@ export default defineConfig({
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: 'icons/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,json,ico,png,svg,webp,bin,jpg}'],
-        maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
-        runtimeCaching: [
-          {
-            // Obejmuje oba warianty podkładu mapy (patrz src/data/mapLayers.ts) - standardowy OSM
-            // i terenowy OpenTopoMap - tym samym cache'em, żeby OfflineAreaDownload i Service
-            // Worker traktowały je spójnie niezależnie od wybranej warstwy.
-            urlPattern: /^https:\/\/[abc]\.tile\.(openstreetmap|opentopomap)\.org\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'map-tiles',
-              expiration: {
-                maxEntries: 4000,
-                maxAgeSeconds: 60 * 60 * 24 * 90,
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
+        // Udostępnianie zdjęcia grzyba Z INNEJ apki (np. Galerii telefonu) bezpośrednio do
+        // Grzybobrania - "Udostępnij" pokazuje apkę na liście celów, POST trafia do
+        // src/sw.ts's `handleShareTarget`, który odkłada plik do Cache Storage i przekierowuje do
+        // formularza dodawania znaleziska. Tylko `image/*` - to jedyny typ pliku, który formularz
+        // znaleziska umie przyjąć.
+        share_target: {
+          action: '/share-target',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            files: [{ name: 'photo', accept: ['image/*'] }],
           },
-          {
-            urlPattern: /\/models\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'ai-model',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-            },
-          },
-        ],
+        },
       },
     }),
   ],

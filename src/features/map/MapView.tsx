@@ -26,6 +26,7 @@ import { useReturnPointTracking } from '../../hooks/useReturnPointTracking'
 import { useSpotNavigation } from '../../hooks/useSpotNavigation'
 import { hasSeasonalMatch } from '../../utils/spotSeasonality'
 import { useTripTrail } from '../../hooks/useTripTrail'
+import { consumeSharedPhoto } from '../../utils/sharedPhoto'
 import { AddFindingForm } from './AddFindingForm'
 import { OfflineAreaDownload } from './OfflineAreaDownload'
 import { SpotManager } from './SpotManager'
@@ -102,6 +103,10 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
   // osobna potrzeba: szybkie odfiltrowanie mapy do 1-2 gatunków przy dużej liczbie znalezisk.
   const [speciesFilterIds, setSpeciesFilterIds] = useState<Set<string>>(new Set())
   const [tileLoadIssue, setTileLoadIssue] = useState(false)
+  // Zdjęcie odebrane przez `share_target` (patrz src/sw.ts + src/utils/sharedPhoto.ts) - "Udostępnij"
+  // z innej apki (np. Galerii) prosto do formularza dodawania znaleziska, zamiast wybierania z
+  // dysku od nowa. `null` w każdym innym przypadku otwarcia formularza.
+  const [sharedPhoto, setSharedPhoto] = useState<File | null>(null)
   const mapRef = useRef<L.Map | null>(null)
   // Cel startowej pozycji `MapContainer` - trzymany w stanie (nie tylko jako stała), bo
   // "Pokaż na mapie" w SzczecinSpotsPanel musi też zadziałać z widoku listy, gdzie MapContainer
@@ -118,7 +123,13 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
   const suppressNextRecenterRef = useRef(false)
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('open') === 'add-finding') {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('open') === 'add-finding') {
+      if (params.get('shared') === '1') {
+        void consumeSharedPhoto().then((file) => {
+          if (file) setSharedPhoto(file)
+        })
+      }
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
@@ -383,8 +394,10 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
       {activeSheet === 'add-finding' && (
         <AddFindingForm
           initialPosition={findingPosition}
+          initialPhoto={sharedPhoto}
           onClose={(saved) => {
             setActiveSheet(null)
+            setSharedPhoto(null)
             if (saved) setPinPosition(null)
           }}
         />

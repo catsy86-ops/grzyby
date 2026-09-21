@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { toast } from 'sonner'
 import { CheckIcon, MicIcon, MinusIcon, PlusIcon } from 'lucide-react'
@@ -29,10 +29,13 @@ const NONE_SPOT = '__none__'
 
 interface AddFindingFormProps {
   initialPosition: [number, number] | null
+  // Zdjęcie z PWA `share_target` (Udostępnij z innej apki, patrz MapView.tsx) - od razu wpięte do
+  // listy zdjęć formularza, tak jakby użytkownik sam je wybrał.
+  initialPhoto?: File | null
   onClose: (saved: boolean) => void
 }
 
-export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps) {
+export function AddFindingForm({ initialPosition, initialPhoto, onClose }: AddFindingFormProps) {
   // Podpowiada ostatnio wybrany gatunek zamiast zawsze startować od "-- nieokreślony --" - przy
   // zbieraniu jednego gatunku seriami oszczędza powtarzanie tego samego wyboru za każdym razem.
   // Sprawdzone przeciwko species.json na wypadek gdyby zapamiętany id już nie istniał.
@@ -49,7 +52,17 @@ export function AddFindingForm({ initialPosition, onClose }: AddFindingFormProps
   const [quantity, setQuantity] = useState<number | null>(null)
   const [flyUp, setFlyUp] = useState(0)
   const [notes, setNotes] = useState('')
-  const [photos, setPhotos] = useState<File[]>([])
+  const [photos, setPhotos] = useState<File[]>(() => (initialPhoto ? [initialPhoto] : []))
+  // `initialPhoto` dociera asynchronicznie (odczyt z Cache Storage w MapView, patrz
+  // consumeSharedPhoto) - w chwili montowania tego komponentu prop może jeszcze być `null`, więc
+  // sam initializer stanu wyżej to za mało. Ten efekt dogania spóźniony plik, tylko raz.
+  const addedInitialPhotoRef = useRef(false)
+  useEffect(() => {
+    if (initialPhoto && !addedInitialPhotoRef.current) {
+      addedInitialPhotoRef.current = true
+      setPhotos((prev) => [...prev, initialPhoto])
+    }
+  }, [initialPhoto])
   const [saving, setSaving] = useState(false)
   // Krótki checkmark-moment na przycisku "Zapisz" tuż przed zamknięciem szuflady - potwierdzenie
   // zapisu dotąd żyło wyłącznie w toaście, z dala od miejsca, gdzie kciuk faktycznie nacisnął.
