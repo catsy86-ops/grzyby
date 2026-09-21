@@ -1,13 +1,10 @@
 import { useMemo } from 'react'
-import type { Position } from '../utils/bearing'
-import { getBearingDegrees, getDistanceMeters } from '../utils/bearing'
+import type { BearingInfo, Position } from '../utils/bearing'
+import { getBearingInfo } from '../utils/bearing'
 import { useAppStore } from '../stores/appStore'
 import type { Spot } from '../db/schema'
 
-export interface SpotNavigationInfo {
-  distanceMeters: number
-  bearingDegrees: number
-}
+export type SpotNavigationInfo = BearingInfo
 
 export interface UseSpotNavigationResult {
   navigationTargetSpot: Spot | null
@@ -35,10 +32,7 @@ export function useSpotNavigation(
   const navigationInfo = useMemo(() => {
     if (!navigationTargetSpot || !userPosition) return null
     const targetPosition: Position = [navigationTargetSpot.latitude, navigationTargetSpot.longitude]
-    return {
-      distanceMeters: getDistanceMeters(userPosition, targetPosition),
-      bearingDegrees: getBearingDegrees(userPosition, targetPosition),
-    }
+    return getBearingInfo(userPosition, targetPosition)
   }, [navigationTargetSpot, userPosition])
 
   function clearNavigationTarget() {

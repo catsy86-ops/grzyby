@@ -6,7 +6,7 @@ import { Card, CardContent } from '../../components/ui/card'
 import speciesData from '../../data/species.json'
 import type { Finding, Spot, Species } from '../../db/schema'
 import type { Position } from '../../utils/bearing'
-import { formatDistance, getBearingDegrees, getCardinalDirection, getDistanceMeters } from '../../utils/bearing'
+import { describeBearing, getBearingInfo, getDistanceMeters } from '../../utils/bearing'
 import { formatDate } from '../../utils/formatDate'
 
 const speciesById = new Map((speciesData as Species[]).map((s) => [s.id, s]))
@@ -34,9 +34,7 @@ export function FindingsListView({ findings, spots, userPosition }: FindingsList
 
   function describePosition(position: Position) {
     if (!userPosition) return null
-    const distance = getDistanceMeters(userPosition, position)
-    const bearing = getBearingDegrees(userPosition, position)
-    return `${formatDistance(distance)} ${getCardinalDirection(bearing)}`
+    return describeBearing(getBearingInfo(userPosition, position))
   }
 
   return (

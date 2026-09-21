@@ -44,3 +44,25 @@ export function formatDistance(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)} m`
   return `${(meters / 1000).toFixed(1)} km`
 }
+
+export interface BearingInfo {
+  distanceMeters: number
+  bearingDegrees: number
+}
+
+// Wspólne dla wszystkich hooków liczących dystans/kierunek do zapisanego punktu (auto, spot
+// nawigacji) - dotąd ten sam `{distanceMeters: getDistanceMeters(...), bearingDegrees:
+// getBearingDegrees(...)}` był powtórzony osobno w useReturnPointTracking.ts i
+// useSpotNavigation.ts.
+export function getBearingInfo(from: Position, to: Position): BearingInfo {
+  return {
+    distanceMeters: getDistanceMeters(from, to),
+    bearingDegrees: getBearingDegrees(from, to),
+  }
+}
+
+// "620 m NE"/"1.2 km SW" - format powtórzony dosłownie w MapStatusBadges.tsx (dwa razy) i
+// FindingsListView.tsx przed tym wydzieleniem.
+export function describeBearing({ distanceMeters, bearingDegrees }: BearingInfo): string {
+  return `${formatDistance(distanceMeters)} ${getCardinalDirection(bearingDegrees)}`
+}

@@ -1,13 +1,10 @@
 import { useMemo } from 'react'
-import type { Position } from '../utils/bearing'
-import { getBearingDegrees, getDistanceMeters } from '../utils/bearing'
+import type { BearingInfo, Position } from '../utils/bearing'
+import { getBearingInfo } from '../utils/bearing'
 import { getCurrentPosition } from '../utils/geolocation'
 import { useAppStore } from '../stores/appStore'
 
-export interface ReturnPointInfo {
-  distanceMeters: number
-  bearingDegrees: number
-}
+export type ReturnPointInfo = BearingInfo
 
 export interface UseReturnPointTrackingResult {
   returnPoint: ReturnType<typeof useAppStore.getState>['returnPoint']
@@ -33,10 +30,7 @@ export function useReturnPointTracking(
   const returnPointInfo = useMemo(() => {
     if (!returnPoint || !userPosition) return null
     const returnPosition: Position = [returnPoint.latitude, returnPoint.longitude]
-    return {
-      distanceMeters: getDistanceMeters(userPosition, returnPosition),
-      bearingDegrees: getBearingDegrees(userPosition, returnPosition),
-    }
+    return getBearingInfo(userPosition, returnPosition)
   }, [returnPoint, userPosition])
 
   async function handleSaveReturnPoint() {

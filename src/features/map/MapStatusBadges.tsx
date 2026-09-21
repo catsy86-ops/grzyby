@@ -18,7 +18,7 @@ import type { ReturnPointInfo } from '../../hooks/useReturnPointTracking'
 import type { SpotNavigationInfo } from '../../hooks/useSpotNavigation'
 import type { ReturnPoint } from '../../stores/appStore'
 import type { Spot } from '../../db/schema'
-import { formatDistance, getCardinalDirection } from '../../utils/bearing'
+import { describeBearing } from '../../utils/bearing'
 
 interface MapStatusBadgesProps {
   activeTripName: string | null
@@ -164,9 +164,7 @@ export function MapStatusBadges({
             >
               <Badge variant="secondary" className="gap-1.5 py-1.5 pl-3 pr-1.5 text-xs shadow">
                 <CarIcon className="size-3.5" />
-                {returnPointInfo
-                  ? `Auto: ${formatDistance(returnPointInfo.distanceMeters)} ${getCardinalDirection(returnPointInfo.bearingDegrees)}`
-                  : 'Auto zapisane'}
+                {returnPointInfo ? `Auto: ${describeBearing(returnPointInfo)}` : 'Auto zapisane'}
                 {returnPointInfo && isPositionStale && (
                   <TriangleAlertIcon
                     className="size-3.5 text-amber-500"
@@ -195,7 +193,7 @@ export function MapStatusBadges({
               <Badge variant="secondary" className="gap-1.5 py-1.5 pl-3 pr-1.5 text-xs shadow">
                 <NavigationIcon className="size-3.5" />
                 {navigationInfo
-                  ? `${navigationTargetSpot.name}: ${formatDistance(navigationInfo.distanceMeters)} ${getCardinalDirection(navigationInfo.bearingDegrees)}`
+                  ? `${navigationTargetSpot.name}: ${describeBearing(navigationInfo)}`
                   : navigationTargetSpot.name}
                 {navigationInfo && isPositionStale && (
                   <TriangleAlertIcon
