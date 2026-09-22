@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import speciesData from '../../data/species.json'
-import type { Species } from '../../db/schema'
+import { ALL_SPECIES } from '../../data/species'
 import { SpeciesComparator } from '../../components/SpeciesComparator'
+import { shouldResetSelectionOnClose } from '../../utils/speciesComparePicker'
 import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 
-const species = speciesData as Species[]
+const species = [...ALL_SPECIES].sort((a, b) => a.nameCommon.localeCompare(b.nameCommon, 'pl'))
 const NONE = '__none__'
 
 interface SpeciesComparePickerProps {
@@ -28,7 +28,16 @@ export function SpeciesComparePicker({ open, onOpenChange }: SpeciesComparePicke
 
   return (
     <>
-      <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer
+        open={open}
+        onOpenChange={(next) => {
+          onOpenChange(next)
+          if (shouldResetSelectionOnClose(next, bothSelected)) {
+            setSpeciesAId('')
+            setSpeciesBId('')
+          }
+        }}
+      >
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Porównaj gatunki</DrawerTitle>

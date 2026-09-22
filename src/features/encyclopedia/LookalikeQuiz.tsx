@@ -1,15 +1,14 @@
 import { useMemo, useState } from 'react'
 import { CheckIcon, RotateCcwIcon, XIcon } from 'lucide-react'
-import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
+import { ALL_SPECIES } from '../../data/species'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
 import { buildQuizPairs, pickRandomPair, type QuizPair } from '../../utils/lookalikeQuiz'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 
-const species = speciesData as Species[]
-const PAIRS = buildQuizPairs(species)
+const PAIRS = buildQuizPairs(ALL_SPECIES)
 
 interface LookalikeQuizProps {
   open: boolean
@@ -85,7 +84,7 @@ export function LookalikeQuiz({ open, onOpenChange }: LookalikeQuizProps) {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                {round.order.map((candidate) => {
+                {round.order.map((candidate, position) => {
                   const isCorrect = candidate.id === round.pair.target.id
                   const isChosen = answered?.id === candidate.id
                   return (
@@ -94,6 +93,9 @@ export function LookalikeQuiz({ open, onOpenChange }: LookalikeQuizProps) {
                       type="button"
                       disabled={answered != null}
                       onClick={() => handleAnswer(candidate)}
+                      // Pozycyjna etykieta ("Kandydat A/B"), nie nazwa gatunku - zdradziłaby
+                      // odpowiedź czytnikowi ekranu przed wyborem (obrazek ma celowo puste `alt`).
+                      aria-label={answered ? candidate.nameCommon : `Kandydat ${position === 0 ? 'A' : 'B'}`}
                       className={`flex flex-col overflow-hidden rounded-lg border text-left transition-colors ${
                         answered
                           ? isCorrect

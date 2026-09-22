@@ -133,6 +133,16 @@ osobna sesja (obróbka obrazów), nie "szybki fix kodu" jak reszta Tier 1.
 
 ---
 
+**Tier 1 (pkt 1-9) zaimplementowane w całości (2026-09-22)**: wspólna stała `ALL_SPECIES`
+(`src/data/species.ts`), sortowanie alfabetyczne (`localeCompare(..., 'pl')`) w `EncyclopediaView`
+i `SpeciesComparePicker`, `normalizeForSearch()` (nowy util, diakrytyki) użyty w obu miejscach
+wyszukiwania, badge "Pogoda niedostępna" w `ForestAssistant`, `aria-label` pozycyjny na przyciskach
+`LookalikeQuiz`, reset wyboru `SpeciesComparePicker` przy zamknięciu bez dokończenia (logika
+wydzielona do `utils/speciesComparePicker.ts` - łatwiejsze do testu niż symulowanie w jsdom
+realnego gestu zamknięcia Drawer), nowy `LookalikeQuiz.test.tsx` (6 testów), rozszerzony
+`SpeciesComparePicker.test.tsx` o właściwy przepływ porównania, poprawione komentarze "19
+gatunków" → 28. tsc/oxlint/build/testy (683/683) czyste.
+
 ## Rekomendowana kolejność realizacji
 
 Tier 1 (pkt 1-9) to niskie-średnie ryzyko, żadne nie dotyka tego samego miejsca co inne poza

@@ -185,7 +185,7 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
 
   const speciesById = useMemo(() => new Map((speciesData as Species[]).map((s) => [s.id, s])), [])
   // Tylko gatunki faktycznie obecne wśród znalezisk trafiają do listy filtra - lista wszystkich
-  // 19 gatunków z atlasu byłaby w większości pusta dla typowego użytkownika.
+  // 28 gatunków z atlasu byłaby w większości pusta dla typowego użytkownika.
   const presentSpeciesOptions = useMemo(() => {
     const ids = new Set((findings ?? []).map((f) => f.speciesId).filter((id): id is string => id != null))
     return Array.from(ids)

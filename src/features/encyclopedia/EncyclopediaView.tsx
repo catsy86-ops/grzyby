@@ -13,7 +13,7 @@ import {
   SwordsIcon,
 } from 'lucide-react'
 import { EmptySearchIllustration } from '../../components/icons/illustrations'
-import speciesData from '../../data/species.json'
+import { ALL_SPECIES } from '../../data/species'
 import type { EdibilityStatus, Species } from '../../db/schema'
 import { EdibilityBadge, edibilityChartColor, speciesCardClassName } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
@@ -28,6 +28,7 @@ import { Toggle } from '../../components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
 import { downloadBlob } from '../../utils/exportImport'
 import { exportSpeciesCardToPdf } from '../../utils/pdfExport'
+import { normalizeForSearch } from '../../utils/normalizeForSearch'
 import { daysUntilSeasonStart, getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'
 import { HABITAT_TAG_LABELS, matchesHabitatTag, type HabitatTag } from '../../utils/speciesHabitatTags'
 import { SHAPE_GROUP_LABEL, getSpeciesShapeGroup } from '../../utils/speciesShape'
@@ -56,7 +57,7 @@ export function EncyclopediaView() {
   const [compareOpen, setCompareOpen] = useState(false)
   const [listRef] = useAutoAnimate()
 
-  const species = speciesData as Species[]
+  const species = ALL_SPECIES
 
   // "Za X dni zaczyna się sezon na [gatunek]" (ROZBUDOWA-ROADMAP.md Część 2 pkt 5) - jeden,
   // najbliższy nadchodzący sezon spośród wszystkich gatunków, nie lista - to skrót/ciekawostka na
@@ -73,17 +74,20 @@ export function EncyclopediaView() {
   }, [species])
 
   const filtered = useMemo(() => {
-    return species.filter((s) => {
-      const matchesFilter = filter === 'wszystkie' || s.edibility === filter
-      const matchesQuery =
-        query.trim() === '' ||
-        s.nameCommon.toLowerCase().includes(query.toLowerCase()) ||
-        s.nameLatin.toLowerCase().includes(query.toLowerCase())
-      const matchesSeason = !seasonOnly || isInSeason(s.season)
-      const matchesProtected = !protectedOnly || !!s.legalProtection
-      const matchesHabitat = matchesHabitatTag(s.habitat, habitatFilter)
-      return matchesFilter && matchesQuery && matchesSeason && matchesProtected && matchesHabitat
-    })
+    const normalizedQuery = normalizeForSearch(query.trim())
+    return species
+      .filter((s) => {
+        const matchesFilter = filter === 'wszystkie' || s.edibility === filter
+        const matchesQuery =
+          normalizedQuery === '' ||
+          normalizeForSearch(s.nameCommon).includes(normalizedQuery) ||
+          normalizeForSearch(s.nameLatin).includes(normalizedQuery)
+        const matchesSeason = !seasonOnly || isInSeason(s.season)
+        const matchesProtected = !protectedOnly || !!s.legalProtection
+        const matchesHabitat = matchesHabitatTag(s.habitat, habitatFilter)
+        return matchesFilter && matchesQuery && matchesSeason && matchesProtected && matchesHabitat
+      })
+      .sort((a, b) => a.nameCommon.localeCompare(b.nameCommon, 'pl'))
   }, [species, query, filter, seasonOnly, protectedOnly, habitatFilter])
 
   // "Karta kieszonkowa" PDF (Część 3 pkt 8 ROZBUDOWA-ROADMAP.md) - jeden gatunek, do wydruku i
@@ -130,7 +134,7 @@ export function EncyclopediaView() {
         </Alert>
       )}
 
-      {/* Sticky pasek wyszukiwania/filtrów - przy przewijaniu 19 gatunków w dół wracanie na
+      {/* Sticky pasek wyszukiwania/filtrów - przy przewijaniu 28 gatunków w dół wracanie na
           górę tylko po to, żeby zmienić filtr, jest niewygodne na telefonie. Ujemny margines +
           padding odtwarza szerokość kontenera (który ma własny `p-4`), a tło + blur sprawiają,
           że treść listy znika POD paskiem zamiast prześwitywać zza niego przy scrollu. */}
@@ -228,7 +232,7 @@ export function EncyclopediaView() {
         <span aria-hidden="true">{filtered.length === 1 ? 'gatunek' : 'gatunków'}</span>
       </p>
 
-      {/* Siatka 2-kolumnowa już na mobile (nie dopiero od md:) - z miniaturkami zdjęć lista 19
+      {/* Siatka 2-kolumnowa już na mobile (nie dopiero od md:) - z miniaturkami zdjęć lista 28
           gatunków skanuje się szybciej niż jedna szeroka kolumna, a szczegóły opisowe i tak są
           domyślnie zwinięte (patrz Collapsible niżej), więc węższa karta ich nie ścieśnia. */}
       <div ref={listRef} className="grid grid-cols-2 items-start gap-3 md:grid-cols-3 lg:grid-cols-4">
@@ -309,7 +313,7 @@ export function EncyclopediaView() {
                 </Alert>
               )}
               {/* Reszta (opis/siedlisko/sobowtóry/przepisy) domknięta domyślnie - progresywne
-                  odkrywanie treści, żeby lista 19 gatunków dała się skanować wzrokiem zamiast
+                  odkrywanie treści, żeby lista 28 gatunków dała się skanować wzrokiem zamiast
                   wymuszać przescrollowanie ściany tekstu na każdej karcie. */}
               <Collapsible defaultOpen={false}>
                 <CollapsibleTrigger

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { ArrowLeftIcon, CloudRainIcon, CompassIcon, MapPinIcon, SearchIcon } from 'lucide-react'
-import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
+import { ALL_SPECIES } from '../../data/species'
 import { useAppStore } from '../../stores/appStore'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { fetchMushroomForecast, fetchMushroomOutlook, type MushroomDayOutlook, type MushroomOutlook } from '../../utils/mushroomWeather'
+import { normalizeForSearch } from '../../utils/normalizeForSearch'
 import { getSpeciesSpotHistory, type SpeciesSpotHistory } from '../../utils/speciesSpotHistory'
 import { isInSeason } from '../../utils/seasonFilter'
 import { formatDate, formatWeekdayShort } from '../../utils/formatDate'
@@ -16,7 +17,7 @@ import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { Input } from '../../components/ui/input'
 
-const species = speciesData as Species[]
+const species = ALL_SPECIES
 
 interface ForestAssistantProps {
   open: boolean
@@ -44,13 +45,14 @@ export function ForestAssistant({ open, onOpenChange }: ForestAssistantProps) {
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const isWidePanel = useMediaQuery('(min-width: 1024px)')
 
+  const normalizedQuery = normalizeForSearch(query.trim())
   const matches =
-    query.trim() === ''
+    normalizedQuery === ''
       ? []
       : species.filter(
           (s) =>
-            s.nameCommon.toLowerCase().includes(query.toLowerCase()) ||
-            s.nameLatin.toLowerCase().includes(query.toLowerCase()),
+            normalizeForSearch(s.nameCommon).includes(normalizedQuery) ||
+            normalizeForSearch(s.nameLatin).includes(normalizedQuery),
         )
 
   async function selectSpecies(s: Species) {
@@ -180,6 +182,12 @@ export function ForestAssistant({ open, onOpenChange }: ForestAssistantProps) {
                   <Badge variant={goodWeather ? 'secondary' : 'outline'} className="gap-1.5">
                     <CloudRainIcon className="size-3.5" />
                     {outlook.label}
+                  </Badge>
+                )}
+                {outlookStatus === 'unavailable' && (
+                  <Badge variant="outline" className="gap-1.5">
+                    <CloudRainIcon className="size-3.5" />
+                    Pogoda niedostępna (brak GPS/offline)
                   </Badge>
                 )}
               </div>
