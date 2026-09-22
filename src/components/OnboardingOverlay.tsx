@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { MapIcon, CameraIcon, WrenchIcon } from 'lucide-react'
 import { Button } from './ui/button'
@@ -53,13 +53,28 @@ function markSeen() {
 // narzędzi bezpieczeństwa naraz, więc nowy użytkownik bez żadnego wprowadzenia nie wie, gdzie
 // czego szukać. Pokazywany raz (localStorage, nie sessionStorage jak AppSplash - to wprowadzenie
 // do funkcji, nie animacja startu, nie ma sensu powtarzać go co sesję).
-export function OnboardingOverlay() {
+//
+// `forceReplayKey` - opcjonalne ponowne wywołanie z zewnątrz (przycisk "Pokaż wprowadzenie
+// ponownie" w ToolsMenu, NAWIGACJA-AUDIT-ROADMAP.md Tier 1 pkt 6) - dotąd, po pierwszym
+// `markSeen()`, treść onboardingu nie była nigdzie dostępna. Każda zmiana wartości (rosnący
+// licznik) otwiera overlay od nowa, niezależnie od stanu `localStorage`.
+export function OnboardingOverlay({ forceReplayKey }: { forceReplayKey?: number } = {}) {
   const [visible, setVisible] = useState(() => !readSeen())
   const [step, setStep] = useState(0)
+
+  useEffect(() => {
+    if (forceReplayKey == null || forceReplayKey === 0) return
+    setStep(0)
+    setVisible(true)
+  }, [forceReplayKey])
 
   function finish() {
     markSeen()
     setVisible(false)
+  }
+
+  function goBack() {
+    setStep((s) => Math.max(0, s - 1))
   }
 
   if (!visible) return null
@@ -96,15 +111,31 @@ export function OnboardingOverlay() {
       <div className="flex flex-col items-center gap-4 p-6 pb-10">
         <div className="flex gap-1.5">
           {SLIDES.map((_, i) => (
-            <span
+            <button
               key={i}
-              className={`size-1.5 rounded-full transition-colors ${i === step ? 'bg-primary' : 'bg-muted'}`}
-            />
+              type="button"
+              onClick={() => setStep(i)}
+              aria-label={`Slajd ${i + 1} z ${SLIDES.length}`}
+              aria-current={i === step ? 'step' : undefined}
+              className="p-1 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-full"
+            >
+              <span
+                aria-hidden="true"
+                className={`block size-1.5 rounded-full transition-colors ${i === step ? 'bg-primary' : 'bg-muted'}`}
+              />
+            </button>
           ))}
         </div>
-        <Button className="w-full max-w-xs" onClick={() => (isLast ? finish() : setStep((s) => s + 1))}>
-          {isLast ? 'Zaczynajmy' : 'Dalej'}
-        </Button>
+        <div className="flex w-full max-w-xs gap-2">
+          {step > 0 && (
+            <Button variant="outline" className="flex-1" onClick={goBack}>
+              Wstecz
+            </Button>
+          )}
+          <Button className="flex-1" onClick={() => (isLast ? finish() : setStep((s) => s + 1))}>
+            {isLast ? 'Zaczynajmy' : 'Dalej'}
+          </Button>
+        </div>
       </div>
     </div>
   )

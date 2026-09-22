@@ -1,4 +1,4 @@
-import { BackpackIcon, BatteryIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, PhoneCallIcon, TimerIcon, TreePineIcon } from 'lucide-react'
+import { BackpackIcon, BatteryIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, PhoneCallIcon, SparklesIcon, TimerIcon, TreePineIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { useBatteryStatus } from '../../hooks/useBatteryStatus'
@@ -17,7 +17,14 @@ const ITEM_VARIANTS = {
   visible: { opacity: 1, x: 0 },
 }
 
-export type ToolKey = 'first-aid' | 'gear-checklist' | 'tick-care' | 'cooking-timer' | 'storage-info' | 'emergency-card'
+export type ToolKey =
+  | 'first-aid'
+  | 'gear-checklist'
+  | 'tick-care'
+  | 'cooking-timer'
+  | 'storage-info'
+  | 'emergency-card'
+  | 'show-onboarding'
 
 // Krótki tytuł + osobny podtytuł (zamiast jednego długiego zdania jako etykiety) czyta się
 // szybciej przy skanowaniu menu wzrokiem. `badge` grupuje narzędzia wizualnie wg charakteru
@@ -37,6 +44,7 @@ const TOOLS: {
   { key: 'gear-checklist', title: 'Checklista sprzętu', subtitle: 'Przed wyjściem w teren', icon: BackpackIcon, badge: 'primary' },
   { key: 'cooking-timer', title: 'Timer kuchenny', subtitle: 'Blanszowanie, gotowanie', icon: TimerIcon, badge: 'accent' },
   { key: 'storage-info', title: 'Pamięć i dane', subtitle: 'Miejsce zajęte przez apkę', icon: HardDriveIcon, badge: 'neutral' },
+  { key: 'show-onboarding', title: 'Pokaż wprowadzenie ponownie', subtitle: 'Krótkie przypomnienie funkcji apki', icon: SparklesIcon, badge: 'neutral' },
 ]
 
 const BADGE_CLASS: Record<(typeof TOOLS)[number]['badge'], string> = {
@@ -49,7 +57,7 @@ const BADGE_CLASS: Record<(typeof TOOLS)[number]['badge'], string> = {
 const SECTIONS: { label: string; tools: ToolKey[] }[] = [
   { label: 'Bezpieczeństwo w terenie', tools: ['first-aid', 'tick-care', 'emergency-card'] },
   { label: 'Przygotowanie', tools: ['gear-checklist', 'cooking-timer'] },
-  { label: 'Aplikacja', tools: ['storage-info'] },
+  { label: 'Aplikacja', tools: ['storage-info', 'show-onboarding'] },
 ]
 
 // Nagłówek apki puchnie z każdą kolejną funkcją pomocniczą - zamiast dokładać kolejną ikonę obok

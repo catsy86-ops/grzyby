@@ -181,6 +181,9 @@ function App() {
   const [headerMapActionsEl, setHeaderMapActionsEl] = useState<HTMLDivElement | null>(null)
   const [showToolsMenu, setShowToolsMenu] = useState(false)
   const [showNotificationCenter, setShowNotificationCenter] = useState(false)
+  // Rosnący licznik zamiast boolean - OnboardingOverlay ma zareagować na KAŻDE żądanie replaya
+  // (nawet gdy overlay wciąż jest otwarty z poprzedniego razu), nie tylko na zmianę false->true.
+  const [onboardingReplayKey, setOnboardingReplayKey] = useState(0)
   const notificationItems = useNotificationItems()
   const forestMode = useAppStore((s) => s.forestMode)
   const setForestMode = useAppStore((s) => s.setForestMode)
@@ -235,13 +238,16 @@ function App() {
       case 'emergency-card':
         setShowEmergencyCard(true)
         break
+      case 'show-onboarding':
+        setOnboardingReplayKey((k) => k + 1)
+        break
     }
   }
 
   return (
     <div className="flex h-full flex-col bg-background">
       <AppSplash />
-      <OnboardingOverlay />
+      <OnboardingOverlay forceReplayKey={onboardingReplayKey} />
       {/* Płaski, jednolicie ciemny (nie zielony gradient per-zakładka jak dawniej) - tło nagłówka
           niesie teraz AnimatedHeaderBackground (unoszące się grzyby/piwo), więc samo tło musi być
           stonowane i jednolite w obu motywach, żeby animowane ikony były czytelne na wierzchu.
@@ -335,6 +341,12 @@ function App() {
             />
           ))}
         </aside>
+        {/* Ogłoszenie zmiany widoku dla czytników ekranu - bez tego `<main>` po prostu dostaje
+            nową zawartość przy zmianie zakładki, bez żadnej informacji dla kogoś, kto nie widzi
+            wizualnego przejścia (NAWIGACJA-AUDIT-ROADMAP.md Tier 1 pkt 4). */}
+        <p role="status" aria-live="polite" className="sr-only">
+          {TABS.find((t) => t.key === activeTab)?.label}, widok załadowany
+        </p>
         <main
           className="relative z-0 min-h-0 flex-1 overflow-hidden"
           style={supportsViewTransitions ? { viewTransitionName: 'tab-content' } : undefined}
