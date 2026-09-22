@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { motion } from 'motion/react'
 
 interface FloatingIcon {
@@ -25,7 +26,10 @@ const ICONS: FloatingIcon[] = [
 // piwa w tle, w duchu "leć po browara i dawaj w las" z podtytułu obok. `overflow-hidden` na
 // nagłówku (patrz App.tsx) obcina ikony wypływające poza jego wysokość, `pointer-events-none` +
 // niska nieprzezroczystość, żeby nie kolidowały z faktyczną treścią nagłówka nad nimi (z-10).
-export function AnimatedHeaderBackground() {
+// Bez propsów - `memo` eliminuje zbędną rekoncyliację przy każdym re-renderze App (widoczny na
+// KAŻDEJ zakładce, więc re-renderuje się przy każdej zmianie taba i co minutę z timera
+// useNotificationItems - SRC-COMPONENTS-AUDIT-ROADMAP.md Tier 1 pkt 5).
+export const AnimatedHeaderBackground = memo(function AnimatedHeaderBackground() {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
       {ICONS.map((icon, index) => (
@@ -46,4 +50,4 @@ export function AnimatedHeaderBackground() {
       ))}
     </div>
   )
-}
+})

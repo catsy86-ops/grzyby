@@ -10,7 +10,7 @@ import { useAppStore } from '../../stores/appStore'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
 import { edibilityChartColor } from '../../components/EdibilityBadge'
-import { StatTile, StatTileRow } from '../../components/StatTiles'
+import { StatTile, StatTileRow } from './StatTiles'
 import {
   buildExportFilename,
   countLikelyDuplicates,
@@ -62,8 +62,8 @@ import {
 import { Input } from '../../components/ui/input'
 import { Skeleton } from '../../components/ui/skeleton'
 import { FirstAidGuide } from '../tools/FirstAidGuide'
-import { NotificationPermissionBanner } from '../../components/NotificationPermissionBanner'
-import { BackupReminderBanner } from '../../components/BackupReminderBanner'
+import { NotificationPermissionBanner } from './NotificationPermissionBanner'
+import { BackupReminderBanner } from './BackupReminderBanner'
 import { lazyRetry } from '../../utils/lazyRetry'
 import { AchievementsDrawer } from './AchievementsDrawer'
 import { FindingCard } from './FindingCard'

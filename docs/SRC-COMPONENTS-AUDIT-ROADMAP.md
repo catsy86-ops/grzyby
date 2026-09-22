@@ -114,6 +114,15 @@ memoizacja i testy.
 
 ---
 
+**Tier 1 (pkt 1-8) zaimplementowane w całości (2026-09-22)**: `StatTiles`/`NotificationPermissionBanner`/
+`BackupReminderBanner` przeniesione do `src/features/journal/`, `SeasonCalendarStrip` (+ test) do
+`src/features/encyclopedia/`; `AnimatedHeaderBackground`/`AnimatedHeaderTitle` owinięte w `memo()`;
+`BackupReminderBanner` odświeża `now` co 60s (ten sam wzorzec co `useNotificationItems`); nowe testy
+`BackupReminderBanner.test.tsx`, `NotificationPermissionBanner.test.tsx`,
+`SpeciesComparator.test.tsx`; `LookalikesWarning` w `EncyclopediaView` przeniesione poza
+`Collapsible`, obok zawsze-widocznego `legalProtection`. tsc/oxlint/build/testy (696/696, poza jedną
+znaną wcześniej flaką niezwiązaną ze zmianą) czyste.
+
 ## Rekomendowana kolejność realizacji
 
 Pkt 1-4 (przenosiny plików) są całkowicie niezależne od siebie i od reszty - zrobić razem, bez

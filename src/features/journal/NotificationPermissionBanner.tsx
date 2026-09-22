@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { Alert, AlertDescription } from './ui/alert'
-import { Button } from './ui/button'
+import { Alert, AlertDescription } from '../../components/ui/alert'
+import { Button } from '../../components/ui/button'
 import {
   getNotificationPermission,
   isNotificationSupported,
   requestNotificationPermission,
-} from '../utils/notifications'
+} from '../../utils/notifications'
 
 const DISMISS_KEY = 'lysy-notif-banner-dismissed'
 

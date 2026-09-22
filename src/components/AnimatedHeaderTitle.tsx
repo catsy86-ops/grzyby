@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { motion } from 'motion/react'
 
 const TITLE = 'Grzybobranie'
@@ -23,7 +24,9 @@ const LETTER = {
 // najpierw czyta nazwę apki, a podtytuł czuje się jak hasło/zawołanie, nie część logo.
 // Delikatny, zapętlony połysk (gradient sweep) na samym tytule - subtelny sygnał "żyje", bez
 // pętli co sekundę, która by rozpraszała przy każdym spojrzeniu na nagłówek.
-export function AnimatedHeaderTitle({ className }: { className?: string }) {
+// `memo` - App.tsx zawsze woła bez `className`, więc re-renderuje się identycznie jak
+// AnimatedHeaderBackground obok (SRC-COMPONENTS-AUDIT-ROADMAP.md Tier 1 pkt 5).
+export const AnimatedHeaderTitle = memo(function AnimatedHeaderTitle({ className }: { className?: string }) {
   return (
     <span className={`flex flex-col items-center leading-none ${className ?? ''}`}>
       <motion.span
@@ -61,4 +64,4 @@ export function AnimatedHeaderTitle({ className }: { className?: string }) {
       </motion.span>
     </span>
   )
-}
+})

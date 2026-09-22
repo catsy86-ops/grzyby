@@ -17,7 +17,7 @@ import { ALL_SPECIES } from '../../data/species'
 import type { EdibilityStatus, Species } from '../../db/schema'
 import { EdibilityBadge, edibilityChartColor, speciesCardClassName } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
-import { SeasonCalendarStrip } from '../../components/SeasonCalendarStrip'
+import { SeasonCalendarStrip } from './SeasonCalendarStrip'
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
@@ -302,9 +302,11 @@ export function EncyclopediaView() {
                 {s.season}
                 {isInSeason(s.season) && <span className="font-medium text-primary">· w sezonie teraz</span>}
               </p>
-              {/* Ostrzeżenie o ochronie prawnej zostaje zawsze widoczne (obok jadalności) - to,
-                  razem z LookalikesWarning w widoku Rozpoznaj, jest bezpieczeństwo/legalność, nie
-                  ciekawostka do zwinięcia. */}
+              {/* Ostrzeżenie o ochronie prawnej i o sobowtórach zostają zawsze widoczne (obok
+                  jadalności) - to bezpieczeństwo/legalność, nie ciekawostka do zwinięcia. Ta sama
+                  zasada co w widoku Rozpoznaj (PredictionCard.tsx) - wcześniej LookalikesWarning
+                  było tu błędnie schowane w zwiniętych "Szczegółach" mimo tego komentarza
+                  (SRC-COMPONENTS-AUDIT-ROADMAP.md Tier 1 pkt 8). */}
               {s.legalProtection && (
                 <Alert variant="warning" className="mt-2 text-xs">
                   <ScaleIcon />
@@ -312,9 +314,10 @@ export function EncyclopediaView() {
                   <AlertDescription className="text-current">{s.legalProtection}</AlertDescription>
                 </Alert>
               )}
-              {/* Reszta (opis/siedlisko/sobowtóry/przepisy) domknięta domyślnie - progresywne
-                  odkrywanie treści, żeby lista 28 gatunków dała się skanować wzrokiem zamiast
-                  wymuszać przescrollowanie ściany tekstu na każdej karcie. */}
+              <LookalikesWarning species={s} allSpecies={species} />
+              {/* Reszta (opis/siedlisko/przepisy) domknięta domyślnie - progresywne odkrywanie
+                  treści, żeby lista 28 gatunków dała się skanować wzrokiem zamiast wymuszać
+                  przescrollowanie ściany tekstu na każdej karcie. */}
               <Collapsible defaultOpen={false}>
                 <CollapsibleTrigger
                   className="group/details mt-2 flex items-center gap-1 text-xs font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -326,7 +329,6 @@ export function EncyclopediaView() {
                   <p className="mt-2 text-sm leading-relaxed text-foreground/80">{s.description}</p>
                   <p className="mt-1 text-xs text-muted-foreground">Siedlisko: {s.habitat}</p>
                   <SeasonCalendarStrip season={s.season} />
-                  <LookalikesWarning species={s} allSpecies={species} />
                   {s.preparationTips && (
                     // text-sm (nie text-xs) - porady dot. przyrządzania bywają bezpieczeństwem,
                     // nie ciekawostką (np. smardz/piestrzenica: toksyny niszczone dopiero

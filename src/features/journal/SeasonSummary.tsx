@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/db'
-import { StatTile, StatTileRow } from '../../components/StatTiles'
+import { StatTile, StatTileRow } from './StatTiles'
 import { Card, CardContent } from '../../components/ui/card'
 import {
   computeRainyTripInsight,

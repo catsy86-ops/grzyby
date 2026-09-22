@@ -1,4 +1,4 @@
-import { getSeasonMonths, seasonColorClassForMonth, MONTH_ABBR_PL } from '../utils/seasonFilter'
+import { getSeasonMonths, seasonColorClassForMonth, MONTH_ABBR_PL } from '../../utils/seasonFilter'
 
 // Wizualny kalendarz sezonowy per gatunek (UI-QOL-ROADMAP.md, Część 3 pkt 7) - uzupełnienie
 // tekstowego zakresu ("Czerwiec - Październik") już widocznego na karcie gatunku, nie jego
