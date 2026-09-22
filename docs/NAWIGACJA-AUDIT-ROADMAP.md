@@ -128,6 +128,21 @@ jednoznaczny, tani kierunek naprawy bez trade-offów architektonicznych, więc l
 
 ---
 
+**Tier 1 w całości zaimplementowane (2026-09-22).** Pkt 1 (`KeepAliveViews` w App.tsx - zakładki
+raz odwiedzone zostają zamontowane, przełączanie przez `hidden`) zweryfikowany live w przeglądarce
+(claude-in-chrome): przesunięto/przybliżono mapę, przełączono na Dziennik i z powrotem - pozycja
+kamery Leaflet przetrwała, brak nowych błędów w konsoli po kilku czystych przełączeniach. Pkt 2
+(`resetKey` w `ErrorBoundary`) **zostawiony bez zmian** - decyzja użytkownika: skoro pkt 1 został
+zrobiony, `resetKey` przestał być martwym kodem i jest teraz jedynym mechanizmem resetu błędu przy
+zmianie zakładki (wszystkie 4 widoki są trwale zamontowane, więc `ErrorBoundary` też). Pkt 3 - nowy
+`src/App.test.tsx` (5 testów: przełączanie zakładek, zachowanie zamontowania nieaktywnej zakładki,
+`aria-live`, oraz obie ścieżki View Transitions - fallback i Chromium, ta druga wymagała
+`vi.resetModules()` + dynamicznego re-importu, bo `supportsViewTransitions` to stała modułowa
+liczona raz przy imporcie). Pkt 4-6 zaimplementowane wcześniej tego samego dnia (commit `82da849`).
+tsc/oxlint/build czyste, testy 701/704 - 3 porażki potwierdzone jako flaka pod pełnym obciążeniem
+(przechodzą w izolacji), ten sam znany wzorzec co istniejąca flaka `AddFindingForm.test.tsx`, nie
+regresja.
+
 ## Rekomendowana kolejność realizacji
 
 **Kolejność ma znaczenie dla pkt 1 i 2** (jedyna zależność w tym dokumencie): zdecydować najpierw,

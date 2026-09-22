@@ -40,9 +40,10 @@ const TABS: { key: ActiveTab; label: string; icon: typeof MapIcon }[] = [
 
 // View Transitions API (nowecos.md, pkt 5) - tylko Chromium ma `document.startViewTransition`,
 // więc to progresywne wzbogacenie: gdy dostępne, przełączenie taba owija się w natywny crossfade
-// (patrz `::view-transition-*(tab-content)` w index.css) i AnimatePresence poniżej przechodzi w
-// tryb "bez animacji" (duration 0), żeby nie nakładać dwóch konkurencyjnych przejść na siebie.
-// Gdy niedostępne (Firefox, starsze Safari), AnimatePresence działa dokładnie jak wcześniej.
+// (patrz `::view-transition-*(tab-content)` w index.css) i wejściowa animacja `motion.div` w
+// `KeepAliveViews` niżej przechodzi w tryb "bez animacji" (duration 0), żeby nie nakładać dwóch
+// konkurencyjnych przejść na siebie. Gdy niedostępne (Firefox, starsze Safari), `motion.div`
+// animuje wejście samodzielnie.
 const supportsViewTransitions = typeof document !== 'undefined' && 'startViewTransition' in document
 
 // Każdy widok lazy-loadowany osobno - żaden z nich (zwłaszcza Mapa, ciągnąca za sobą
@@ -95,24 +96,66 @@ function IdentifyViewSkeleton() {
   )
 }
 
-function ActiveView({ tab, mapHeaderActionsSlot }: { tab: ActiveTab; mapHeaderActionsSlot: HTMLDivElement | null }) {
-  const fallback =
-    tab === 'mapa' ? <MapViewSkeleton /> : tab === 'rozpoznaj' ? <IdentifyViewSkeleton /> : <CardListSkeleton />
+function tabFallback(tab: ActiveTab) {
+  return tab === 'mapa' ? <MapViewSkeleton /> : tab === 'rozpoznaj' ? <IdentifyViewSkeleton /> : <CardListSkeleton />
+}
+
+function tabContent(tab: ActiveTab, mapHeaderActionsSlot: HTMLDivElement | null) {
+  switch (tab) {
+    case 'mapa':
+      return <MapView headerActionsSlot={mapHeaderActionsSlot} />
+    case 'rozpoznaj':
+      return <IdentifyView />
+    case 'dziennik':
+      return <JournalView />
+    case 'baza-wiedzy':
+      return <EncyclopediaView />
+  }
+}
+
+// Każda zakładka, raz odwiedzona, zostaje NA STAŁE zamontowana (przełączanie dalej przez `hidden`,
+// nie unmount) - naprawia utratę stanu kamery Mapy (Leaflet się reinicjalizował) i pozycji
+// scrolla/filtrów Dziennika/Bazy wiedzy przy każdym powrocie na zakładkę
+// (NAWIGACJA-AUDIT-ROADMAP.md Tier 1 pkt 1). `visitedTabs` startuje tylko z bieżącej zakładki, więc
+// code-splitting per-zakładka (patrz `lazyRetry` wyżej) wciąż działa - nieodwiedzona zakładka
+// (np. Mapa z Leaflet) nie zaciąga swojego kodu, dopóki użytkownik faktycznie na nią nie wejdzie.
+function KeepAliveViews({
+  activeTab,
+  mapHeaderActionsSlot,
+}: {
+  activeTab: ActiveTab
+  mapHeaderActionsSlot: HTMLDivElement | null
+}) {
+  const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(() => new Set([activeTab]))
+
+  useEffect(() => {
+    setVisitedTabs((prev) => (prev.has(activeTab) ? prev : new Set(prev).add(activeTab)))
+  }, [activeTab])
+
   return (
-    <Suspense fallback={fallback}>
-      {(() => {
-        switch (tab) {
-          case 'mapa':
-            return <MapView headerActionsSlot={mapHeaderActionsSlot} />
-          case 'rozpoznaj':
-            return <IdentifyView />
-          case 'dziennik':
-            return <JournalView />
-          case 'baza-wiedzy':
-            return <EncyclopediaView />
-        }
-      })()}
-    </Suspense>
+    <>
+      {TABS.filter((tab) => visitedTabs.has(tab.key)).map((tab) => {
+        const isActive = tab.key === activeTab
+        return (
+          <motion.div
+            key={tab.key}
+            hidden={!isActive}
+            className="h-full"
+            initial={false}
+            // Tylko wejście się animuje (crossfade odejścia wymagałby trzymania poprzedniej
+            // zakładki widocznej podczas animacji, co kolidowałoby z natychmiastowym `hidden`
+            // niżej) - akceptowalne przybliżenie poprzedniego zachowania, ten sam kompromis co w
+            // Chromium, gdzie natywny View Transitions crossfade i tak przejmuje ten przypadek.
+            animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 }}
+            transition={supportsViewTransitions ? { duration: 0 } : { duration: 0.18, ease: 'easeOut' }}
+          >
+            <ErrorBoundary resetKey={activeTab}>
+              <Suspense fallback={tabFallback(tab.key)}>{tabContent(tab.key, mapHeaderActionsSlot)}</Suspense>
+            </ErrorBoundary>
+          </motion.div>
+        )
+      })}
+    </>
   )
 }
 
@@ -327,8 +370,8 @@ function App() {
       {/* `md:` w górę: dolny nav ustępuje pionowej szynie z boku (side-rail) - na szerszym
           ekranie apka rozciągnięta na całą szerokość telefonu wygląda jak przeskalowany telefon,
           nie jak natywna aplikacja desktopowa/tabletowa. Oba nav-y są zamontowane naraz (ukryte
-          przez CSS, nie unmount) - `key={activeTab}` w `AnimatePresence` i stan w appStore są
-          współdzielone, więc przełączenie breakpointu w locie (np. obrót tabletu) nic nie gubi. */}
+          przez CSS, nie unmount) - `activeTab` w appStore jest współdzielony, więc przełączenie
+          breakpointu w locie (np. obrót tabletu) nic nie gubi. */}
       <div className="flex min-h-0 flex-1 md:flex-row">
         <aside className="hidden shrink-0 flex-col gap-1 border-r border-border bg-card/60 p-2 md:flex md:w-24">
           {TABS.map((tab) => (
@@ -351,20 +394,7 @@ function App() {
           className="relative z-0 min-h-0 flex-1 overflow-hidden"
           style={supportsViewTransitions ? { viewTransitionName: 'tab-content' } : undefined}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={activeTab}
-              initial={supportsViewTransitions ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={supportsViewTransitions ? undefined : { opacity: 0, y: -8 }}
-              transition={supportsViewTransitions ? { duration: 0 } : { duration: 0.18, ease: 'easeOut' }}
-              className="h-full"
-            >
-              <ErrorBoundary resetKey={activeTab}>
-                <ActiveView tab={activeTab} mapHeaderActionsSlot={headerMapActionsEl} />
-              </ErrorBoundary>
-            </motion.div>
-          </AnimatePresence>
+          <KeepAliveViews activeTab={activeTab} mapHeaderActionsSlot={headerMapActionsEl} />
         </main>
       </div>
       <nav className="safe-area-bottom relative z-10 flex border-t border-border bg-card/95 px-1 pt-1 shadow-[var(--shadow-floating)] backdrop-blur supports-[backdrop-filter]:bg-card/80 md:hidden">
