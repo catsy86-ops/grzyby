@@ -20,7 +20,6 @@ import {
   readExportFile,
   type ExportPayload,
 } from '../../utils/exportImport'
-import { getCurrentPosition } from '../../utils/geolocation'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { exportFindingsToPdf } from '../../utils/pdfExport'
 import { exportFindingsToGpx } from '../../utils/gpxExport'
@@ -68,7 +67,7 @@ import { BackupReminderBanner } from '../../components/BackupReminderBanner'
 import { lazyRetry } from '../../utils/lazyRetry'
 import { AchievementsDrawer } from './AchievementsDrawer'
 import { FindingCard } from './FindingCard'
-import { FindingEditForm } from './FindingEditForm'
+import { FindingEditForm, type FindingEditValues } from './FindingEditForm'
 import { JournalExportMenu } from './JournalExportMenu'
 import { SeasonSummary } from './SeasonSummary'
 import { TripManager } from './TripManager'
@@ -122,28 +121,12 @@ export function JournalView() {
   // domknięcia.
   const [showIncompleteOnly, setShowIncompleteOnly] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [editSpeciesId, setEditSpeciesId] = useState('')
-  const [editNotes, setEditNotes] = useState('')
-  const [editWeightGrams, setEditWeightGrams] = useState('')
-  const [editDriedWeightGrams, setEditDriedWeightGrams] = useState('')
-  const [editQuantity, setEditQuantity] = useState('')
-  const [editLatitude, setEditLatitude] = useState<number | null>(null)
-  const [editLongitude, setEditLongitude] = useState<number | null>(null)
-  const [editPhoto, setEditPhoto] = useState<File | null>(null)
-  const [editRemovePhoto, setEditRemovePhoto] = useState(false)
-  const [editLocating, setEditLocating] = useState(false)
-  const [editSaving, setEditSaving] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [pendingImport, setPendingImport] = useState<{ payload: ExportPayload; duplicateCount: number } | null>(null)
   const [showFirstAid, setShowFirstAid] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [listRef] = useAutoAnimate()
-
-  const editingPhoto = useLiveQuery(
-    async () => (editingId != null ? ((await db.photos.where('findingId').equals(editingId).first()) ?? null) : null),
-    [editingId],
-  )
 
   const selectedTrip = useLiveQuery(
     () => (typeof tripFilter === 'number' ? db.trips.get(tripFilter) : undefined),
@@ -318,79 +301,31 @@ export function JournalView() {
     }
   }
 
-  function handleStartEdit(finding: Finding) {
-    setEditingId(finding.id ?? null)
-    setEditSpeciesId(finding.speciesId ?? '')
-    setEditNotes(finding.notes)
-    setEditWeightGrams(finding.weightGrams != null ? String(finding.weightGrams) : '')
-    setEditDriedWeightGrams(finding.driedWeightGrams != null ? String(finding.driedWeightGrams) : '')
-    setEditQuantity(finding.quantity != null ? String(finding.quantity) : '')
-    setEditLatitude(finding.latitude)
-    setEditLongitude(finding.longitude)
-    setEditPhoto(null)
-    setEditRemovePhoto(false)
-  }
-
-  async function handleUseCurrentLocation() {
-    setEditLocating(true)
+  async function handleSaveEdit(id: number, values: FindingEditValues) {
     try {
-      const coords = await getCurrentPosition()
-      setEditLatitude(coords.latitude)
-      setEditLongitude(coords.longitude)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Nie udało się ustalić lokalizacji')
-    } finally {
-      setEditLocating(false)
-    }
-  }
-
-  // Zwraca `undefined` dla pustego pola (nic nie podano), skończoną nieujemną liczbę dla
-  // poprawnego wpisu, albo `null` dla błędnego wpisu (np. "12,5" z przecinkiem zamiast kropki,
-  // częste przy polskiej lokalizacji klawiatury - `Number()` dałoby ciche `NaN` zapisane wprost
-  // do bazy, bez natywnej walidacji formularza - tu nie ma `<form>`/submit, więc `min`/`type`
-  // HTML5 na inputach są tylko kosmetyczne, nie blokują wpisania).
-  function parseOptionalNonNegative(value: string): number | undefined | null {
-    if (value.trim() === '') return undefined
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed) || parsed < 0) return null
-    return parsed
-  }
-
-  async function handleSaveEdit(id: number) {
-    const weightGrams = parseOptionalNonNegative(editWeightGrams)
-    const driedWeightGrams = parseOptionalNonNegative(editDriedWeightGrams)
-    const quantity = parseOptionalNonNegative(editQuantity)
-    if (weightGrams === null || driedWeightGrams === null || quantity === null) {
-      toast.error('Waga i liczba sztuk muszą być poprawnymi, nieujemnymi liczbami.')
-      return
-    }
-    setEditSaving(true)
-    try {
-      const species = (speciesData as Species[]).find((s) => s.id === editSpeciesId) ?? null
       // Kompresja zdjęcia musi zajść PRZED transakcją Dexie - operacje asynchroniczne spoza API
       // Dexie w środku transakcji przedwcześnie ją zamykają (patrz utils/exportImport.ts).
-      const newPhoto = editPhoto
-        ? await Promise.all([compressPhoto(editPhoto), createThumbnail(editPhoto)]).then(([blob, thumbnailBlob]) => ({
-            blob,
-            thumbnailBlob,
-          }))
+      const newPhoto = values.photo
+        ? await Promise.all([compressPhoto(values.photo), createThumbnail(values.photo)]).then(
+            ([blob, thumbnailBlob]) => ({ blob, thumbnailBlob }),
+          )
         : null
 
       await db.transaction('rw', db.findings, db.photos, async () => {
         await db.findings.update(id, {
-          speciesId: species?.id ?? null,
-          speciesNameGuess: species?.nameCommon ?? null,
-          notes: editNotes,
-          weightGrams,
-          driedWeightGrams,
-          quantity,
-          latitude: editLatitude,
-          longitude: editLongitude,
+          speciesId: values.speciesId,
+          speciesNameGuess: values.speciesNameGuess,
+          notes: values.notes,
+          weightGrams: values.weightGrams,
+          driedWeightGrams: values.driedWeightGrams,
+          quantity: values.quantity,
+          latitude: values.latitude,
+          longitude: values.longitude,
         })
         if (newPhoto) {
           await db.photos.where('findingId').equals(id).delete()
           await db.photos.add({ findingId: id, blob: newPhoto.blob, thumbnailBlob: newPhoto.thumbnailBlob })
-        } else if (editRemovePhoto) {
+        } else if (values.removePhoto) {
           await db.photos.where('findingId').equals(id).delete()
         }
       })
@@ -405,8 +340,6 @@ export function JournalView() {
           ? 'Brak miejsca na urządzeniu - zwolnij pamięć (np. w "Pamięć i dane") i spróbuj ponownie.'
           : 'Nie udało się zapisać zmian. Spróbuj ponownie.',
       )
-    } finally {
-      setEditSaving(false)
     }
   }
 
@@ -654,34 +587,9 @@ export function JournalView() {
             return (
               <FindingEditForm
                 key={finding.id}
-                editSpeciesId={editSpeciesId}
-                onEditSpeciesIdChange={setEditSpeciesId}
-                editNotes={editNotes}
-                onEditNotesChange={setEditNotes}
-                editWeightGrams={editWeightGrams}
-                onEditWeightGramsChange={setEditWeightGrams}
-                editDriedWeightGrams={editDriedWeightGrams}
-                onEditDriedWeightGramsChange={setEditDriedWeightGrams}
-                editQuantity={editQuantity}
-                onEditQuantityChange={setEditQuantity}
-                editLatitude={editLatitude}
-                editLongitude={editLongitude}
-                onClearLocation={() => {
-                  setEditLatitude(null)
-                  setEditLongitude(null)
-                }}
-                editLocating={editLocating}
-                onUseCurrentLocation={handleUseCurrentLocation}
-                onPhotoChange={(file) => {
-                  setEditPhoto(file)
-                  setEditRemovePhoto(false)
-                }}
-                hasExistingPhoto={!editPhoto && !!editingPhoto}
-                editRemovePhoto={editRemovePhoto}
-                onRemovePhoto={() => setEditRemovePhoto(true)}
-                editSaving={editSaving}
+                finding={finding}
                 onCancel={() => setEditingId(null)}
-                onSave={() => handleSaveEdit(finding.id!)}
+                onSave={handleSaveEdit}
               />
             )
           }
@@ -699,7 +607,7 @@ export function JournalView() {
               species={findingSpecies}
               index={index}
               onShare={handleShare}
-              onEdit={handleStartEdit}
+              onEdit={(f) => setEditingId(f.id ?? null)}
               onDeleteRequest={setConfirmDeleteId}
             />
           )

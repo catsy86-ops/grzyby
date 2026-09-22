@@ -1,5 +1,10 @@
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
-import type { Species } from '../../db/schema'
+import type { Finding, Species } from '../../db/schema'
+import { getCurrentPosition } from '../../utils/geolocation'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
@@ -8,59 +13,111 @@ import { Textarea } from '../../components/ui/textarea'
 
 const NONE_SPECIES = '__none__'
 
-// Wydzielone z JournalView.tsx (Faza 27, redukcja rozmiaru pliku) - karta w trybie edycji
-// znaleziska, dotąd inline'owana bezpośrednio w mapowaniu listy. Cały stan formularza edycji
-// (editSpeciesId/editNotes/itd.) zostaje w JournalView jako "źródło prawdy" - ten komponent jest
-// czystą prezentacją nad kontrolowanymi polami, bez własnego stanu.
-interface FindingEditFormProps {
-  editSpeciesId: string
-  onEditSpeciesIdChange: (value: string) => void
-  editNotes: string
-  onEditNotesChange: (value: string) => void
-  editWeightGrams: string
-  onEditWeightGramsChange: (value: string) => void
-  editDriedWeightGrams: string
-  onEditDriedWeightGramsChange: (value: string) => void
-  editQuantity: string
-  onEditQuantityChange: (value: string) => void
-  editLatitude: number | null
-  editLongitude: number | null
-  onClearLocation: () => void
-  editLocating: boolean
-  onUseCurrentLocation: () => void
-  onPhotoChange: (file: File | null) => void
-  hasExistingPhoto: boolean
-  editRemovePhoto: boolean
-  onRemovePhoto: () => void
-  editSaving: boolean
-  onCancel: () => void
-  onSave: () => void
+export interface FindingEditValues {
+  speciesId: string | null
+  speciesNameGuess: string | null
+  notes: string
+  weightGrams: number | undefined
+  driedWeightGrams: number | undefined
+  quantity: number | undefined
+  latitude: number | null
+  longitude: number | null
+  photo: File | null
+  removePhoto: boolean
 }
 
-export function FindingEditForm({
-  editSpeciesId,
-  onEditSpeciesIdChange,
-  editNotes,
-  onEditNotesChange,
-  editWeightGrams,
-  onEditWeightGramsChange,
-  editDriedWeightGrams,
-  onEditDriedWeightGramsChange,
-  editQuantity,
-  onEditQuantityChange,
-  editLatitude,
-  editLongitude,
-  onClearLocation,
-  editLocating,
-  onUseCurrentLocation,
-  onPhotoChange,
-  hasExistingPhoto,
-  editRemovePhoto,
-  onRemovePhoto,
-  editSaving,
-  onCancel,
-  onSave,
-}: FindingEditFormProps) {
+// Zwraca `undefined` dla pustego pola (nic nie podano), skończoną nieujemną liczbę dla
+// poprawnego wpisu, albo `null` dla błędnego wpisu (np. "12,5" z przecinkiem zamiast kropki,
+// częste przy polskiej lokalizacji klawiatury - `Number()` dałoby ciche `NaN` zapisane wprost
+// do bazy, bez natywnej walidacji formularza - tu nie ma `<form>`/submit, więc `min`/`type`
+// HTML5 na inputach są tylko kosmetyczne, nie blokują wpisania).
+function parseOptionalNonNegative(value: string): number | undefined | null {
+  if (value.trim() === '') return undefined
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed < 0) return null
+  return parsed
+}
+
+// Faza JOURNAL-AUDIT-ROADMAP.md Tier 0 (2026-09-22): stan pól formularza edycji przeniesiony TU
+// z JournalView.tsx (był tam jako 11 `useState` przekazywanych jako 22 propsy) - jako lokalny,
+// niekontrolowany stan inicjalizowany raz z `finding` przy montowaniu (`useState`-owy leniwy
+// inicjalizator, nie efekt resynchronizujący się przy każdej zmianie `finding` - w trakcie edycji
+// świadomie ignorujemy późniejsze zmiany tego samego rekordu z zewnątrz, tak jak wcześniej robił
+// to jednorazowy `handleStartEdit` w JournalView). Naprawia dwa problemy naraz: DRY (jeden
+// komponent, jeden stan, bez 22 propsów value+onChange) i wydajność (pisanie w polu notatek nie
+// dotyka już JournalView, więc nie re-renderuje całej listy kart `FindingCard` przy każdym
+// naciśnięciu klawisza). `onSave` liftuje wynik do rodzica dopiero przy faktycznym zapisie.
+interface FindingEditFormProps {
+  finding: Finding
+  onCancel: () => void
+  onSave: (id: number, values: FindingEditValues) => Promise<void>
+}
+
+export function FindingEditForm({ finding, onCancel, onSave }: FindingEditFormProps) {
+  const [editSpeciesId, setEditSpeciesId] = useState(finding.speciesId ?? '')
+  const [editNotes, setEditNotes] = useState(finding.notes)
+  const [editWeightGrams, setEditWeightGrams] = useState(
+    finding.weightGrams != null ? String(finding.weightGrams) : '',
+  )
+  const [editDriedWeightGrams, setEditDriedWeightGrams] = useState(
+    finding.driedWeightGrams != null ? String(finding.driedWeightGrams) : '',
+  )
+  const [editQuantity, setEditQuantity] = useState(finding.quantity != null ? String(finding.quantity) : '')
+  const [editLatitude, setEditLatitude] = useState<number | null>(finding.latitude)
+  const [editLongitude, setEditLongitude] = useState<number | null>(finding.longitude)
+  const [editPhoto, setEditPhoto] = useState<File | null>(null)
+  const [editRemovePhoto, setEditRemovePhoto] = useState(false)
+  const [editLocating, setEditLocating] = useState(false)
+  const [editSaving, setEditSaving] = useState(false)
+
+  const editingPhoto = useLiveQuery(
+    async () => (finding.id != null ? ((await db.photos.where('findingId').equals(finding.id).first()) ?? null) : null),
+    [finding.id],
+  )
+  const hasExistingPhoto = !editPhoto && !!editingPhoto
+
+  async function handleUseCurrentLocation() {
+    setEditLocating(true)
+    try {
+      const coords = await getCurrentPosition()
+      setEditLatitude(coords.latitude)
+      setEditLongitude(coords.longitude)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Nie udało się ustalić lokalizacji')
+    } finally {
+      setEditLocating(false)
+    }
+  }
+
+  async function handleSave() {
+    if (finding.id == null) return
+    const weightGrams = parseOptionalNonNegative(editWeightGrams)
+    const driedWeightGrams = parseOptionalNonNegative(editDriedWeightGrams)
+    const quantity = parseOptionalNonNegative(editQuantity)
+    if (weightGrams === null || driedWeightGrams === null || quantity === null) {
+      toast.error('Waga i liczba sztuk muszą być poprawnymi, nieujemnymi liczbami.')
+      return
+    }
+    const species = (speciesData as Species[]).find((s) => s.id === editSpeciesId) ?? null
+    setEditSaving(true)
+    try {
+      await onSave(finding.id, {
+        speciesId: species?.id ?? null,
+        speciesNameGuess: species?.nameCommon ?? null,
+        notes: editNotes,
+        weightGrams,
+        driedWeightGrams,
+        quantity,
+        latitude: editLatitude,
+        longitude: editLongitude,
+        photo: editPhoto,
+        removePhoto: editRemovePhoto,
+      })
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
   return (
     // Karta w trybie edycji rozpięta na całą szerokość siatki, niezależnie od tego w której
     // kolumnie by wypadła - ścieśniony formularz w jednej kolumnie 1/3 szerokości byłby
@@ -71,7 +128,7 @@ export function FindingEditForm({
           Gatunek
           <Select
             value={editSpeciesId || NONE_SPECIES}
-            onValueChange={(value) => onEditSpeciesIdChange(value == null || value === NONE_SPECIES ? '' : value)}
+            onValueChange={(value) => setEditSpeciesId(value == null || value === NONE_SPECIES ? '' : value)}
           >
             <SelectTrigger className="mt-1 w-full">
               <SelectValue />
@@ -88,7 +145,7 @@ export function FindingEditForm({
         </label>
         <label className="text-sm">
           Notatki
-          <Textarea value={editNotes} onChange={(e) => onEditNotesChange(e.target.value)} className="mt-1" rows={2} />
+          <Textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} className="mt-1" rows={2} />
         </label>
 
         <label className="text-sm">
@@ -99,7 +156,7 @@ export function FindingEditForm({
             min={0}
             step={1}
             value={editWeightGrams}
-            onChange={(e) => onEditWeightGramsChange(e.target.value)}
+            onChange={(e) => setEditWeightGrams(e.target.value)}
             className="mt-1"
           />
         </label>
@@ -112,7 +169,7 @@ export function FindingEditForm({
             min={0}
             step={1}
             value={editDriedWeightGrams}
-            onChange={(e) => onEditDriedWeightGramsChange(e.target.value)}
+            onChange={(e) => setEditDriedWeightGrams(e.target.value)}
             className="mt-1"
             placeholder="Opcjonalnie, gdy zbiór był suszony"
           />
@@ -126,7 +183,7 @@ export function FindingEditForm({
             min={0}
             step={1}
             value={editQuantity}
-            onChange={(e) => onEditQuantityChange(e.target.value)}
+            onChange={(e) => setEditQuantity(e.target.value)}
             className="mt-1"
           />
         </label>
@@ -139,11 +196,19 @@ export function FindingEditForm({
                 ? `${editLatitude.toFixed(5)}, ${editLongitude.toFixed(5)}`
                 : 'Brak lokalizacji'}
             </p>
-            <Button type="button" variant="outline" size="sm" disabled={editLocating} onClick={onUseCurrentLocation}>
+            <Button type="button" variant="outline" size="sm" disabled={editLocating} onClick={handleUseCurrentLocation}>
               {editLocating ? 'Ustalanie...' : 'Użyj obecnej (GPS)'}
             </Button>
             {editLatitude != null && (
-              <Button type="button" variant="ghost" size="sm" onClick={onClearLocation}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setEditLatitude(null)
+                  setEditLongitude(null)
+                }}
+              >
                 Usuń
               </Button>
             )}
@@ -156,12 +221,21 @@ export function FindingEditForm({
             type="file"
             accept="image/*"
             capture="environment"
-            onChange={(e) => onPhotoChange(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              setEditPhoto(e.target.files?.[0] ?? null)
+              setEditRemovePhoto(false)
+            }}
             className="mt-1 h-auto"
           />
         </label>
         {hasExistingPhoto && !editRemovePhoto && (
-          <Button type="button" variant="ghost" size="sm" className="w-fit text-destructive" onClick={onRemovePhoto}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="w-fit text-destructive"
+            onClick={() => setEditRemovePhoto(true)}
+          >
             Usuń obecne zdjęcie
           </Button>
         )}
@@ -171,7 +245,7 @@ export function FindingEditForm({
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Anuluj
           </Button>
-          <Button size="sm" disabled={editSaving} onClick={onSave}>
+          <Button size="sm" disabled={editSaving} onClick={handleSave}>
             {editSaving ? 'Zapisywanie...' : 'Zapisz'}
           </Button>
         </div>
