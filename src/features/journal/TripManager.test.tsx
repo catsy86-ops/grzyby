@@ -3,12 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import * as geolocation from '../../utils/geolocation'
+import * as notifications from '../../utils/notifications'
 import * as rainCheck from '../../utils/rainCheck'
 import { TripManager } from './TripManager'
+
+const LONG_TRIP_NOTIFIED_KEY = 'lysy-long-trip-notified-id'
 
 beforeEach(async () => {
   await db.trips.clear()
   useAppStore.setState({ activeTripId: null })
+  localStorage.removeItem(LONG_TRIP_NOTIFIED_KEY)
   vi.restoreAllMocks()
 })
 
@@ -88,5 +92,72 @@ describe('TripManager', () => {
     render(<TripManager />)
 
     expect(await screen.findByText(/Wyprawa się przeciąga/)).toBeInTheDocument()
+  })
+
+  it('wysyła SMS z lokalizacją po kliknięciu przycisku w ostrzeżeniu o przeciągającej się wyprawie', async () => {
+    vi.spyOn(geolocation, 'getCurrentPosition').mockResolvedValue({ latitude: 53.4, longitude: 14.5 })
+    const originalHref = window.location.href
+    const hrefSetter = vi.fn()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, set href(v: string) { hrefSetter(v) } },
+      writable: true,
+    })
+
+    const tripId = await db.trips.add({
+      name: 'Wyprawa testowa',
+      startedAt: Date.now() - 60_000,
+      endedAt: null,
+      notes: '',
+      plannedReturnAt: Date.now() - 1000,
+    })
+    useAppStore.setState({ activeTripId: tripId })
+
+    render(<TripManager />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Wyślij SMS z lokalizacją' }))
+
+    await waitFor(() => expect(hrefSetter).toHaveBeenCalled())
+    expect(hrefSetter.mock.calls[0][0]).toContain('sms:')
+
+    Object.defineProperty(window, 'location', { value: { ...window.location, href: originalHref }, writable: true })
+  })
+
+  it('pokazuje błąd, gdy nie udało się ustalić lokalizacji do SMS-a', async () => {
+    vi.spyOn(geolocation, 'getCurrentPosition').mockRejectedValue(new Error('brak GPS'))
+
+    const tripId = await db.trips.add({
+      name: 'Wyprawa testowa',
+      startedAt: Date.now() - 60_000,
+      endedAt: null,
+      notes: '',
+      plannedReturnAt: Date.now() - 1000,
+    })
+    useAppStore.setState({ activeTripId: tripId })
+
+    render(<TripManager />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Wyślij SMS z lokalizacją' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Wyślij SMS z lokalizacją' })).not.toBeDisabled(),
+    )
+  })
+
+  it('powiadamia raz o długiej wyprawie i nie duplikuje powiadomienia przy ponownym sprawdzeniu (np. kolejny tick)', async () => {
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+
+    const longAgo = Date.now() - 5 * 60 * 60 * 1000
+    const tripId = await db.trips.add({ name: 'Długa wyprawa', startedAt: longAgo, endedAt: null, notes: '' })
+    useAppStore.setState({ activeTripId: tripId })
+
+    const { unmount } = render(<TripManager />)
+
+    await waitFor(() => expect(notifySpy).toHaveBeenCalledTimes(1))
+    expect(localStorage.getItem(LONG_TRIP_NOTIFIED_KEY)).toBe(String(tripId))
+    unmount()
+
+    // Zamontowanie ponownie (ten sam efekt co kolejny tick 60s-interwału) uruchamia checkLongTrip()
+    // od nowa - dedupe po localStorage musi wciąż zapobiec drugiemu powiadomieniu.
+    render(<TripManager />)
+    await waitFor(() => expect(screen.getByText(/Aktywna wyprawa/)).toBeInTheDocument())
+    expect(notifySpy).toHaveBeenCalledTimes(1)
   })
 })
