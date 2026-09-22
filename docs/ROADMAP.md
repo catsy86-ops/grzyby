@@ -1073,7 +1073,8 @@ precache z Fazy 4).
 - [x] Audyt `ConsumptionTracker.tsx`, `TripManager.tsx` - hardkodowane kolory (`gray-200`,
       `green-300` itd.) zamienione na tokeny motywu. `TripsHistory.tsx` sprawdzony - już był czysty
       (shadcn `ToggleGroup`/`Button`, brak hardkodowanych kolorów), bez zmian.
-- [ ] Customizacja `sonner` (kolory z tokenów, `richColors`) - nie zrobione, niski priorytet.
+- [x] Customizacja `sonner` (kolory z tokenów) - zrobione, sprawdzone ponownie w Fazie 8 niżej.
+      `richColors` świadomie pominięte (kolidowałoby z tokenowym stylem).
 
 *(Agent `frontend-expert`, sesja z 2026-09-13.)*
 
