@@ -35,11 +35,17 @@ describe('ToolsMenu', () => {
     const onToggleForestMode = vi.fn()
     render(<ToolsMenu open onOpenChange={vi.fn()} onSelect={vi.fn()} forestMode={true} onToggleForestMode={onToggleForestMode} />)
 
-    const toggle = screen.getByRole('switch')
+    const toggle = screen.getByRole('switch', { name: 'Tryb W lesie' })
     expect(toggle).toHaveAttribute('aria-checked', 'true')
 
     fireEvent.click(toggle)
     expect(onToggleForestMode).toHaveBeenCalled()
+  })
+
+  it('pokazuje przełącznik ciemnego motywu obok trybu "W lesie"', () => {
+    render(<ToolsMenu open onOpenChange={vi.fn()} onSelect={vi.fn()} forestMode={false} onToggleForestMode={vi.fn()} />)
+
+    expect(screen.getByRole('switch', { name: 'Ciemny motyw' })).toBeInTheDocument()
   })
 
   it('pokazuje sekcję oszczędzania baterii z domyślnie zaznaczonym trybem "Auto"', () => {

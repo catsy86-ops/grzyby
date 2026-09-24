@@ -1,5 +1,7 @@
-import { BackpackIcon, BatteryIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, PhoneCallIcon, SparklesIcon, TimerIcon, TreePineIcon } from 'lucide-react'
+import { BackpackIcon, BatteryIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, MoonIcon, PhoneCallIcon, SparklesIcon, TimerIcon, TreePineIcon } from 'lucide-react'
 import { motion } from 'motion/react'
+import { useEffect, useState } from 'react'
+import { useTheme } from 'next-themes'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { useBatteryStatus } from '../../hooks/useBatteryStatus'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
@@ -90,6 +92,13 @@ export function ToolsMenu({
   const batteryStatus = useBatteryStatus()
   const powerSaveActive = isPowerSaveActive(powerSaveMode, batteryStatus)
 
+  // next-themes odczytuje motyw z localStorage dopiero po zamontowaniu (patrz ThemeToggle.tsx) -
+  // bez tego guardu `isDark` byłby błędnie `false` przy pierwszym renderze i przełącznik mrugałby.
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  const isDark = mounted && resolvedTheme === 'dark'
+
   return (
     <Drawer open={open} swipeDirection={isWidePanel ? 'right' : 'down'} onOpenChange={onOpenChange}>
       <DrawerContent>
@@ -102,6 +111,7 @@ export function ToolsMenu({
             type="button"
             role="switch"
             aria-checked={forestMode}
+            aria-label="Tryb W lesie"
             onClick={onToggleForestMode}
             className={`flex items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 ${forestMode ? 'bg-primary/5' : ''}`}
           >
@@ -113,6 +123,23 @@ export function ToolsMenu({
               <span className="block text-xs text-muted-foreground">Większe przyciski, wyższy kontrast</span>
             </span>
             {forestMode && <CheckIcon className="size-4 shrink-0 text-primary" />}
+          </button>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isDark}
+            aria-label="Ciemny motyw"
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            className={`flex items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 ${isDark ? 'bg-primary/5' : ''}`}
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <MoonIcon className="size-4.5" />
+            </span>
+            <span className="flex-1">
+              <span className="block font-medium">Ciemny motyw</span>
+              <span className="block text-xs text-muted-foreground">Ten sam przełącznik co w nagłówku</span>
+            </span>
+            {isDark && <CheckIcon className="size-4 shrink-0 text-primary" />}
           </button>
         </div>
         <div className="mx-4 my-1 border-t border-border" />
