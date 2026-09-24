@@ -94,3 +94,18 @@ jednej sesji. Punkt 5 (konsolidacja `App.tsx` do `activeTool`) warto zrobić jak
 dotyka renderowania wszystkich sześciu dialogów naraz, zasługuje na ręczną weryfikację w
 przeglądarce. Punkt 1 (SMS bez GPS) wymaga wcześniej krótkiej decyzji redakcyjnej (treść SMS-a bez
 współrzędnych) - technicznie niezależny od pozostałych, ale dotyka współdzielonego `locationSms.ts`.
+
+---
+
+**Tier 1 w całości zaimplementowane (2026-09-24).** Pkt 1: `buildLocationSmsUrl` przyjmuje teraz
+`latitude`/`longitude` jako `number | null` - bez GPS treść SMS-a to prośba o pomoc bez linku do
+mapy zamiast zablokowanego przycisku; `EmergencyCard`'s przycisk SMS odblokowany niezależnie od
+`position`, etykieta zmienia się na "SMS bez lokalizacji do kontaktu". Pkt 2: `FirstAidGuide`
+dostał przycisk `tel:112`. Pkt 3: `role="radiogroup"` + `aria-label` na grupie trybu oszczędzania
+baterii. Pkt 4: `GearChecklist` przeniesiony z ręcznego `localStorage` do `appStore`
+(`gearChecklistChecked`, `persist`+`partialize`). Pkt 5: sześć `useState<boolean>` w `App.tsx`
+skonsolidowane do jednego `activeTool`. Pkt 6: `SECTIONS` w `ToolsMenu.tsx` wyprowadzone z `TOOLS`
+(nowe pole `section`), koniec ręcznej synchronizacji dwóch list. Pkt 7: usunięty zbędny
+`key={open ? 'open' : 'closed'}` remount w `ToolsMenu.tsx`. Pkt 8: `checkedCount` w `GearChecklist`
+liczony bez zagnieżdżonego `some()` w `some()`. tsc/oxlint/build czyste, testy 711/712 (1 znana
+flaka pod pełnym obciążeniem, niezwiązana z tymi zmianami).

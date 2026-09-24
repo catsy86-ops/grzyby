@@ -1,6 +1,7 @@
 import { PhoneCallIcon } from 'lucide-react'
 import { FIRST_AID_DISCLAIMER, FIRST_AID_STEPS } from '../../data/firstAid'
 import { Alert, AlertDescription } from '../../components/ui/alert'
+import { Button } from '../../components/ui/button'
 import { ToolDialog } from './ToolDialog'
 
 export function FirstAidGuide({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -11,6 +12,18 @@ export function FirstAidGuide({ open, onOpenChange }: { open: boolean; onOpenCha
       icon={<PhoneCallIcon className="size-5 text-destructive" />}
       title="Pierwsza pomoc przy podejrzeniu zatrucia"
     >
+      <Button
+        type="button"
+        variant="destructive"
+        className="w-full"
+        onClick={() => {
+          window.location.href = 'tel:112'
+        }}
+      >
+        <PhoneCallIcon />
+        Zadzwoń pod 112
+      </Button>
+
       {/* Tekst kroków pierwszej pomocy celowo WIĘKSZY i wyższego kontrastu niż typowy opis
           pomocniczy (text-sm zamiast text-xs, text-foreground/85 zamiast text-muted-foreground,
           leading-relaxed) - to instrukcja czytana w stresie, czasem w słabym świetle lasu, nie

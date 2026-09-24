@@ -27,4 +27,11 @@ describe('buildLocationSmsUrl', () => {
 
     expect(url.startsWith('sms:+48123456789?body=')).toBe(true)
   })
+
+  it('buduje treść z prośbą o pomoc bez linku do mapy, gdy brak współrzędnych', () => {
+    const url = buildLocationSmsUrl(null, null, '+48123456789', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')
+
+    expect(decodeURIComponent(url)).toContain('Potrzebuję pomocy, nie udało mi się ustalić dokładnej lokalizacji.')
+    expect(decodeURIComponent(url)).not.toContain('google.com/maps')
+  })
 })

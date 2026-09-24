@@ -1,47 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { CheckIcon } from 'lucide-react'
 import { GEAR_CHECKLIST } from '../../data/gearChecklist'
 import { Button } from '../../components/ui/button'
+import { useAppStore } from '../../stores/appStore'
 import { ToolDialog } from './ToolDialog'
 
-const CHECKED_ITEMS_KEY = 'grzyby-gear-checklist-checked'
-
-function readChecked(): Set<string> {
-  try {
-    const raw = localStorage.getItem(CHECKED_ITEMS_KEY)
-    if (!raw) return new Set()
-    return new Set(JSON.parse(raw) as string[])
-  } catch {
-    return new Set()
-  }
-}
-
-// Interaktywna checklista sprzętu przed wyjściem - czysto lokalna (localStorage), bez zależności
-// zewnętrznych. Stan zaznaczeń przetrwa zamknięcie apki (przygotowania do wyprawy mogą trwać
-// dłużej niż jedna sesja), z przyciskiem "Wyczyść" na kolejne wyjście.
+// Interaktywna checklista sprzętu przed wyjściem - stan zaznaczeń w appStore (jak
+// emergencyInfo/ambientAudioVolume), przetrwa zamknięcie apki (przygotowania do wyprawy mogą
+// trwać dłużej niż jedna sesja), z przyciskiem "Wyczyść" na kolejne wyjście.
 export function GearChecklist({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const [checked, setChecked] = useState<Set<string>>(() => readChecked())
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHECKED_ITEMS_KEY, JSON.stringify([...checked]))
-    } catch {
-      // localStorage niedostępny/pełny - stan zostaje tylko w pamięci sesji
-    }
-  }, [checked])
+  const checkedIds = useAppStore((s) => s.gearChecklistChecked)
+  const setGearChecklistChecked = useAppStore((s) => s.setGearChecklistChecked)
+  const checked = useMemo(() => new Set(checkedIds), [checkedIds])
 
   const totalItems = GEAR_CHECKLIST.reduce((sum, cat) => sum + cat.items.length, 0)
-  const checkedCount = [...checked].filter((id) =>
-    GEAR_CHECKLIST.some((cat) => cat.items.some((item) => item.id === id))
-  ).length
+  const checkedCount = GEAR_CHECKLIST.flatMap((cat) => cat.items).filter((item) => checked.has(item.id)).length
 
   function toggle(id: string) {
-    setChecked((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+    const next = new Set(checked)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setGearChecklistChecked([...next])
   }
 
   return (
@@ -91,7 +70,7 @@ export function GearChecklist({ open, onOpenChange }: { open: boolean; onOpenCha
         ))}
       </div>
 
-      <Button variant="outline" size="sm" className="mt-1" onClick={() => setChecked(new Set())}>
+      <Button variant="outline" size="sm" className="mt-1" onClick={() => setGearChecklistChecked([])}>
         Wyczyść zaznaczenia
       </Button>
     </ToolDialog>

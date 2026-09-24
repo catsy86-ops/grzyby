@@ -42,6 +42,10 @@ interface AppState {
   // offline, bez chmury) - patrz utils/backupReminder.ts i BackupReminderBanner. `null` = nigdy.
   lastExportAt: number | null
   setLastExportAt: (timestamp: number) => void
+  // Zaznaczenia checklisty sprzętu (features/tools/GearChecklist.tsx) - przygotowania mogą trwać
+  // dłużej niż jedna sesja, więc stan przetrwa zamknięcie apki, tak jak reszta appStore.
+  gearChecklistChecked: string[]
+  setGearChecklistChecked: (ids: string[]) => void
 }
 
 // Dane karty awaryjnej (patrz features/tools/EmergencyCard.tsx) - czysto lokalne (localStorage,
@@ -89,6 +93,8 @@ export const useAppStore = create<AppState>()(
       setAmbientAudioVolume: (volume) => set({ ambientAudioVolume: volume }),
       lastExportAt: null,
       setLastExportAt: (timestamp) => set({ lastExportAt: timestamp }),
+      gearChecklistChecked: [],
+      setGearChecklistChecked: (ids) => set({ gearChecklistChecked: ids }),
     }),
     {
       name: 'lysy-app-store',
@@ -102,6 +108,7 @@ export const useAppStore = create<AppState>()(
         emergencyInfo: state.emergencyInfo,
         ambientAudioVolume: state.ambientAudioVolume,
         lastExportAt: state.lastExportAt,
+        gearChecklistChecked: state.gearChecklistChecked,
       }),
       onRehydrateStorage: () => () => {
         // Odłożone do makrotaska: onRehydrateStorage jest wywoływane synchronicznie

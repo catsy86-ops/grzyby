@@ -99,14 +99,17 @@ export function EmergencyCard({ open, onOpenChange }: { open: boolean; onOpenCha
         <Button
           type="button"
           className="flex-1"
-          disabled={!emergencyInfo.contactPhone.trim() || !position}
+          disabled={!emergencyInfo.contactPhone.trim()}
           onClick={() => {
-            if (!position) return
-            window.location.href = buildLocationSmsUrl(position[0], position[1], emergencyInfo.contactPhone)
+            window.location.href = buildLocationSmsUrl(
+              position?.[0] ?? null,
+              position?.[1] ?? null,
+              emergencyInfo.contactPhone,
+            )
           }}
         >
           <MessageCircleIcon />
-          SMS z lokalizacją do kontaktu
+          {position ? 'SMS z lokalizacją do kontaktu' : 'SMS bez lokalizacji do kontaktu'}
         </Button>
         <Button
           type="button"

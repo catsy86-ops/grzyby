@@ -1,10 +1,14 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GEAR_CHECKLIST } from '../../data/gearChecklist'
+import { useAppStore } from '../../stores/appStore'
 import { GearChecklist } from './GearChecklist'
 
 describe('GearChecklist', () => {
-  beforeEach(() => localStorage.clear())
+  beforeEach(() => {
+    localStorage.clear()
+    useAppStore.setState({ gearChecklistChecked: [] })
+  })
   afterEach(() => cleanup())
 
   it('nie renderuje treści, gdy zamknięty', () => {
@@ -38,7 +42,7 @@ describe('GearChecklist', () => {
     expect(screen.getByText(`1/${totalItems}`)).toBeInTheDocument()
   })
 
-  it('zapamiętuje zaznaczenia w localStorage między montowaniami', () => {
+  it('zapamiętuje zaznaczenia między montowaniami', () => {
     const { unmount } = render(<GearChecklist open onOpenChange={vi.fn()} />)
     const firstItem = GEAR_CHECKLIST[0].items[0]
     fireEvent.click(screen.getByText(firstItem.label).closest('button')!)

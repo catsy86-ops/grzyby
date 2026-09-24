@@ -37,7 +37,7 @@ describe('EmergencyCard', () => {
     vi.mocked(geolocation.getCurrentPosition).mockResolvedValue({ latitude: 1, longitude: 2 })
     render(<EmergencyCard open onOpenChange={vi.fn()} />)
 
-    expect(screen.getByRole('button', { name: /SMS z lokalizacją/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /SMS (z lokalizacją|bez lokalizacji) do kontaktu/ })).toBeDisabled()
     expect(screen.getByRole('button', { name: /Zadzwoń do kontaktu/ })).toBeDisabled()
   })
 
@@ -48,12 +48,16 @@ describe('EmergencyCard', () => {
     expect(await screen.findByText(/52.12346, 19.65432/)).toBeInTheDocument()
   })
 
-  it('pokazuje ostrzeżenie, gdy nie udało się ustalić pozycji', async () => {
+  it('pokazuje ostrzeżenie, gdy nie udało się ustalić pozycji, ale nie blokuje SMS-a', async () => {
     vi.mocked(geolocation.getCurrentPosition).mockRejectedValue(new Error('Brak sygnału GPS'))
+    useAppStore.setState({
+      emergencyInfo: { bloodType: '', allergies: '', contactName: 'Anna', contactPhone: '+48111222333' },
+    })
     render(<EmergencyCard open onOpenChange={vi.fn()} />)
 
     await waitFor(() => expect(screen.getByText('Brak sygnału GPS')).toBeInTheDocument())
     expect(screen.getByText(/SMS zostanie wysłany bez współrzędnych/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /SMS bez lokalizacji/ })).not.toBeDisabled()
   })
 
   it('odblokowuje przyciski, gdy numer kontaktu i pozycja są dostępne', async () => {

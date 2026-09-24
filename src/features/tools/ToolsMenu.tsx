@@ -31,20 +31,23 @@ export type ToolKey =
 // (bezpieczeństwo/przygotowanie/aplikacja) - inny kontekst niż EdibilityBadge (menu narzędzi
 // nigdy nie wyświetla się obok kart gatunków), więc ponowne użycie destructive/brand-accent/
 // primary tutaj nie koliduje z ustaloną skalą jadalności.
+type SectionLabel = 'Bezpieczeństwo w terenie' | 'Przygotowanie' | 'Aplikacja'
+
 const TOOLS: {
   key: ToolKey
   title: string
   subtitle: string
   icon: typeof PhoneCallIcon
   badge: 'destructive' | 'accent' | 'primary' | 'neutral'
+  section: SectionLabel
 }[] = [
-  { key: 'first-aid', title: 'Pierwsza pomoc', subtitle: 'Przy podejrzeniu zatrucia', icon: PhoneCallIcon, badge: 'destructive' },
-  { key: 'tick-care', title: 'Kleszcze', subtitle: 'Ochrona i bezpieczne usuwanie', icon: BugOffIcon, badge: 'destructive' },
-  { key: 'emergency-card', title: 'Karta awaryjna', subtitle: 'Dane medyczne i kontakt', icon: HeartPulseIcon, badge: 'destructive' },
-  { key: 'gear-checklist', title: 'Checklista sprzętu', subtitle: 'Przed wyjściem w teren', icon: BackpackIcon, badge: 'primary' },
-  { key: 'cooking-timer', title: 'Timer kuchenny', subtitle: 'Blanszowanie, gotowanie', icon: TimerIcon, badge: 'accent' },
-  { key: 'storage-info', title: 'Pamięć i dane', subtitle: 'Miejsce zajęte przez apkę', icon: HardDriveIcon, badge: 'neutral' },
-  { key: 'show-onboarding', title: 'Pokaż wprowadzenie ponownie', subtitle: 'Krótkie przypomnienie funkcji apki', icon: SparklesIcon, badge: 'neutral' },
+  { key: 'first-aid', title: 'Pierwsza pomoc', subtitle: 'Przy podejrzeniu zatrucia', icon: PhoneCallIcon, badge: 'destructive', section: 'Bezpieczeństwo w terenie' },
+  { key: 'tick-care', title: 'Kleszcze', subtitle: 'Ochrona i bezpieczne usuwanie', icon: BugOffIcon, badge: 'destructive', section: 'Bezpieczeństwo w terenie' },
+  { key: 'emergency-card', title: 'Karta awaryjna', subtitle: 'Dane medyczne i kontakt', icon: HeartPulseIcon, badge: 'destructive', section: 'Bezpieczeństwo w terenie' },
+  { key: 'gear-checklist', title: 'Checklista sprzętu', subtitle: 'Przed wyjściem w teren', icon: BackpackIcon, badge: 'primary', section: 'Przygotowanie' },
+  { key: 'cooking-timer', title: 'Timer kuchenny', subtitle: 'Blanszowanie, gotowanie', icon: TimerIcon, badge: 'accent', section: 'Przygotowanie' },
+  { key: 'storage-info', title: 'Pamięć i dane', subtitle: 'Miejsce zajęte przez apkę', icon: HardDriveIcon, badge: 'neutral', section: 'Aplikacja' },
+  { key: 'show-onboarding', title: 'Pokaż wprowadzenie ponownie', subtitle: 'Krótkie przypomnienie funkcji apki', icon: SparklesIcon, badge: 'neutral', section: 'Aplikacja' },
 ]
 
 const BADGE_CLASS: Record<(typeof TOOLS)[number]['badge'], string> = {
@@ -54,11 +57,14 @@ const BADGE_CLASS: Record<(typeof TOOLS)[number]['badge'], string> = {
   neutral: 'bg-muted text-muted-foreground',
 }
 
-const SECTIONS: { label: string; tools: ToolKey[] }[] = [
-  { label: 'Bezpieczeństwo w terenie', tools: ['first-aid', 'tick-care', 'emergency-card'] },
-  { label: 'Przygotowanie', tools: ['gear-checklist', 'cooking-timer'] },
-  { label: 'Aplikacja', tools: ['storage-info', 'show-onboarding'] },
-]
+// Wyprowadzone z TOOLS (pole `section`), nie osobna, ręcznie synchronizowana lista - dodanie
+// narzędzia do TOOLS automatycznie umieszcza je we właściwej sekcji, bez ryzyka rozjazdu kluczy.
+const SECTIONS: { label: SectionLabel; tools: ToolKey[] }[] = (
+  ['Bezpieczeństwo w terenie', 'Przygotowanie', 'Aplikacja'] as SectionLabel[]
+).map((label) => ({
+  label,
+  tools: TOOLS.filter((t) => t.section === label).map((t) => t.key),
+}))
 
 // Nagłówek apki puchnie z każdą kolejną funkcją pomocniczą - zamiast dokładać kolejną ikonę obok
 // tytułu, wszystkie narzędzia (pierwsza pomoc, checklista, kleszcze, timer, pamięć) są teraz
@@ -110,7 +116,7 @@ export function ToolsMenu({
           </button>
         </div>
         <div className="mx-4 my-1 border-t border-border" />
-        <div className="flex flex-col gap-0.5 px-4 pb-2">
+        <div className="flex flex-col gap-0.5 px-4 pb-2" role="radiogroup" aria-label="Oszczędzanie baterii">
           <p className="px-2 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
             Oszczędzanie baterii {powerSaveActive && '(aktywne)'}
           </p>
@@ -133,7 +139,6 @@ export function ToolsMenu({
         </div>
         <div className="mx-4 my-1 border-t border-border" />
         <motion.div
-          key={open ? 'open' : 'closed'}
           className="flex flex-col gap-3 overflow-y-auto px-4 pb-6"
           variants={LIST_VARIANTS}
           initial="hidden"

@@ -211,12 +211,9 @@ function App() {
   const activeTab = useAppStore((s) => s.activeTab)
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const isOnline = useOnlineStatus()
-  const [showStorageInfo, setShowStorageInfo] = useState(false)
-  const [showFirstAid, setShowFirstAid] = useState(false)
-  const [showGearChecklist, setShowGearChecklist] = useState(false)
-  const [showTickCare, setShowTickCare] = useState(false)
-  const [showCookingTimer, setShowCookingTimer] = useState(false)
-  const [showEmergencyCard, setShowEmergencyCard] = useState(false)
+  // Jeden stan zamiast osobnej flagi na narzędzie - te dialogi wzajemnie się wykluczają (nigdy
+  // dwa naraz), analogicznie do `activeSheet` w MapView.tsx dla arkuszy mapy.
+  const [activeTool, setActiveTool] = useState<Exclude<ToolKey, 'show-onboarding'> | null>(null)
   // Węzeł DOM drugiego rzędu nagłówka (tylko na zakładce Mapy) - MapView portaluje tam swoje
   // kontekstowe akcje (patrz MapHeaderActions.tsx). `useState` zamiast zwykłego `useRef`, bo
   // callback-ref musi wywołać re-render App, żeby `headerMapActionsEl` faktycznie dotarł do
@@ -262,29 +259,11 @@ function App() {
 
   function handleSelectTool(tool: ToolKey) {
     setShowToolsMenu(false)
-    switch (tool) {
-      case 'first-aid':
-        setShowFirstAid(true)
-        break
-      case 'gear-checklist':
-        setShowGearChecklist(true)
-        break
-      case 'tick-care':
-        setShowTickCare(true)
-        break
-      case 'cooking-timer':
-        setShowCookingTimer(true)
-        break
-      case 'storage-info':
-        setShowStorageInfo(true)
-        break
-      case 'emergency-card':
-        setShowEmergencyCard(true)
-        break
-      case 'show-onboarding':
-        setOnboardingReplayKey((k) => k + 1)
-        break
+    if (tool === 'show-onboarding') {
+      setOnboardingReplayKey((k) => k + 1)
+      return
     }
+    setActiveTool(tool)
   }
 
   return (
@@ -409,12 +388,30 @@ function App() {
         ))}
       </nav>
       <Toaster position="top-center" />
-      <StorageInfoDrawer open={showStorageInfo} onOpenChange={setShowStorageInfo} />
-      <FirstAidGuide open={showFirstAid} onOpenChange={setShowFirstAid} />
-      <GearChecklist open={showGearChecklist} onOpenChange={setShowGearChecklist} />
-      <TickCareGuide open={showTickCare} onOpenChange={setShowTickCare} />
-      <CookingTimer open={showCookingTimer} onOpenChange={setShowCookingTimer} />
-      <EmergencyCard open={showEmergencyCard} onOpenChange={setShowEmergencyCard} />
+      <StorageInfoDrawer
+        open={activeTool === 'storage-info'}
+        onOpenChange={(open) => setActiveTool(open ? 'storage-info' : null)}
+      />
+      <FirstAidGuide
+        open={activeTool === 'first-aid'}
+        onOpenChange={(open) => setActiveTool(open ? 'first-aid' : null)}
+      />
+      <GearChecklist
+        open={activeTool === 'gear-checklist'}
+        onOpenChange={(open) => setActiveTool(open ? 'gear-checklist' : null)}
+      />
+      <TickCareGuide
+        open={activeTool === 'tick-care'}
+        onOpenChange={(open) => setActiveTool(open ? 'tick-care' : null)}
+      />
+      <CookingTimer
+        open={activeTool === 'cooking-timer'}
+        onOpenChange={(open) => setActiveTool(open ? 'cooking-timer' : null)}
+      />
+      <EmergencyCard
+        open={activeTool === 'emergency-card'}
+        onOpenChange={(open) => setActiveTool(open ? 'emergency-card' : null)}
+      />
       <ToolsMenu
         open={showToolsMenu}
         onOpenChange={setShowToolsMenu}
