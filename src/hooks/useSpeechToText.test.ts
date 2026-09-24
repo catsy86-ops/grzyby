@@ -8,13 +8,17 @@ class FakeSpeechRecognition extends EventTarget {
   interimResults = false
   onresult: ((event: { results: { isFinal: boolean; 0: { transcript: string } }[]; resultIndex: number }) => void) | null =
     null
-  onerror: (() => void) | null = null
+  onerror: ((event: { error: string }) => void) | null = null
   onend: (() => void) | null = null
   start = vi.fn()
   stop = vi.fn(() => this.onend?.())
 
   emitFinalResult(transcript: string) {
     this.onresult?.({ results: [{ isFinal: true, 0: { transcript } }], resultIndex: 0 })
+  }
+
+  emitError(error: string) {
+    this.onerror?.({ error })
   }
 }
 
@@ -50,5 +54,23 @@ describe('useSpeechToText', () => {
     act(() => result.current.toggleListening())
     expect(instance!.stop).toHaveBeenCalledOnce()
     expect(result.current.isListening).toBe(false)
+  })
+
+  it('ustawia komunikat błędu i przerywa nasłuchiwanie, gdy rozpoznawanie zawiedzie', () => {
+    let instance: FakeSpeechRecognition | null = null
+    function FakeSpeechRecognitionCtor(this: unknown) {
+      instance = new FakeSpeechRecognition()
+      return instance
+    }
+    vi.stubGlobal('window', Object.assign(window, { webkitSpeechRecognition: FakeSpeechRecognitionCtor }))
+
+    const { result } = renderHook(() => useSpeechToText(vi.fn()))
+    expect(result.current.error).toBeNull()
+
+    act(() => result.current.toggleListening())
+    act(() => instance!.emitError('not-allowed'))
+
+    expect(result.current.isListening).toBe(false)
+    expect(result.current.error).toBe('Brak dostępu do mikrofonu - sprawdź uprawnienia aplikacji.')
   })
 })

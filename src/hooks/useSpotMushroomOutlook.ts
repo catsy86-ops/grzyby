@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { isOutlookCacheStale } from '../utils/outlookCacheStaleness'
 import { fetchMushroomOutlook, type MushroomOutlook } from '../utils/mushroomWeather'
 import { useOnlineStatus } from './useOnlineStatus'
 
@@ -37,9 +38,7 @@ function writeEntry(spotId: number, entry: CachedEntry) {
 }
 
 function isStale(entry: CachedEntry, lat: number, lon: number, now: number): boolean {
-  const tooOld = now - entry.timestamp > MAX_CACHE_AGE_MS
-  const moved = Math.abs(entry.lat - lat) > MOVED_THRESHOLD_DEGREES || Math.abs(entry.lon - lon) > MOVED_THRESHOLD_DEGREES
-  return tooOld || moved
+  return isOutlookCacheStale(entry.lat, entry.lon, entry.timestamp, lat, lon, now, MAX_CACHE_AGE_MS, MOVED_THRESHOLD_DEGREES)
 }
 
 export interface UseSpotMushroomOutlookResult {

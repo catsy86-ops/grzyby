@@ -92,3 +92,17 @@ Wszystkie 4 punkty Tier 1 są w pełni niezależne od siebie - bezpieczne do zro
 w dowolnej kolejności. Sensownie najpierw pkt 4 (test `useMediaQuery`, czysto addytywny, zero
 ryzyka), potem pkt 3 (rozszerzenie `useSpeechToText` o `error`, przy okazji dopisując test ścieżki
 błędu).
+
+---
+
+**Tier 1 w całości zaimplementowane (2026-09-24).** Pkt 1: nowy `utils/outlookCacheStaleness.ts`
+(`isOutlookCacheStale`) - wspólna reguła staleness używana teraz przez `useMushroomOutlook.ts` i
+`useSpotMushroomOutlook.ts`, każdy zachowuje własną strukturę przechowywania (pojedynczy klucz vs
+mapa per spot). Pkt 2: `downloadBlob` przeniesiony z `exportImport.ts` do nowego
+`utils/downloadBlob.ts`, wszystkie 4 miejsca użycia (`NotificationCenter`, `EncyclopediaView`,
+`JournalView`, `SpotManager`) i test `SpotManager.test.tsx` zaktualizowane. Pkt 3:
+`UseSpeechToTextResult` dostał pole `error: string | null` z czytelnym komunikatem
+(`describeSpeechError`), `AddFindingForm.tsx` pokazuje go pod polem notatek, nowy test w
+`useSpeechToText.test.ts`. Pkt 4: nowy `useMediaQuery.test.ts` (stan początkowy, reakcja na zmianę,
+odpięcie listenera). tsc/oxlint/build czyste, testy 711/712 (1 znana flaka pod pełnym obciążeniem,
+niezwiązana z tymi zmianami).

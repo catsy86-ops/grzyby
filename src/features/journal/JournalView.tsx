@@ -14,12 +14,12 @@ import { StatTile, StatTileRow } from './StatTiles'
 import {
   buildExportFilename,
   countLikelyDuplicates,
-  downloadBlob,
   exportData,
   importPayload,
   readExportFile,
   type ExportPayload,
 } from '../../utils/exportImport'
+import { downloadBlob } from '../../utils/downloadBlob'
 import { compressPhoto, createThumbnail } from '../../utils/imageUtils'
 import { exportFindingsToPdf } from '../../utils/pdfExport'
 import { exportFindingsToGpx } from '../../utils/gpxExport'

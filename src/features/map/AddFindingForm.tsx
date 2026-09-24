@@ -82,7 +82,12 @@ export function AddFindingForm({ initialPosition, initialPhoto, onClose }: AddFi
   // Dopisuje rozpoznany tekst do istniejącej notatki (spacją, gdy już coś tam jest) zamiast
   // nadpisywać - grzybiarz w terenie może dyktować w kilku krótkich turach (np. przerywanych
   // zbieraniem), nie jedną długą wypowiedzią.
-  const { isSupported: speechSupported, isListening, toggleListening } = useSpeechToText((text) => {
+  const {
+    isSupported: speechSupported,
+    isListening,
+    error: speechError,
+    toggleListening,
+  } = useSpeechToText((text) => {
     if (!text) return
     setNotes((prev) => (prev.trim() === '' ? text : `${prev} ${text}`))
   })
@@ -327,6 +332,7 @@ export function AddFindingForm({ initialPosition, initialPhoto, onClose }: AddFi
               )}
             </span>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="mt-1" rows={3} />
+            {speechError && <p className="mt-1 text-sm text-destructive">{speechError}</p>}
           </label>
 
           {duplicateWarning && (

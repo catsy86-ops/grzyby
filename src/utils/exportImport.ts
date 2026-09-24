@@ -179,12 +179,3 @@ export function buildExportFilename(tripName: string | undefined, extension: str
   const date = new Date().toISOString().slice(0, 10)
   return `lysy-${base}-${date}.${extension}`
 }
-
-export function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}

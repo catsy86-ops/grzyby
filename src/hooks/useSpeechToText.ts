@@ -12,6 +12,9 @@ interface SpeechRecognitionEventLike extends Event {
   resultIndex: number
   results: ArrayLike<SpeechRecognitionResultLike>
 }
+interface SpeechRecognitionErrorEventLike extends Event {
+  error: string
+}
 interface SpeechRecognitionLike extends EventTarget {
   lang: string
   continuous: boolean
@@ -19,7 +22,7 @@ interface SpeechRecognitionLike extends EventTarget {
   start: () => void
   stop: () => void
   onresult: ((event: SpeechRecognitionEventLike) => void) | null
-  onerror: ((event: Event) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null
   onend: (() => void) | null
 }
 type SpeechRecognitionConstructor = new () => SpeechRecognitionLike
@@ -32,7 +35,22 @@ interface WindowWithSpeechRecognition extends Window {
 export interface UseSpeechToTextResult {
   isSupported: boolean
   isListening: boolean
+  error: string | null
   toggleListening: () => void
+}
+
+function describeSpeechError(code: string): string {
+  switch (code) {
+    case 'not-allowed':
+    case 'service-not-allowed':
+      return 'Brak dostępu do mikrofonu - sprawdź uprawnienia aplikacji.'
+    case 'no-speech':
+      return 'Nie rozpoznano mowy - spróbuj ponownie.'
+    case 'network':
+      return 'Rozpoznawanie mowy wymaga połączenia z siecią.'
+    default:
+      return 'Nie udało się rozpoznać mowy.'
+  }
 }
 
 // Dyktowanie głosowe notatki/gatunku - w terenie, w rękawiczkach lub z rękami zajętymi
@@ -43,6 +61,7 @@ export interface UseSpeechToTextResult {
 // nie jest to serwis apki, więc nie wprowadza nowej zależności sieciowej z jej strony.
 export function useSpeechToText(onFinalResult: (text: string) => void): UseSpeechToTextResult {
   const [isListening, setIsListening] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   const onFinalResultRef = useRef(onFinalResult)
   useEffect(() => {
@@ -70,6 +89,7 @@ export function useSpeechToText(onFinalResult: (text: string) => void): UseSpeec
       return
     }
 
+    setError(null)
     const recognition = new Ctor()
     recognition.lang = 'pl-PL'
     recognition.continuous = false
@@ -78,7 +98,10 @@ export function useSpeechToText(onFinalResult: (text: string) => void): UseSpeec
       const result = event.results[event.results.length - 1]
       if (result?.isFinal) onFinalResultRef.current(result[0].transcript.trim())
     }
-    recognition.onerror = () => setIsListening(false)
+    recognition.onerror = (event) => {
+      setError(describeSpeechError(event.error))
+      setIsListening(false)
+    }
     recognition.onend = () => setIsListening(false)
 
     recognitionRef.current = recognition
@@ -86,5 +109,5 @@ export function useSpeechToText(onFinalResult: (text: string) => void): UseSpeec
     setIsListening(true)
   }
 
-  return { isSupported, isListening, toggleListening }
+  return { isSupported, isListening, error, toggleListening }
 }

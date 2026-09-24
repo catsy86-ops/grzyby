@@ -26,7 +26,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../compo
 import { Input } from '../../components/ui/input'
 import { Toggle } from '../../components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
-import { downloadBlob } from '../../utils/exportImport'
+import { downloadBlob } from '../../utils/downloadBlob'
 import { exportSpeciesCardToPdf } from '../../utils/pdfExport'
 import { normalizeForSearch } from '../../utils/normalizeForSearch'
 import { daysUntilSeasonStart, getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../db/db'
 import { SpotManager } from './SpotManager'
 import * as geolocation from '../../utils/geolocation'
-import * as exportImport from '../../utils/exportImport'
+import * as downloadBlobModule from '../../utils/downloadBlob'
 
 vi.mock('../../utils/geolocation', () => ({
   getCurrentPosition: vi.fn(),
@@ -263,7 +263,7 @@ describe('SpotManager', () => {
   })
 
   it('pokazuje przycisk dodania do kalendarza tylko gdy grzybowisko ma flagę "sprawdzić w sezonie", i pobiera plik .ics po kliknięciu', async () => {
-    const downloadSpy = vi.spyOn(exportImport, 'downloadBlob').mockImplementation(() => {})
+    const downloadSpy = vi.spyOn(downloadBlobModule, 'downloadBlob').mockImplementation(() => {})
     await db.spots.add({ name: 'Bez flagi', latitude: 1, longitude: 1, notes: '', createdAt: 1 })
     await db.spots.add({
       name: 'Z flagą',

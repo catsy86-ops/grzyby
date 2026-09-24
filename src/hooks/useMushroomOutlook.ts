@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { isOutlookCacheStale } from '../utils/outlookCacheStaleness'
 import { fetchMushroomOutlook, type MushroomOutlook } from '../utils/mushroomWeather'
 import { useOnlineStatus } from './useOnlineStatus'
 
@@ -32,10 +33,7 @@ function writeCache(entry: CachedOutlook) {
 }
 
 function isStale(cache: CachedOutlook, lat: number, lon: number, now: number): boolean {
-  const tooOld = now - cache.timestamp > MAX_CACHE_AGE_MS
-  const movedFar =
-    Math.abs(cache.lat - lat) > SIGNIFICANT_MOVE_DEGREES || Math.abs(cache.lon - lon) > SIGNIFICANT_MOVE_DEGREES
-  return tooOld || movedFar
+  return isOutlookCacheStale(cache.lat, cache.lon, cache.timestamp, lat, lon, now, MAX_CACHE_AGE_MS, SIGNIFICANT_MOVE_DEGREES)
 }
 
 // Odczyt ostatniego znanego wyniku niezależnie od tego, czy MapView jest w ogóle zamontowany -
