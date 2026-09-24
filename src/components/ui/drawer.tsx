@@ -1,6 +1,8 @@
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 import { cn } from "cn"
+import { Button } from "@/components/ui/button"
+import { XIcon } from "lucide-react"
 
 type DrawerContextProps = {
   hasSnapPoints: boolean
@@ -97,8 +99,15 @@ function DrawerSwipeHandle({
 function DrawerContent({
   className,
   children,
+  showCloseButton = true,
   ...props
-}: DrawerPrimitive.Popup.Props) {
+}: DrawerPrimitive.Popup.Props & {
+  // Domyślnie widoczny - przed tym drawer-y (w odróżnieniu od Dialog, patrz dialog.tsx) nie miały
+  // ŻADNEGO jawnego zamknięcia poza swipe/tap-outside, co na desktopie (mysz, brak gestu swipe)
+  // nie daje żadnej wizualnej podpowiedzi jak zamknąć panel. Stały (nie tylko przy scrollu)
+  // element `DrawerPrimitive.Popup`, nie `.Content` - zostaje na miejscu nawet gdy treść scrolluje.
+  showCloseButton?: boolean
+}) {
   const { hasSnapPoints, modal, showSwipeHandle, swipeDirection } = useDrawer()
   const swipeAxis =
     swipeDirection === "down" || swipeDirection === "up" ? "y" : "x"
@@ -155,6 +164,15 @@ function DrawerContent({
           >
             {children}
           </DrawerPrimitive.Content>
+          {showCloseButton && (
+            <DrawerPrimitive.Close
+              data-slot="drawer-close"
+              render={<Button variant="ghost" className="absolute top-2 right-2" size="icon-sm" />}
+            >
+              <XIcon />
+              <span className="sr-only">Zamknij</span>
+            </DrawerPrimitive.Close>
+          )}
         </DrawerPrimitive.Popup>
       </DrawerPrimitive.Viewport>
     </DrawerPortal>
@@ -166,7 +184,10 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="drawer-header"
       className={cn(
-        "flex shrink-0 flex-col gap-0.5 p-4 pb-0 group-data-[swipe-axis=y]/drawer-popup:text-center md:gap-0.5 md:text-left",
+        // pr-9: miejsce na przycisk zamknięcia (absolute top-2 right-2 w DrawerContent) - bez
+        // tego wyśrodkowany tytuł na mobilnym bottom-sheecie (swipe-axis=y) mógłby na niego
+        // najechać przy dłuższych tytułach (np. "Pobierz obszar offline").
+        "flex shrink-0 flex-col gap-0.5 p-4 pr-9 pb-0 group-data-[swipe-axis=y]/drawer-popup:text-center md:gap-0.5 md:text-left",
         className
       )}
       {...props}

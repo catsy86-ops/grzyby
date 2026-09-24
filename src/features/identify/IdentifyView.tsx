@@ -1,13 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { CameraIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
+import { CameraIcon, LightbulbIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
 import { CameraMushroomIllustration } from '../../components/icons/illustrations'
 import { INPUT_SIZE, isModelAvailable, loadDatasetReviewed, type Prediction } from '../../utils/mushroomModel'
 import { identifyMushroomInWorker } from '../../utils/mushroomWorkerClient'
 import { PredictionCard } from './PredictionCard'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
+import { Card, CardContent } from '../../components/ui/card'
+
+// Wskazówki dla lepszego zdjęcia - stałe, nie generowane, więc wydzielone poza komponent (nie
+// przeliczane przy każdym renderze).
+const PHOTO_TIPS = [
+  'Fotografuj w dziennym świetle, bez lampy błyskowej z bliska - ostre kontrastowe cienie zniekształcają kolor i kształt.',
+  'Pokaż cały owocnik: kapelusz z góry, spód (blaszki/rurki/kolce) i trzon aż do podstawy - jeden kadr rzadko wystarcza.',
+  'Jeden gatunek na zdjęcie, na jednolitym tle jeśli to możliwe - kilka grzybów w kadrze myli model.',
+  'Zrób 2-3 ujęcia pod różnymi kątami i wybierz najostrzejsze do rozpoznania.',
+]
 
 export function IdentifyView() {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
@@ -86,126 +96,152 @@ export function IdentifyView() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-md flex-col gap-4 overflow-y-auto p-4">
-      <h1 className="text-heading-md font-semibold tracking-tight">Rozpoznaj grzyb ze zdjęcia</h1>
+    // `lg:grid` dopiero od 1024px - na telefonie/tablecie w orientacji pionowej (główny kontekst
+    // użycia w terenie) to zwykła jedna kolumna jak dawniej, wskazówki lądują pod resztą treści.
+    // Na szerokim ekranie (desktop, tablet poziomo) wąska kolumna formularza zostawiała połowę
+    // ekranu pustą - druga kolumna to wskazówki, nie oddzielny nowy widok/stan.
+    <div className="mx-auto flex h-full w-full max-w-5xl flex-col gap-6 overflow-y-auto p-4 lg:grid lg:grid-cols-[minmax(0,28rem)_1fr] lg:items-start">
+      <div className="flex flex-col gap-4">
+        <h1 className="text-heading-md font-semibold tracking-tight">Rozpoznaj grzyb ze zdjęcia</h1>
 
-      {modelReady === false && (
-        <Alert variant="warning">
-          <TriangleAlertIcon />
-          <AlertDescription className="text-current">
-            Model rozpoznawania nie jest jeszcze zainstalowany w tej aplikacji (brak plików w{' '}
-            <code>public/models</code>). Funkcja będzie działać po dodaniu wytrenowanego modelu
-            TensorFlow.js.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Widoczne OD RAZU (nie dopiero po wyniku rozpoznania) - ktoś decydujący, czy w ogóle
-          zaufać tej funkcji, powinien to wiedzieć zanim zrobi zdjęcie, nie dopiero po analizie.
-          `datasetReviewed` pochodzi z metadata.json (patrz loadDatasetReviewed w
-          mushroomModel.ts) - `false` obejmuje zarówno model sprzed dodania bramki recenzji
-          danych (scripts/prepare-dataset/review-gate.mjs), jak i brak jakiegokolwiek pola (np.
-          eksport z Teachable Machine). */}
-      {modelReady && !datasetReviewed && (
-        <Alert variant="warning">
-          <TriangleAlertIcon />
-          <AlertDescription className="text-current">
-            Zainstalowany model NIE przeszedł jeszcze formalnej, ręcznej recenzji zdjęć
-            treningowych (patrz <code>docs/MODEL-TRAINING.md</code>) - jego wyniki mogą być mniej
-            wiarygodne niż zwykle. Traktuj je z jeszcze większą rezerwą niż standardowe ostrzeżenie
-            poniżej.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div
-        onDragOver={(e) => {
-          e.preventDefault()
-          setIsDragOver(true)
-        }}
-        onDragLeave={() => setIsDragOver(false)}
-        onDrop={handleDrop}
-        className={`rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
-          isDragOver ? 'border-primary bg-primary/5' : 'border-border'
-        }`}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        {!imageUrl && (
-          <CameraMushroomIllustration className="mx-auto mb-3 size-16 text-muted-foreground" />
-        )}
-        <Button type="button" variant="outline" disabled={loading} onClick={() => fileInputRef.current?.click()}>
-          <CameraIcon />
-          {imageUrl ? 'Zmień zdjęcie' : 'Wybierz lub zrób zdjęcie'}
-        </Button>
-        <p className="mt-2 text-xs text-muted-foreground">lub przeciągnij zdjęcie tutaj</p>
-      </div>
-
-      <AnimatePresence>
-        {imageUrl && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.18 }}
-            className="flex flex-col items-center gap-3"
-          >
-            {/* Ramka skanowania podczas inferencji zamiast samego spinnera na przycisku - to
-                "wow moment" apki (patrz nowecos.md), więc zasługuje na coś bardziej namacalnego
-                niż statyczny loader. Pasek światła przesuwa się w pętli przez zdjęcie, obwódka
-                pulsuje - `prefers-reduced-motion` wyłącza obie animacje (patrz index.css). */}
-            <div className="relative overflow-hidden rounded-lg">
-              <img
-                ref={imageRef}
-                src={imageUrl}
-                alt="Zdjęcie grzyba do rozpoznania"
-                className="max-h-72 rounded-lg shadow"
-                crossOrigin="anonymous"
-              />
-              {loading && (
-                <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg">
-                  <div className="absolute inset-0 rounded-lg ring-2 ring-primary/70 scan-pulse-ring" />
-                  <div className="absolute inset-x-0 h-1/3 bg-gradient-to-b from-transparent via-primary/35 to-transparent scan-line-sweep" />
-                </div>
-              )}
-            </div>
-            <Button onClick={handleIdentify} disabled={loading || modelReady === false}>
-              {loading && <Loader2Icon className="animate-spin" />}
-              {loading ? 'Analizuję...' : 'Rozpoznaj gatunek'}
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {error && (
-        <Alert variant="destructive-soft">
-          <AlertDescription className="text-current">{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <div ref={resultsListRef} className="flex flex-col gap-3">
-        {predictions && (
-          <Alert variant="destructive-soft" className="font-medium">
+        {modelReady === false && (
+          <Alert variant="warning">
             <TriangleAlertIcon />
             <AlertDescription className="text-current">
-              Model jest w wersji alpha, trenowany na niewielkim, nieskuratorowanym zbiorze zdjęć —
-              traktuj wynik jako bardzo zgrubną wskazówkę, nie potwierdzenie gatunku. To nie jest
-              profesjonalna weryfikacja. Nigdy nie spożywaj grzyba wyłącznie na podstawie wyniku tej
-              aplikacji — w razie wątpliwości skonsultuj się z mikologiem lub punktem klasyfikacji
-              grzybów (Sanepid).
+              Model rozpoznawania nie jest jeszcze zainstalowany w tej aplikacji (brak plików w{' '}
+              <code>public/models</code>). Funkcja będzie działać po dodaniu wytrenowanego modelu
+              TensorFlow.js.
             </AlertDescription>
           </Alert>
         )}
-        {predictions?.map((prediction, index) => (
-          <PredictionCard key={prediction.labelRaw + index} prediction={prediction} rank={index + 1} />
-        ))}
+
+        {/* Widoczne OD RAZU (nie dopiero po wyniku rozpoznania) - ktoś decydujący, czy w ogóle
+            zaufać tej funkcji, powinien to wiedzieć zanim zrobi zdjęcie, nie dopiero po analizie.
+            `datasetReviewed` pochodzi z metadata.json (patrz loadDatasetReviewed w
+            mushroomModel.ts) - `false` obejmuje zarówno model sprzed dodania bramki recenzji
+            danych (scripts/prepare-dataset/review-gate.mjs), jak i brak jakiegokolwiek pola (np.
+            eksport z Teachable Machine). */}
+        {modelReady && !datasetReviewed && (
+          <Alert variant="warning">
+            <TriangleAlertIcon />
+            <AlertDescription className="text-current">
+              Zainstalowany model NIE przeszedł jeszcze formalnej, ręcznej recenzji zdjęć
+              treningowych (patrz <code>docs/MODEL-TRAINING.md</code>) - jego wyniki mogą być mniej
+              wiarygodne niż zwykle. Traktuj je z jeszcze większą rezerwą niż standardowe ostrzeżenie
+              poniżej.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div
+          onDragOver={(e) => {
+            e.preventDefault()
+            setIsDragOver(true)
+          }}
+          onDragLeave={() => setIsDragOver(false)}
+          onDrop={handleDrop}
+          className={`rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
+            isDragOver ? 'border-primary bg-primary/5' : 'border-border'
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          {!imageUrl && (
+            <CameraMushroomIllustration className="mx-auto mb-3 size-16 text-muted-foreground" />
+          )}
+          <Button type="button" variant="outline" disabled={loading} onClick={() => fileInputRef.current?.click()}>
+            <CameraIcon />
+            {imageUrl ? 'Zmień zdjęcie' : 'Wybierz lub zrób zdjęcie'}
+          </Button>
+          <p className="mt-2 text-xs text-muted-foreground">lub przeciągnij zdjęcie tutaj</p>
+        </div>
+
+        <AnimatePresence>
+          {imageUrl && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.18 }}
+              className="flex flex-col items-center gap-3"
+            >
+              {/* Ramka skanowania podczas inferencji zamiast samego spinnera na przycisku - to
+                  "wow moment" apki (patrz nowecos.md), więc zasługuje na coś bardziej namacalnego
+                  niż statyczny loader. Pasek światła przesuwa się w pętli przez zdjęcie, obwódka
+                  pulsuje - `prefers-reduced-motion` wyłącza obie animacje (patrz index.css). */}
+              <div className="relative overflow-hidden rounded-lg">
+                <img
+                  ref={imageRef}
+                  src={imageUrl}
+                  alt="Zdjęcie grzyba do rozpoznania"
+                  className="max-h-72 rounded-lg shadow"
+                  crossOrigin="anonymous"
+                />
+                {loading && (
+                  <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg">
+                    <div className="absolute inset-0 rounded-lg ring-2 ring-primary/70 scan-pulse-ring" />
+                    <div className="absolute inset-x-0 h-1/3 bg-gradient-to-b from-transparent via-primary/35 to-transparent scan-line-sweep" />
+                  </div>
+                )}
+              </div>
+              <Button onClick={handleIdentify} disabled={loading || modelReady === false}>
+                {loading && <Loader2Icon className="animate-spin" />}
+                {loading ? 'Analizuję...' : 'Rozpoznaj gatunek'}
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {error && (
+          <Alert variant="destructive-soft">
+            <AlertDescription className="text-current">{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <div ref={resultsListRef} className="flex flex-col gap-3">
+          {predictions && (
+            <Alert variant="destructive-soft" className="font-medium">
+              <TriangleAlertIcon />
+              <AlertDescription className="text-current">
+                Model jest w wersji alpha, trenowany na niewielkim, nieskuratorowanym zbiorze zdjęć —
+                traktuj wynik jako bardzo zgrubną wskazówkę, nie potwierdzenie gatunku. To nie jest
+                profesjonalna weryfikacja. Nigdy nie spożywaj grzyba wyłącznie na podstawie wyniku tej
+                aplikacji — w razie wątpliwości skonsultuj się z mikologiem lub punktem klasyfikacji
+                grzybów (Sanepid).
+              </AlertDescription>
+            </Alert>
+          )}
+          {predictions?.map((prediction, index) => (
+            <PredictionCard key={prediction.labelRaw + index} prediction={prediction} rank={index + 1} />
+          ))}
+        </div>
       </div>
+
+      {/* Druga kolumna dopiero od lg: (patrz komentarz przy kontenerze) - poniżej tego
+          breakpointu ten sam element po prostu ląduje pod formularzem (kolejność źródłowa =
+          kolejność wizualna w jednej kolumnie na mobile/tablecie pionowo), nie znika. */}
+      <Card className="lg:sticky lg:top-4">
+        <CardContent className="flex flex-col gap-3">
+          <h2 className="flex items-center gap-2 font-medium">
+            <LightbulbIcon className="size-4.5 text-brand-accent" />
+            Wskazówki dla lepszego rozpoznania
+          </h2>
+          <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
+            {PHOTO_TIPS.map((tip) => (
+              <li key={tip} className="flex gap-2.5">
+                <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-brand-accent" />
+                {tip}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   )
 }

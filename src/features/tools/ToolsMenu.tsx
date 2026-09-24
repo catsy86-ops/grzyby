@@ -103,7 +103,7 @@ export function ToolsMenu({
             role="switch"
             aria-checked={forestMode}
             onClick={onToggleForestMode}
-            className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50"
+            className={`flex items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 ${forestMode ? 'bg-primary/5' : ''}`}
           >
             <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <TreePineIcon className="size-4.5" />
@@ -120,22 +120,27 @@ export function ToolsMenu({
           <p className="px-2 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
             Oszczędzanie baterii {powerSaveActive && '(aktywne)'}
           </p>
-          {(Object.keys(POWER_SAVE_MODE_LABELS) as PowerSaveMode[]).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              role="radio"
-              aria-checked={powerSaveMode === mode}
-              onClick={() => setPowerSaveMode(mode)}
-              className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50"
-            >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <BatteryIcon className="size-4.5" />
-              </span>
-              <span className="flex-1 font-medium">{POWER_SAVE_MODE_LABELS[mode]}</span>
-              {powerSaveMode === mode && <CheckIcon className="size-4 shrink-0 text-primary" />}
-            </button>
-          ))}
+          {(Object.keys(POWER_SAVE_MODE_LABELS) as PowerSaveMode[]).map((mode) => {
+            const isSelected = powerSaveMode === mode
+            return (
+              <button
+                key={mode}
+                type="button"
+                role="radio"
+                aria-checked={isSelected}
+                onClick={() => setPowerSaveMode(mode)}
+                className={`flex items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 ${isSelected ? 'bg-primary/5' : ''}`}
+              >
+                <span
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-full transition-colors ${isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}
+                >
+                  <BatteryIcon className="size-4.5" />
+                </span>
+                <span className="flex-1 font-medium">{POWER_SAVE_MODE_LABELS[mode]}</span>
+                {isSelected && <CheckIcon className="size-4 shrink-0 text-primary" />}
+              </button>
+            )
+          })}
         </div>
         <div className="mx-4 my-1 border-t border-border" />
         <motion.div
