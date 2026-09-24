@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { Prediction } from '../../utils/mushroomModel'
+import { useAppStore } from '../../stores/appStore'
 import { PredictionCard } from './PredictionCard'
 
 function makePrediction(overrides: Partial<Prediction> = {}): Prediction {
@@ -51,5 +52,26 @@ describe('PredictionCard', () => {
 
     expect(screen.getByText(/to raczej nie jest grzyb/i)).toBeInTheDocument()
     expect(screen.queryByText('inne')).not.toBeInTheDocument()
+  })
+
+  it('nie pokazuje przycisku "Dodaj do dziennika" dla klasy negatywnej "inne" (species = null)', () => {
+    render(
+      <PredictionCard
+        prediction={makePrediction({ labelRaw: 'inne', species: null, confidence: 0.8 })}
+        rank={1}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: /dodaj do dziennika/i })).not.toBeInTheDocument()
+  })
+
+  it('"Dodaj do dziennika" ustawia pendingIdentifiedSpeciesId i przełącza na zakładkę Mapa', () => {
+    useAppStore.setState({ pendingIdentifiedSpeciesId: null, activeTab: 'rozpoznaj' })
+    render(<PredictionCard prediction={makePrediction()} rank={1} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /dodaj do dziennika/i }))
+
+    expect(useAppStore.getState().pendingIdentifiedSpeciesId).toBe('borowik-szlachetny')
+    expect(useAppStore.getState().activeTab).toBe('mapa')
   })
 })

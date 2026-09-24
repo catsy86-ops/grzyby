@@ -1,10 +1,13 @@
 import { motion } from 'motion/react'
+import { NotebookPenIcon } from 'lucide-react'
 import type { Prediction } from '../../utils/mushroomModel'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
+import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
+import { useAppStore } from '../../stores/appStore'
 
 const LOW_CONFIDENCE_THRESHOLD = 0.4
 
@@ -23,6 +26,16 @@ export function PredictionCard({ prediction, rank }: { prediction: Prediction; r
   const { species, confidence, labelRaw } = prediction
   const confidencePct = Math.round(confidence * 100)
   const isLowConfidence = confidence < LOW_CONFIDENCE_THRESHOLD
+  const setActiveTab = useAppStore((s) => s.setActiveTab)
+  const setPendingIdentifiedSpeciesId = useAppStore((s) => s.setPendingIdentifiedSpeciesId)
+
+  // Przejmowane przez AddFindingForm po przełączeniu na Mapę (patrz MapView.tsx) - jedyny mostek
+  // między wynikiem skanera a Dziennikiem, dotąd nazwa gatunku ginęła bezpowrotnie po analizie.
+  function handleAddToJournal() {
+    if (!species) return
+    setPendingIdentifiedSpeciesId(species.id)
+    setActiveTab('mapa')
+  }
 
   // Twarde wstrzymanie wyniku poniżej progu, nie samo złagodzenie tonu - nazwa gatunku (nawet
   // podpisana jako "niepewna") to wciąż sugestia, którą przy klasyfikatorze jadalny/trujący łatwo
@@ -70,6 +83,10 @@ export function PredictionCard({ prediction, rank }: { prediction: Prediction; r
               </div>
               <p className="mt-2 text-sm text-foreground/80">{species.description}</p>
               <LookalikesWarning species={species} allSpecies={speciesData as Species[]} />
+              <Button type="button" variant="outline" size="sm" className="mt-3 w-full" onClick={handleAddToJournal}>
+                <NotebookPenIcon />
+                Dodaj do dziennika
+              </Button>
             </>
           )}
         </CardContent>

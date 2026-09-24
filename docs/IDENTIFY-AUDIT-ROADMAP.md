@@ -83,5 +83,19 @@ najpierw decyzji użytkownika co do docelowego przepływu.
 zdjęcie" dostał `disabled={loading}`. Pkt 3: nowe testy `IdentifyView.test.tsx` (sukces workera,
 błąd workera, race condition ze zmianą zdjęcia w trakcie analizy) - zamockowany globalny
 `createImageBitmap` i `identifyMushroomInWorker`. tsc/oxlint/build czyste, testy 711/712 (1 znana
-flaka pod pełnym obciążeniem, niezwiązana z tymi zmianami). **Tier 0** (most Identify -> Dziennik)
-pozostaje otwarty - wymaga decyzji użytkownika co do docelowego przepływu.
+flaka pod pełnym obciążeniem, niezwiązana z tymi zmianami).
+
+---
+
+**Tier 0 zaimplementowane (2026-09-24).** `PredictionCard.tsx` dostał przycisk "Dodaj do dziennika"
+(widoczny tylko gdy `species != null` - nie dla niskiej pewności ani klasy "inne"), który ustawia
+`appStore.pendingIdentifiedSpeciesId` i przełącza `activeTab` na 'mapa'. `MapView.tsx` konsumuje to
+pole jednorazowo (efekt czyści je od razu po odczycie, ten sam wzorzec co istniejący handoff przez
+URL param dla PWA shortcut/share_target) i otwiera arkusz "Dodaj znalezisko" z nowym propem
+`AddFindingForm`'s `initialSpeciesId` - nadrzędnym względem "ostatnio wybranego gatunku". Pole
+celowo NIE persystowane w `appStore` (jednorazowy handoff w ramach sesji). Lokalizacja/spot
+zostają nietknięte - formularz działa dokładnie tak jak przy zwykłym otwarciu z FAB, tylko z
+przedwypełnionym gatunkiem. Nowe testy: `PredictionCard.test.tsx` (przycisk widoczny/niewidoczny,
+ustawienie store'u), `MapView.test.tsx` (konsumpcja i czyszczenie pola), `AddFindingForm.test.tsx`
+(pierwszeństwo `initialSpeciesId` nad zapamiętanym gatunkiem, fallback gdy nieprawidłowy id).
+tsc/oxlint/build czyste, testy 716/717 (1 znana flaka pod pełnym obciążeniem, niezwiązana).

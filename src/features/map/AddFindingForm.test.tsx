@@ -143,6 +143,34 @@ describe('AddFindingForm', () => {
     expect(saved.speciesId).toBe('borowik-szlachetny')
   })
 
+  it('initialSpeciesId (z rozpoznania AI) ma pierwszeństwo przed zapamiętanym ostatnim gatunkiem', async () => {
+    localStorage.setItem('grzyby-last-species-id', 'kurka')
+    const onClose = vi.fn()
+    render(
+      <AddFindingForm initialPosition={[52.1, 19.5]} initialSpeciesId="borowik-szlachetny" onClose={onClose} />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true))
+
+    const saved = (await db.findings.toArray())[0]
+    expect(saved.speciesId).toBe('borowik-szlachetny')
+  })
+
+  it('ignoruje initialSpeciesId, jeśli nie istnieje w species.json (spada na zapamiętany gatunek)', async () => {
+    localStorage.setItem('grzyby-last-species-id', 'borowik-szlachetny')
+    const onClose = vi.fn()
+    render(
+      <AddFindingForm initialPosition={[52.1, 19.5]} initialSpeciesId="nieistniejacy-gatunek" onClose={onClose} />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true))
+
+    const saved = (await db.findings.toArray())[0]
+    expect(saved.speciesId).toBe('borowik-szlachetny')
+  })
+
   it('ignoruje zapamiętany gatunek, jeśli już nie istnieje w species.json', async () => {
     localStorage.setItem('grzyby-last-species-id', 'nieistniejacy-gatunek')
     const onClose = vi.fn()

@@ -1,6 +1,7 @@
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../db/db'
+import { useAppStore } from '../../stores/appStore'
 import { MapView } from './MapView'
 
 // `watchPosition` uruchamiałby prawdziwe API geolokalizacji (niedostępne w jsdom) - no-op stub
@@ -23,6 +24,7 @@ describe('MapView (test dymny po refaktoryzacji Fazy 19)', () => {
       await db.spots.clear()
       await db.findings.clear()
     })
+    useAppStore.setState({ pendingIdentifiedSpeciesId: null })
   })
 
   afterEach(() => cleanup())
@@ -55,5 +57,16 @@ describe('MapView (test dymny po refaktoryzacji Fazy 19)', () => {
 
     act(() => screen.getByRole('button', { name: /Pokaż mapę/ }).click())
     expect(screen.queryByText(/Grzybowiska \(0\)/)).not.toBeInTheDocument()
+  })
+
+  it('otwiera formularz dodawania znaleziska z gatunkiem rozpoznanym w Identify (pendingIdentifiedSpeciesId)', async () => {
+    renderMapView()
+
+    act(() => useAppStore.getState().setPendingIdentifiedSpeciesId('borowik-szlachetny'))
+
+    expect(await screen.findByText('Nowe znalezisko')).toBeInTheDocument()
+    // Konsumowane jednorazowo - nie zostaje w appStore po otwarciu formularza. Samo przekazanie
+    // gatunku do wstępnie zaznaczonej wartości Selecta jest pokryte w AddFindingForm.test.tsx.
+    expect(useAppStore.getState().pendingIdentifiedSpeciesId).toBeNull()
   })
 })

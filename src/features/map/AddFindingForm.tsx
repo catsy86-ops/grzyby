@@ -32,14 +32,22 @@ interface AddFindingFormProps {
   // Zdjęcie z PWA `share_target` (Udostępnij z innej apki, patrz MapView.tsx) - od razu wpięte do
   // listy zdjęć formularza, tak jakby użytkownik sam je wybrał.
   initialPhoto?: File | null
+  // Gatunek rozpoznany przez skaner AI (features/identify/PredictionCard.tsx, przez
+  // appStore.pendingIdentifiedSpeciesId, konsumowany jednorazowo w MapView.tsx) - nadrzędny
+  // względem "ostatnio wybranego gatunku" niżej, bo to świeża, konkretna sugestia dla TEGO
+  // znaleziska, nie ogólna podpowiedź z historii.
+  initialSpeciesId?: string | null
   onClose: (saved: boolean) => void
 }
 
-export function AddFindingForm({ initialPosition, initialPhoto, onClose }: AddFindingFormProps) {
+export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId, onClose }: AddFindingFormProps) {
   // Podpowiada ostatnio wybrany gatunek zamiast zawsze startować od "-- nieokreślony --" - przy
   // zbieraniu jednego gatunku seriami oszczędza powtarzanie tego samego wyboru za każdym razem.
   // Sprawdzone przeciwko species.json na wypadek gdyby zapamiętany id już nie istniał.
   const [speciesId, setSpeciesId] = useState<string>(() => {
+    if (initialSpeciesId != null && (speciesData as Species[]).some((s) => s.id === initialSpeciesId)) {
+      return initialSpeciesId
+    }
     const last = getLastSpeciesId()
     return last != null && (speciesData as Species[]).some((s) => s.id === last) ? last : ''
   })

@@ -107,6 +107,12 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
   // z innej apki (np. Galerii) prosto do formularza dodawania znaleziska, zamiast wybierania z
   // dysku od nowa. `null` w każdym innym przypadku otwarcia formularza.
   const [sharedPhoto, setSharedPhoto] = useState<File | null>(null)
+  // Gatunek rozpoznany w Identify, przekazany przez PredictionCard.tsx przez appStore
+  // (appStore.pendingIdentifiedSpeciesId) - konsumowany jednorazowo w efekcie niżej, żeby nie
+  // otwierać formularza od nowa przy każdym re-renderze MapView po jego zamknięciu.
+  const pendingIdentifiedSpeciesId = useAppStore((s) => s.pendingIdentifiedSpeciesId)
+  const setPendingIdentifiedSpeciesId = useAppStore((s) => s.setPendingIdentifiedSpeciesId)
+  const [prefillSpeciesId, setPrefillSpeciesId] = useState<string | null>(null)
   const mapRef = useRef<L.Map | null>(null)
   // Cel startowej pozycji `MapContainer` - trzymany w stanie (nie tylko jako stała), bo
   // "Pokaż na mapie" w SzczecinSpotsPanel musi też zadziałać z widoku listy, gdzie MapContainer
@@ -143,6 +149,13 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
     }),
     [],
   )
+
+  useEffect(() => {
+    if (pendingIdentifiedSpeciesId == null) return
+    setPrefillSpeciesId(pendingIdentifiedSpeciesId)
+    setPendingIdentifiedSpeciesId(null)
+    setActiveSheet('add-finding')
+  }, [pendingIdentifiedSpeciesId, setPendingIdentifiedSpeciesId])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -405,9 +418,11 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
         <AddFindingForm
           initialPosition={findingPosition}
           initialPhoto={sharedPhoto}
+          initialSpeciesId={prefillSpeciesId}
           onClose={(saved) => {
             setActiveSheet(null)
             setSharedPhoto(null)
+            setPrefillSpeciesId(null)
             if (saved) setPinPosition(null)
           }}
         />

@@ -46,6 +46,12 @@ interface AppState {
   // dłużej niż jedna sesja, więc stan przetrwa zamknięcie apki, tak jak reszta appStore.
   gearChecklistChecked: string[]
   setGearChecklistChecked: (ids: string[]) => void
+  // Most Identify -> Dziennik: gatunek rozpoznany przez skaner AI (features/identify/PredictionCard.tsx),
+  // czekający na przejęcie przez formularz dodawania znaleziska po przełączeniu na zakładkę Mapa
+  // (patrz MapView.tsx). Celowo NIE persystowane - to jednorazowy handoff w ramach jednej sesji,
+  // nie trwały stan (przetrwanie reloadu byłoby mylące - "dlaczego formularz sam się otworzył").
+  pendingIdentifiedSpeciesId: string | null
+  setPendingIdentifiedSpeciesId: (id: string | null) => void
 }
 
 // Dane karty awaryjnej (patrz features/tools/EmergencyCard.tsx) - czysto lokalne (localStorage,
@@ -95,6 +101,8 @@ export const useAppStore = create<AppState>()(
       setLastExportAt: (timestamp) => set({ lastExportAt: timestamp }),
       gearChecklistChecked: [],
       setGearChecklistChecked: (ids) => set({ gearChecklistChecked: ids }),
+      pendingIdentifiedSpeciesId: null,
+      setPendingIdentifiedSpeciesId: (id) => set({ pendingIdentifiedSpeciesId: id }),
     }),
     {
       name: 'lysy-app-store',
