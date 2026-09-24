@@ -7,7 +7,7 @@ const MODEL_URL = '/models/model.json'
 // Teachable Machine, gdzie klasy trzeba nazwać dokładnie tak jak `id` w species.json). Gdy go brak,
 // zakładamy kolejność klas = kolejność gatunków w species.json (tak generuje ją scripts/train-model/train.py).
 const METADATA_URL = '/models/metadata.json'
-const INPUT_SIZE = 224
+export const INPUT_SIZE = 224
 
 export interface Prediction {
   species: Species | null

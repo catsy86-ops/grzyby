@@ -2,11 +2,16 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { IdentifyView } from './IdentifyView'
 import * as mushroomModel from '../../utils/mushroomModel'
+import * as mushroomWorkerClient from '../../utils/mushroomWorkerClient'
 
 vi.mock('../../utils/mushroomModel', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../utils/mushroomModel')>()
   return { ...actual, isModelAvailable: vi.fn(), loadDatasetReviewed: vi.fn() }
 })
+
+vi.mock('../../utils/mushroomWorkerClient', () => ({
+  identifyMushroomInWorker: vi.fn(),
+}))
 
 function makeImageFile(name = 'grzyb.jpg') {
   return new File(['dane-zdjecia'], name, { type: 'image/jpeg' })
@@ -24,6 +29,10 @@ describe('IdentifyView', () => {
     // od czego zależy useAutoAnimate używany przez IdentifyView.
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-preview')
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    vi.stubGlobal(
+      'createImageBitmap',
+      vi.fn().mockResolvedValue({ width: 224, height: 224 } as unknown as ImageBitmap),
+    )
     // Domyślnie "zrecenzjonowany" w testach niezwiązanych z tą flagą - patrz opisane niżej testy
     // `datasetReviewed`, gdzie wartość jest jawnie nadpisywana.
     vi.mocked(mushroomModel.loadDatasetReviewed).mockResolvedValue(true)
@@ -33,7 +42,17 @@ describe('IdentifyView', () => {
     vi.restoreAllMocks()
     vi.mocked(mushroomModel.isModelAvailable).mockReset()
     vi.mocked(mushroomModel.loadDatasetReviewed).mockReset()
+    vi.mocked(mushroomWorkerClient.identifyMushroomInWorker).mockReset()
   })
+
+  async function selectFileAndClickIdentify() {
+    vi.mocked(mushroomModel.isModelAvailable).mockResolvedValue(true)
+    render(<IdentifyView />)
+    selectFileInput(makeImageFile())
+    const button = await screen.findByRole('button', { name: /rozpoznaj gatunek/i })
+    await waitFor(() => expect(button).toBeEnabled())
+    fireEvent.click(button)
+  }
 
   it('wybór pliku przez input ustawia podgląd zdjęcia', async () => {
     vi.mocked(mushroomModel.isModelAvailable).mockResolvedValue(true)
@@ -115,5 +134,41 @@ describe('IdentifyView', () => {
 
     await waitFor(() => expect(mushroomModel.loadDatasetReviewed).toHaveBeenCalled())
     expect(screen.queryByText(/nie przeszedł jeszcze formalnej, ręcznej recenzji/i)).not.toBeInTheDocument()
+  })
+
+  it('po kliknięciu "Rozpoznaj gatunek" renderuje wyniki z workera', async () => {
+    vi.mocked(mushroomWorkerClient.identifyMushroomInWorker).mockResolvedValue([
+      { species: null, labelRaw: 'borowik-szlachetny', confidence: 0.87 },
+    ])
+
+    await selectFileAndClickIdentify()
+
+    expect((await screen.findAllByText(/borowik-szlachetny/, { exact: false })).length).toBeGreaterThan(0)
+    expect(mushroomWorkerClient.identifyMushroomInWorker).toHaveBeenCalledOnce()
+  })
+
+  it('pokazuje komunikat błędu, gdy rozpoznanie w workerze zawiedzie', async () => {
+    vi.mocked(mushroomWorkerClient.identifyMushroomInWorker).mockRejectedValue(new Error('worker padł'))
+
+    await selectFileAndClickIdentify()
+
+    expect(await screen.findByText(/nie udało się rozpoznać grzyba: worker padł/i)).toBeInTheDocument()
+  })
+
+  it('blokuje zmianę zdjęcia w trakcie trwającej analizy', async () => {
+    let resolveIdentify: (value: mushroomModel.Prediction[]) => void = () => {}
+    vi.mocked(mushroomWorkerClient.identifyMushroomInWorker).mockReturnValue(
+      new Promise((resolve) => {
+        resolveIdentify = resolve
+      }),
+    )
+
+    await selectFileAndClickIdentify()
+
+    const changePhotoButton = screen.getByRole('button', { name: /zmień zdjęcie/i })
+    expect(changePhotoButton).toBeDisabled()
+
+    resolveIdentify([])
+    await waitFor(() => expect(changePhotoButton).toBeEnabled())
   })
 })

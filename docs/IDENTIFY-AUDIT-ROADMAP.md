@@ -74,3 +74,14 @@ Tier 1 pkt 1-3 są w pełni niezależne od siebie i od Tier 0 - bezpieczne do zr
 kolejności w tej samej sesji. Sensownie najpierw pkt 3 (test dla `handleIdentify`), bo naturalnie
 posłuży też do odtworzenia race condition z pkt 2. Tier 0 (most Identify -> Dziennik) wymaga
 najpierw decyzji użytkownika co do docelowego przepływu.
+
+---
+
+**Tier 1 w całości zaimplementowane (2026-09-24).** Pkt 1: `INPUT_SIZE` wyeksportowany z
+`mushroomModel.ts`, `createImageBitmap` w `IdentifyView.tsx` teraz robi natywny downscale do
+224x224 od razu (`resizeWidth`/`resizeHeight`/`resizeQuality: 'medium'`). Pkt 2: przycisk "Zmień
+zdjęcie" dostał `disabled={loading}`. Pkt 3: nowe testy `IdentifyView.test.tsx` (sukces workera,
+błąd workera, race condition ze zmianą zdjęcia w trakcie analizy) - zamockowany globalny
+`createImageBitmap` i `identifyMushroomInWorker`. tsc/oxlint/build czyste, testy 711/712 (1 znana
+flaka pod pełnym obciążeniem, niezwiązana z tymi zmianami). **Tier 0** (most Identify -> Dziennik)
+pozostaje otwarty - wymaga decyzji użytkownika co do docelowego przepływu.

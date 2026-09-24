@@ -3,7 +3,7 @@ import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { CameraIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
 import { CameraMushroomIllustration } from '../../components/icons/illustrations'
-import { isModelAvailable, loadDatasetReviewed, type Prediction } from '../../utils/mushroomModel'
+import { INPUT_SIZE, isModelAvailable, loadDatasetReviewed, type Prediction } from '../../utils/mushroomModel'
 import { identifyMushroomInWorker } from '../../utils/mushroomWorkerClient'
 import { PredictionCard } from './PredictionCard'
 import { Alert, AlertDescription } from '../../components/ui/alert'
@@ -64,7 +64,14 @@ export function IdentifyView() {
     try {
       // Kompresja/pomiar - createImageBitmap jest tani (główny wątek), sama inferencja TF.js
       // liczy się w Web Workerze (patrz utils/mushroomWorkerClient.ts), żeby nie przycinać UI.
-      const bitmap = await createImageBitmap(imageRef.current)
+      // Downscale od razu do rozmiaru wejściowego modelu (natywnie, przez opcje resize*) - bez
+      // tego cała zdjęciowa rozdzielczość aparatu trafiałaby jako tekstura na GPU w workerze,
+      // tuż przed odrzuceniem przez resizeBilinear w mushroomModel.ts.
+      const bitmap = await createImageBitmap(imageRef.current, {
+        resizeWidth: INPUT_SIZE,
+        resizeHeight: INPUT_SIZE,
+        resizeQuality: 'medium',
+      })
       const results = await identifyMushroomInWorker(bitmap)
       setPredictions(results)
     } catch (err) {
@@ -133,7 +140,7 @@ export function IdentifyView() {
         {!imageUrl && (
           <CameraMushroomIllustration className="mx-auto mb-3 size-16 text-muted-foreground" />
         )}
-        <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+        <Button type="button" variant="outline" disabled={loading} onClick={() => fileInputRef.current?.click()}>
           <CameraIcon />
           {imageUrl ? 'Zmień zdjęcie' : 'Wybierz lub zrób zdjęcie'}
         </Button>
