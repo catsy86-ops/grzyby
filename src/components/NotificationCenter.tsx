@@ -1,4 +1,5 @@
 import { DownloadIcon, MapPinnedIcon } from 'lucide-react'
+import { toast } from 'sonner'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { useNotificationItems } from '../hooks/useNotificationItems'
 import { useAppStore } from '../stores/appStore'
@@ -34,10 +35,14 @@ export function NotificationCenter({ open, onOpenChange }: NotificationCenterPro
 
   async function handleAction(item: NotificationItem) {
     if (item.action === 'export') {
-      const blob = await exportData()
-      const timestamp = Date.now()
-      downloadBlob(blob, `lysy-dziennik-${new Date(timestamp).toISOString().slice(0, 10)}.json`)
-      useAppStore.getState().setLastExportAt(timestamp)
+      try {
+        const blob = await exportData()
+        const timestamp = Date.now()
+        downloadBlob(blob, `lysy-dziennik-${new Date(timestamp).toISOString().slice(0, 10)}.json`)
+        useAppStore.getState().setLastExportAt(timestamp)
+      } catch {
+        toast.error('Nie udało się utworzyć kopii zapasowej. Spróbuj ponownie.')
+      }
     } else {
       setActiveTab('mapa')
     }

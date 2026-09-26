@@ -212,9 +212,16 @@ export function JournalView() {
   }, [selectedTrip, filteredFindings])
 
   async function handleExport() {
-    const blob = await exportData()
-    downloadBlob(blob, `lysy-dziennik-${new Date().toISOString().slice(0, 10)}.json`)
-    useAppStore.getState().setLastExportAt(Date.now())
+    // Bez try/catch nieudany eksport kończył się brakiem pliku i ciszą - a `setLastExportAt`
+    // słusznie nie było ustawiane, więc apka dalej przypominała o kopii, której nie umiała zrobić,
+    // nie tłumacząc dlaczego. Import obok (finishImport) miał tę obsługę od początku.
+    try {
+      const blob = await exportData()
+      downloadBlob(blob, `lysy-dziennik-${new Date().toISOString().slice(0, 10)}.json`)
+      useAppStore.getState().setLastExportAt(Date.now())
+    } catch {
+      toast.error('Nie udało się utworzyć kopii zapasowej. Spróbuj ponownie.')
+    }
   }
 
   async function handleExportPdf() {
@@ -242,7 +249,17 @@ export function JournalView() {
   async function finishImport(payload: ExportPayload) {
     try {
       const result = await importPayload(payload)
-      toast.success(`Zaimportowano ${result.findingsImported} znalezisk i ${result.tripsImported} wypraw.`)
+      const parts = [`${result.findingsImported} znalezisk`, `${result.tripsImported} wypraw`]
+      if (result.spotsImported > 0) parts.push(`${result.spotsImported} grzybowisk`)
+      toast.success(`Zaimportowano ${parts.join(', ')}.`)
+      // Plik w starym formacie (bez grzybowisk) niesie `spotId` wskazujące na cudzą bazę -
+      // import je czyści zamiast podpinać znaleziska pod przypadkowe miejsce. Użytkownik musi o
+      // tym wiedzieć, bo to jedyny moment, w którym może te powiązania odtworzyć ręcznie.
+      if (result.spotLinksDropped > 0) {
+        toast.warning(
+          `${result.spotLinksDropped} znalezisk straciło powiązanie z grzybowiskiem - plik pochodzi ze starszej wersji apki, która nie zapisywała grzybowisk w kopii.`,
+        )
+      }
     } catch (err) {
       toast.error(err instanceof Error ? `Błąd importu: ${err.message}` : 'Błąd importu pliku')
     }

@@ -1,14 +1,30 @@
 import { db } from '../db/db'
-import type { Finding, Trip } from '../db/schema'
+import type { Finding, Spot, Trip, TripTrailPoint } from '../db/schema'
 import { createThumbnail } from './imageUtils'
 
+// Wersja 3 (wcześniej 2) domyka trzy luki, przez które "jedyna kopia zapasowa" tej apki
+// (appStore.setLastExportAt, BackupReminderBanner) nie była w istocie pełną kopią:
+//   - `spots` w ogóle nie były eksportowane, mimo że `Finding.spotId` owszem - po imporcie na
+//     czystym urządzeniu pierwsze utworzone grzybowisko dostawało `++id = 1` i "przygarniało"
+//     wszystkie znaleziska z `spotId === 1` z cudzego pliku (ciche fałszywe powiązanie widoczne
+//     potem w statystykach spotu i w rankingu "Dziś warto sprawdzić"),
+//   - `photosByFindingId` było mapą jedno-zdjęciową, więc ze znaleziska z galerią do kopii
+//     trafiało tylko ostatnie zdjęcie, choć schema i UI obsługują wiele (Photo.findingId),
+//   - `tripTrailPoints` (ślad GPS wyprawy) nie były zapisywane nigdzie poza IndexedDB.
+// Pliki w wersji 2 nadal się importują - patrz `normalizePhotoEntry` i obsługa braku `spots`
+// w `importPayload`.
 interface ExportPayload {
   exportedAt: string
-  version: 2
+  version: 2 | 3
   findings: Finding[]
   trips: Trip[]
-  // klucz: id znaleziska w chwili eksportu (oryginalny, przed remapowaniem przy imporcie)
-  photosByFindingId: Record<number, string>
+  // klucz: id znaleziska w chwili eksportu (oryginalny, przed remapowaniem przy imporcie).
+  // Wartość: lista zdjęć (v3) albo pojedyncze zdjęcie (v2, pliki sprzed tej zmiany).
+  photosByFindingId: Record<number, string[] | string>
+  // Od v3. `undefined` w pliku v2 - i to rozróżnienie ma znaczenie przy imporcie: bez tablicy
+  // grzybowisk `Finding.spotId` z pliku nie ma do czego się odnosić.
+  spots?: Spot[]
+  tripTrailPoints?: TripTrailPoint[]
 }
 
 function blobToBase64(blob: Blob): Promise<string> {
@@ -26,25 +42,37 @@ async function base64ToBlob(base64: string): Promise<Blob> {
 }
 
 export async function exportData(): Promise<Blob> {
-  const [findings, trips, photos] = await Promise.all([
+  const [findings, trips, photos, spots, tripTrailPoints] = await Promise.all([
     db.findings.toArray(),
     db.trips.toArray(),
     db.photos.toArray(),
+    db.spots.toArray(),
+    db.tripTrailPoints.toArray(),
   ])
 
-  const photosByFindingId: Record<number, string> = {}
+  // Kolejność zdjęć w obrębie znaleziska jest zachowana (`photos` przychodzi posortowane po
+  // kluczu głównym, a `AddFindingForm` zapisuje je sekwencyjnie w kolejności wyboru) - galeria
+  // po imporcie wygląda więc tak samo jak przed eksportem.
+  const photosByFindingId: Record<number, string[]> = {}
   await Promise.all(
-    photos.map(async (photo) => {
-      photosByFindingId[photo.findingId] = await blobToBase64(photo.blob)
+    photos.map(async (photo, index) => {
+      const base64 = await blobToBase64(photo.blob)
+      return { index, findingId: photo.findingId, base64 }
     }),
-  )
+  ).then((encoded) => {
+    for (const { findingId, base64 } of encoded.sort((a, b) => a.index - b.index)) {
+      ;(photosByFindingId[findingId] ??= []).push(base64)
+    }
+  })
 
   const payload: ExportPayload = {
     exportedAt: new Date().toISOString(),
-    version: 2,
+    version: 3,
     findings,
     trips,
     photosByFindingId,
+    spots,
+    tripTrailPoints,
   }
 
   return new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -75,6 +103,27 @@ function validateExportPayload(value: unknown): asserts value is ExportPayload {
   if (value.photosByFindingId !== undefined && !isRecord(value.photosByFindingId)) {
     throw new Error('Plik zawiera niepoprawny format zdjęć.')
   }
+  // `spots`/`tripTrailPoints` istnieją dopiero od v3 - brak pola jest poprawnym plikiem v2,
+  // ale pole obecne i niebędące tablicą to już uszkodzony plik.
+  if (value.spots !== undefined && !Array.isArray(value.spots)) {
+    throw new Error('Plik zawiera niepoprawną listę grzybowisk.')
+  }
+  if (value.tripTrailPoints !== undefined && !Array.isArray(value.tripTrailPoints)) {
+    throw new Error('Plik zawiera niepoprawny format śladu wyprawy.')
+  }
+
+  value.spots?.forEach((spot, index) => {
+    if (
+      !isRecord(spot) ||
+      typeof spot.name !== 'string' ||
+      typeof spot.latitude !== 'number' ||
+      typeof spot.longitude !== 'number' ||
+      typeof spot.notes !== 'string' ||
+      typeof spot.createdAt !== 'number'
+    ) {
+      throw new Error(`Grzybowisko #${index + 1} w pliku ma niepoprawny format.`)
+    }
+  })
 
   value.findings.forEach((finding, index) => {
     if (
@@ -129,19 +178,53 @@ export function countLikelyDuplicates(payload: ExportPayload, existingFindings: 
   return payload.findings.filter((finding) => existingSignatures.has(findingSignature(finding))).length
 }
 
-export async function importPayload(payload: ExportPayload): Promise<{ findingsImported: number; tripsImported: number }> {
+// Pliki v2 trzymały pod kluczem znaleziska jeden string base64, v3 trzyma listę - obie postacie
+// sprowadzamy do listy, żeby reszta importu miała jeden kształt danych.
+function normalizePhotoEntry(entry: string[] | string): string[] {
+  return Array.isArray(entry) ? entry : [entry]
+}
+
+export interface ImportResult {
+  findingsImported: number
+  tripsImported: number
+  spotsImported: number
+  // Ile znalezisk straciło powiązanie z grzybowiskiem, bo plik był w starym formacie (v2, bez
+  // tablicy `spots`) - UI mówi o tym użytkownikowi wprost, zamiast po cichu podpinać je pod
+  // przypadkowe, lokalne grzybowisko o tym samym id.
+  spotLinksDropped: number
+}
+
+export async function importPayload(payload: ExportPayload): Promise<ImportResult> {
   // Zdekodowanie zdjęć i wygenerowanie miniatur musi zajść PRZED transakcją Dexie:
   // operacje asynchroniczne spoza API Dexie w środku transakcji przedwcześnie ją zamykają.
-  const decodedPhotosByOldFindingId = new Map<number, { blob: Blob; thumbnailBlob: Blob }>()
+  const decodedPhotosByOldFindingId = new Map<number, { blob: Blob; thumbnailBlob: Blob }[]>()
   await Promise.all(
-    Object.entries(payload.photosByFindingId ?? {}).map(async ([oldFindingId, base64]) => {
-      const blob = await base64ToBlob(base64)
-      const thumbnailBlob = await createThumbnail(blob)
-      decodedPhotosByOldFindingId.set(Number(oldFindingId), { blob, thumbnailBlob })
+    Object.entries(payload.photosByFindingId ?? {}).map(async ([oldFindingId, entry]) => {
+      const decoded = await Promise.all(
+        normalizePhotoEntry(entry).map(async (base64) => {
+          const blob = await base64ToBlob(base64)
+          return { blob, thumbnailBlob: await createThumbnail(blob) }
+        }),
+      )
+      decodedPhotosByOldFindingId.set(Number(oldFindingId), decoded)
     }),
   )
 
-  await db.transaction('rw', db.trips, db.findings, db.photos, async () => {
+  // Plik bez tablicy `spots` (format v2) niesie `Finding.spotId`, które wskazuje na grzybowiska
+  // z INNEJ bazy - zachowanie takiego id byłoby gorsze niż jego utrata, bo po utworzeniu
+  // pierwszego lokalnego grzybowiska (`++id = 1`) znaleziska z pliku zostałyby po cichu
+  // przypisane do miejsca, w którym nigdy nie były.
+  const hasSpots = Array.isArray(payload.spots)
+  let spotLinksDropped = 0
+
+  await db.transaction('rw', db.trips, db.findings, db.photos, db.spots, db.tripTrailPoints, async () => {
+    const spotIdMap = new Map<number, number>()
+    for (const spot of payload.spots ?? []) {
+      const { id: oldId, ...spotData } = spot
+      const newId = await db.spots.add(spotData)
+      if (oldId != null) spotIdMap.set(oldId, newId)
+    }
+
     const tripIdMap = new Map<number, number>()
     for (const trip of payload.trips) {
       const { id: oldId, ...tripData } = trip
@@ -150,25 +233,38 @@ export async function importPayload(payload: ExportPayload): Promise<{ findingsI
     }
 
     for (const finding of payload.findings) {
-      const { id: oldFindingId, tripId, ...rest } = finding
+      const { id: oldFindingId, tripId, spotId, ...rest } = finding
+      const remappedSpotId = spotId != null && hasSpots ? spotIdMap.get(spotId) : undefined
+      if (spotId != null && remappedSpotId == null) spotLinksDropped++
+
       const newFindingId = await db.findings.add({
         ...rest,
         tripId: tripId != null ? tripIdMap.get(tripId) : undefined,
+        spotId: remappedSpotId,
       })
 
-      const photo = oldFindingId != null ? decodedPhotosByOldFindingId.get(oldFindingId) : undefined
-      if (photo) {
+      const photos = oldFindingId != null ? decodedPhotosByOldFindingId.get(oldFindingId) : undefined
+      for (const photo of photos ?? []) {
         await db.photos.add({ findingId: newFindingId, blob: photo.blob, thumbnailBlob: photo.thumbnailBlob })
       }
     }
+
+    // Punkt śladu bez odpowiadającej wyprawy w pliku byłby sierotą (nic go nigdy nie narysuje
+    // ani nie posprząta), więc przepisujemy tylko te, których wyprawa faktycznie przyszła.
+    for (const point of payload.tripTrailPoints ?? []) {
+      const newTripId = tripIdMap.get(point.tripId)
+      if (newTripId == null) continue
+      const { id: _oldId, ...pointData } = point
+      await db.tripTrailPoints.add({ ...pointData, tripId: newTripId })
+    }
   })
 
-  return { findingsImported: payload.findings.length, tripsImported: payload.trips.length }
-}
-
-export async function importData(file: File): Promise<{ findingsImported: number; tripsImported: number }> {
-  const payload = await readExportFile(file)
-  return importPayload(payload)
+  return {
+    findingsImported: payload.findings.length,
+    tripsImported: payload.trips.length,
+    spotsImported: payload.spots?.length ?? 0,
+    spotLinksDropped,
+  }
 }
 
 // Wspólny wzorzec nazwy pliku eksportu - dotąd powtórzony osobno w handleExportPdf/Gpx/Csv w
