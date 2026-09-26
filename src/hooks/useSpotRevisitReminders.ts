@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
 import { db } from '../db/db'
-import { showLocalNotification } from '../utils/notifications'
+import { canShowNotifications, showLocalNotification } from '../utils/notifications'
 import { monthLabel, shouldRemindRevisit } from '../utils/spotRevisit'
 
 const NOTIFIED_KEY_PREFIX = 'lysy-spot-revisit-notified-'
@@ -32,6 +32,8 @@ export function useSpotRevisitReminders() {
         const key = notifiedKey(spot.id, year)
         if (localStorage.getItem(key)) continue
         if (!shouldRemindRevisit(spot.revisitMonth, spot.revisitFlaggedAt, now)) continue
+        // Znacznik dopiero po sprawdzeniu zgody - patrz komentarz przy `canShowNotifications`.
+        if (!canShowNotifications()) return
         try {
           localStorage.setItem(key, '1')
         } catch {

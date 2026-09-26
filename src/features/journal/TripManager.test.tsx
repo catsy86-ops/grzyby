@@ -14,6 +14,10 @@ beforeEach(async () => {
   useAppStore.setState({ activeTripId: null })
   localStorage.removeItem(LONG_TRIP_NOTIFIED_KEY)
   vi.restoreAllMocks()
+  // Przypomnienia zapisują znacznik "już powiadomiono" dopiero po sprawdzeniu zgody na
+  // powiadomienia (patrz canShowNotifications) - w jsdom nie ma jej domyślnie, więc bez tego
+  // stuba żaden z poniższych testów nie doszedłby do wysyłki.
+  vi.spyOn(notifications, 'canShowNotifications').mockReturnValue(true)
 })
 
 afterEach(() => cleanup())
@@ -142,7 +146,7 @@ describe('TripManager', () => {
   })
 
   it('powiadamia raz o długiej wyprawie i nie duplikuje powiadomienia przy ponownym sprawdzeniu (np. kolejny tick)', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
 
     const longAgo = Date.now() - 5 * 60 * 60 * 1000
     const tripId = await db.trips.add({ name: 'Długa wyprawa', startedAt: longAgo, endedAt: null, notes: '' })

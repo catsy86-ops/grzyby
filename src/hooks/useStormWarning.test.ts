@@ -16,6 +16,10 @@ beforeEach(async () => {
   localStorage.clear()
   useAppStore.setState({ activeTripId: null })
   vi.restoreAllMocks()
+  // Przypomnienia zapisują znacznik "już powiadomiono" dopiero po sprawdzeniu zgody na
+  // powiadomienia (patrz canShowNotifications) - w jsdom nie ma jej domyślnie, więc bez tego
+  // stuba żaden z poniższych testów nie doszedłby do wysyłki.
+  vi.spyOn(notifications, 'canShowNotifications').mockReturnValue(true)
   setOnline(true)
 })
 
@@ -27,7 +31,7 @@ describe('useStormWarning', () => {
       windSpeedMaxKmh: 10,
       isStormRisk: true,
     })
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     const tripId = await db.trips.add({ name: 'Wyprawa testowa', startedAt: Date.now(), endedAt: null, notes: '' })
     useAppStore.setState({ activeTripId: tripId })
 
@@ -43,7 +47,7 @@ describe('useStormWarning', () => {
       windSpeedMaxKmh: 10,
       isStormRisk: false,
     })
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     const tripId = await db.trips.add({ name: 'Wyprawa testowa', startedAt: Date.now(), endedAt: null, notes: '' })
     useAppStore.setState({ activeTripId: tripId })
 
@@ -67,7 +71,7 @@ describe('useStormWarning', () => {
 
   it('nie rzuca błędu i nie ostrzega, gdy brak GPS', async () => {
     vi.spyOn(geolocation, 'getCurrentPosition').mockRejectedValue(new Error('brak GPS'))
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     const tripId = await db.trips.add({ name: 'Wyprawa testowa', startedAt: Date.now(), endedAt: null, notes: '' })
     useAppStore.setState({ activeTripId: tripId })
 
@@ -84,7 +88,7 @@ describe('useStormWarning', () => {
       windSpeedMaxKmh: 10,
       isStormRisk: true,
     })
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     const tripId = await db.trips.add({ name: 'Wyprawa testowa', startedAt: Date.now(), endedAt: null, notes: '' })
     useAppStore.setState({ activeTripId: tripId })
 

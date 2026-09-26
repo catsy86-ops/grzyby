@@ -10,11 +10,15 @@ beforeEach(async () => {
   localStorage.clear()
   useAppStore.setState({ activeTripId: null })
   vi.restoreAllMocks()
+  // Przypomnienia zapisują znacznik "już powiadomiono" dopiero po sprawdzeniu zgody na
+  // powiadomienia (patrz canShowNotifications) - w jsdom nie ma jej domyślnie, więc bez tego
+  // stuba żaden z poniższych testów nie doszedłby do wysyłki.
+  vi.spyOn(notifications, 'canShowNotifications').mockReturnValue(true)
 })
 
 describe('useOverdueTripReminder', () => {
   it('wysyła przypomnienie, gdy minął planowany czas powrotu', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     const tripId = await db.trips.add({
       name: 'Wyprawa testowa',
       startedAt: Date.now() - 60_000,
@@ -30,7 +34,7 @@ describe('useOverdueTripReminder', () => {
   })
 
   it('nie wysyła przypomnienia, gdy nie podano planowanego powrotu', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     const tripId = await db.trips.add({
       name: 'Wyprawa testowa',
       startedAt: Date.now() - 60_000,
@@ -47,7 +51,7 @@ describe('useOverdueTripReminder', () => {
   })
 
   it('nie wysyła przypomnienia, gdy planowany powrót jeszcze nie minął', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     const tripId = await db.trips.add({
       name: 'Wyprawa testowa',
       startedAt: Date.now() - 60_000,
@@ -64,7 +68,7 @@ describe('useOverdueTripReminder', () => {
   })
 
   it('nie przypomina ponownie po odmontowaniu i ponownym montowaniu dla tej samej wyprawy', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     const tripId = await db.trips.add({
       name: 'Wyprawa testowa',
       startedAt: Date.now() - 60_000,
@@ -84,7 +88,7 @@ describe('useOverdueTripReminder', () => {
   })
 
   it('nic nie robi, gdy nie ma aktywnej wyprawy', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
 
     renderHook(() => useOverdueTripReminder())
 

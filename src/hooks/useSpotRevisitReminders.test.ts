@@ -11,11 +11,15 @@ beforeEach(async () => {
   await db.spots.clear()
   localStorage.clear()
   vi.restoreAllMocks()
+  // Przypomnienia zapisują znacznik "już powiadomiono" dopiero po sprawdzeniu zgody na
+  // powiadomienia (patrz canShowNotifications) - w jsdom nie ma jej domyślnie, więc bez tego
+  // stuba żaden z poniższych testów nie doszedłby do wysyłki.
+  vi.spyOn(notifications, 'canShowNotifications').mockReturnValue(true)
 })
 
 describe('useSpotRevisitReminders', () => {
   it('wysyła przypomnienie, gdy bieżący miesiąc zgadza się z flagą i minęło ~rok od oflagowania', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     await db.spots.add({
       name: 'Sosnowy zagajnik',
       latitude: 1,
@@ -34,7 +38,7 @@ describe('useSpotRevisitReminders', () => {
   })
 
   it('nie wysyła przypomnienia, gdy oflagowany miesiąc nie zgadza się z bieżącym', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     await db.spots.add({
       name: 'Sosnowy zagajnik',
       latitude: 1,
@@ -52,7 +56,7 @@ describe('useSpotRevisitReminders', () => {
   })
 
   it('nie wysyła przypomnienia, gdy oflagowano w tym samym sezonie (za wcześnie)', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     await db.spots.add({
       name: 'Sosnowy zagajnik',
       latitude: 1,
@@ -70,7 +74,7 @@ describe('useSpotRevisitReminders', () => {
   })
 
   it('nie przypomina ponownie po odmontowaniu i ponownym montowaniu w tym samym roku', async () => {
-    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue()
+    const notifySpy = vi.spyOn(notifications, 'showLocalNotification').mockResolvedValue(true)
     await db.spots.add({
       name: 'Sosnowy zagajnik',
       latitude: 1,

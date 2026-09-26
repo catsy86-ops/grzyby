@@ -5,7 +5,7 @@ import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import { useActiveTrip } from '../../stores/useActiveTrip'
 import { countSpeciesDiversity, daysSinceLastTrip, formatDuration, formatWeight, isLongTrip, sumWeightGrams } from '../../utils/tripStats'
-import { showLocalNotification } from '../../utils/notifications'
+import { canShowNotifications, showLocalNotification } from '../../utils/notifications'
 import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { getCurrentPosition } from '../../utils/geolocation'
 import { buildLocationSmsUrl } from '../../utils/locationSms'
@@ -61,6 +61,8 @@ export function TripManager() {
     function checkLongTrip() {
       if (!activeTrip || !isLongTrip(activeTrip.startedAt)) return
       if (localStorage.getItem(LONG_TRIP_NOTIFIED_KEY) === String(activeTripId)) return
+      // Znacznik dopiero po sprawdzeniu zgody - patrz komentarz przy `canShowNotifications`.
+      if (!canShowNotifications()) return
       localStorage.setItem(LONG_TRIP_NOTIFIED_KEY, String(activeTripId))
       showLocalNotification('Długa wyprawa w toku', {
         body: `Wyprawa "${activeTrip.name}" trwa już ${formatDuration(activeTrip.startedAt, null)}. Nie zapomnij jej zakończyć.`,

@@ -13,7 +13,7 @@ export function NotificationPermissionBanner() {
   const [permission, setPermission] = useState(getNotificationPermission())
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(DISMISS_KEY) === '1')
 
-  if (!isNotificationSupported() || permission !== 'default' || dismissed) return null
+  if (!isNotificationSupported() || permission === 'granted' || dismissed) return null
 
   async function handleEnable() {
     const result = await requestNotificationPermission()
@@ -25,10 +25,33 @@ export function NotificationPermissionBanner() {
     setDismissed(true)
   }
 
+  // Stan "odmówiono" nie dawał dotąd ŻADNEJ informacji - banner po prostu znikał. Użytkownik nie
+  // miał skąd wiedzieć, że wyłączył sobie ostrzeżenie o burzy, przypomnienie o kleszczach,
+  // o przeciągającej się wyprawie i o rewizycie grzybowiska. Zgody nie da się odzyskać z poziomu
+  // strony (przeglądarka wymaga zmiany w ustawieniach witryny), więc tu jest sam komunikat,
+  // spokojny w tonie i bez przycisku, który i tak by nie zadziałał.
+  if (permission === 'denied') {
+    return (
+      <Alert className="flex items-center justify-between gap-2">
+        <AlertDescription className="text-current">
+          Powiadomienia są zablokowane, więc nie dostaniesz ostrzeżenia o burzy, przypomnienia
+          o kleszczach ani o przeciągającej się wyprawie. Możesz to zmienić w ustawieniach witryny
+          w przeglądarce.
+        </AlertDescription>
+        <div className="flex shrink-0 gap-2">
+          <Button size="sm" variant="ghost" onClick={handleDismiss}>
+            Rozumiem
+          </Button>
+        </div>
+      </Alert>
+    )
+  }
+
   return (
     <Alert className="flex items-center justify-between gap-2">
       <AlertDescription className="text-current">
-        Włącz powiadomienia, aby dostać przypomnienie, gdy wyprawa trwa bardzo długo.
+        Włącz powiadomienia, aby dostać ostrzeżenie o burzy, przypomnienie o kleszczach i o tym,
+        że wyprawa trwa bardzo długo.
       </AlertDescription>
       <div className="flex shrink-0 gap-2">
         <Button size="sm" onClick={handleEnable}>

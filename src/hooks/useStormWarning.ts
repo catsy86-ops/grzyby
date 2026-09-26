@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { toast } from 'sonner'
 import { useActiveTrip } from '../stores/useActiveTrip'
 import { useOnlineStatus } from './useOnlineStatus'
 import { getCurrentPosition } from '../utils/geolocation'
@@ -27,10 +28,18 @@ export function useStormWarning() {
         const forecast = await fetchStormForecast(position.latitude, position.longitude)
         if (!forecast.isStormRisk) return
         localStorage.setItem(key, '1')
-        showLocalNotification('Ostrzeżenie pogodowe', {
-          body: 'Dzisiejsza prognoza zapowiada burzę lub silny wiatr w Twojej okolicy - rozważ wcześniejszy powrót z lasu.',
+        const body =
+          'Dzisiejsza prognoza zapowiada burzę lub silny wiatr w Twojej okolicy - rozważ wcześniejszy powrót z lasu.'
+        const shown = await showLocalNotification('Ostrzeżenie pogodowe', {
+          body,
           tag: 'lysy-storm-warning',
         })
+        // Kanał zapasowy w apce, gdy powiadomienia systemowe są niedostępne lub odmówione.
+        // Prognoza jest już w ręku, więc nie kosztuje to dodatkowego zapytania - a bez tego
+        // ostrzeżenie o burzy było jedynym przypomnieniem bez ŻADNEJ drogi dotarcia do
+        // użytkownika (`utils/notificationCenter.ts` świadomie pomija je w dzwonku, bo tam
+        // wymagałoby powtórnego fetchu pogody).
+        if (!shown) toast.warning(body)
       } catch {
         // brak GPS/sieci - spróbujemy ponownie przy kolejnym sprawdzeniu
       }

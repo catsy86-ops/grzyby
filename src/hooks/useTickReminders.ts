@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
 import { db } from '../db/db'
 import { useActiveTrip } from '../stores/useActiveTrip'
-import { showLocalNotification } from '../utils/notifications'
+import { canShowNotifications, showLocalNotification } from '../utils/notifications'
 import { shouldRemindSpray, shouldRemindTickCheck } from '../utils/tickReminders'
 
 const SPRAY_LAST_NOTIFIED_KEY_PREFIX = 'lysy-tick-spray-last-notified-'
@@ -46,6 +46,8 @@ export function useTickReminders() {
     function checkSpray() {
       const lastNotified = Number(localStorage.getItem(key)) || activeTrip!.startedAt
       if (!shouldRemindSpray(lastNotified, Date.now())) return
+      // Znacznik dopiero po sprawdzeniu zgody - inaczej brak zgody "zużywałby" przypomnienie.
+      if (!canShowNotifications()) return
       localStorage.setItem(key, String(Date.now()))
       showLocalNotification('Przypomnienie o kleszczach', {
         body: 'Minęło kilka godzin wyprawy - dobry moment na ponowne spryskanie preparatem na kleszcze.',
@@ -68,6 +70,9 @@ export function useTickReminders() {
         if (trip.id == null || trip.endedAt == null) continue
         if (notified.has(trip.id)) continue
         if (!shouldRemindTickCheck(trip.endedAt, now)) continue
+        // Patrz komentarz przy `canShowNotifications` - to jest przypomnienie, którego
+        // utrata boli najbardziej (kontrola skóry pod kątem rumienia wędrującego).
+        if (!canShowNotifications()) return
         markTripNotified(trip.id)
         showLocalNotification('Kontrola po kleszczach', {
           body: `Minęło 14 dni od wyprawy "${trip.name}" - dobry moment, żeby sprawdzić skórę pod kątem rumienia po ukąszeniu kleszcza.`,

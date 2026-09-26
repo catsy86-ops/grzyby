@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useActiveTrip } from '../stores/useActiveTrip'
-import { showLocalNotification } from '../utils/notifications'
+import { canShowNotifications, showLocalNotification } from '../utils/notifications'
 import { isTripOverdue } from '../utils/overdueTrip'
 
 const NOTIFIED_KEY_PREFIX = 'lysy-overdue-trip-notified-'
@@ -20,6 +20,8 @@ export function useOverdueTripReminder() {
     function checkOverdue() {
       if (!activeTrip || !isTripOverdue(activeTrip.plannedReturnAt, Date.now())) return
       if (localStorage.getItem(key) === '1') return
+      // Znacznik dopiero po sprawdzeniu zgody - patrz komentarz przy `canShowNotifications`.
+      if (!canShowNotifications()) return
       localStorage.setItem(key, '1')
       showLocalNotification('Wyprawa się przeciąga', {
         body: `Minął planowany czas powrotu z wyprawy "${activeTrip.name}". Jeśli wszystko OK, zakończ wyprawę - w razie problemu użyj SMS-a z lokalizacją.`,
