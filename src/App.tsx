@@ -15,8 +15,7 @@ import { EmergencyCard } from './features/tools/EmergencyCard'
 import { ToolsMenu, type ToolKey } from './features/tools/ToolsMenu'
 import { NotificationCenter } from './components/NotificationCenter'
 import { useNotificationItems } from './hooks/useNotificationItems'
-import { Logo } from './components/Logo'
-import { AnimatedHeaderTitle } from './components/AnimatedHeaderTitle'
+import { HeaderLogo } from './components/HeaderLogo'
 import { AnimatedHeaderBackground } from './components/AnimatedHeaderBackground'
 import { AppSplash } from './components/AppSplash'
 import { OnboardingOverlay } from './components/OnboardingOverlay'
@@ -285,8 +284,7 @@ function App() {
         <div className="relative z-10 flex items-center gap-2 px-4 pb-3 pt-4">
           <ThemeToggle />
           <div className="flex flex-1 items-center justify-center gap-1.5">
-            <Logo className="size-5" />
-            <AnimatedHeaderTitle />
+            <HeaderLogo />
           </div>
           {/* Dzwonek celowo tej samej, subtelnej wagi co ThemeToggle (hover-only, bez stałej
               obwódki/tła) - w odróżnieniu od "Narzędzia" to nie jest wejście do osobnego zestawu
