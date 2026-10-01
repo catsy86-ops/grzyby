@@ -50,7 +50,12 @@ describe('OnboardingOverlay', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Wstecz' }))
     await waitFor(() => expect(screen.getByText('Zapisuj znaleziska na mapie')).toBeInTheDocument())
-    expect(screen.queryByRole('button', { name: 'Wstecz' })).not.toBeInTheDocument()
+    // waitFor, bo wychodzący slajd (AnimatePresence) może jeszcze chwilę wisieć w DOM razem
+    // z przyciskiem "Wstecz" - pod obciążeniem pełnego przebiegu testów asercja synchroniczna
+    // bywała niestabilna.
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Wstecz' })).not.toBeInTheDocument(),
+    )
   })
 
   it('pozwala skoczyć do dowolnego slajdu klikając kropkę postępu', async () => {
