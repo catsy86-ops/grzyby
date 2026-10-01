@@ -9,7 +9,8 @@
     "season": "Czerwiec - październik",
     "lookalikes": [
       "borowik-szatanski",
-      "goryczak-zolciowy"
+      "goryczak-zolciowy",
+      "krasnoborowik-ceglastopory"
     ],
     "imageUrls": [
       "/species-images/borowik-szlachetny.jpg"
@@ -25,7 +26,9 @@
     "habitat": "Lasy iglaste, zwłaszcza przy pniach sosen i świerków",
     "season": "Czerwiec - październik",
     "lookalikes": [
-      "borowik-szlachetny"
+      "borowik-szlachetny",
+      "podgrzybek-brunatny",
+      "podgrzybek-zajaczek"
     ],
     "imageUrls": [
       "/species-images/goryczak-zolciowy.jpg"
@@ -43,7 +46,11 @@
       "czubajka-kania",
       "gaska-zielonka",
       "purchawka-olbrzymia",
-      "pieczarka-lakowa"
+      "pieczarka-lakowa",
+      "muchomor-cytrynowy",
+      "muchomor-twardawy",
+      "muchomor-czerwieniejacy",
+      "purchawka-chropowata"
     ],
     "imageUrls": [
       "/species-images/muchomor-sromotnikowy.jpg"
@@ -60,7 +67,9 @@
     "lookalikes": [
       "czubajka-kania",
       "muchomor-sromotnikowy",
-      "purchawka-olbrzymia"
+      "purchawka-olbrzymia",
+      "muchomor-cytrynowy",
+      "muchomor-twardawy"
     ],
     "imageUrls": [
       "/species-images/muchomor-jadowity.jpg"
@@ -91,7 +100,10 @@
     "description": "Najbardziej rozpoznawalny grzyb w Polsce - czerwony kapelusz w białe, płatkowate łaty (zmywane deszczem), białe blaszki, pierścień i bulwiasta pochwa u nasady trzonu. Zawiera muskarynę i kwas ibotenowy - powoduje zatrucia neurotoksyczne (zaburzenia widzenia, majaczenie, wymioty), rzadko śmiertelne u dorosłych, ale niebezpieczne zwłaszcza dla dzieci.",
     "habitat": "Lasy brzozowe i iglaste (mikoryza z brzozą, świerkiem, sosną)",
     "season": "Sierpień - listopad",
-    "lookalikes": [],
+    "lookalikes": [
+      "muchomor-plamisty",
+      "muchomor-czerwieniejacy"
+    ],
     "imageUrls": [
       "/species-images/muchomor-czerwony.jpg"
     ]
@@ -104,7 +116,10 @@
     "description": "Kapelusz lśniący, śluzowaty w wilgotną pogodę, brązowy. Charakterystyczny pierścień błoniasty na trzonie. Zaleca się zdejmowanie śluzowatej skórki przed spożyciem.",
     "habitat": "Lasy sosnowe, zwłaszcza młodniki",
     "season": "Maj - listopad",
-    "lookalikes": [],
+    "lookalikes": [
+      "maslak-zolty",
+      "maslak-ziarnisty"
+    ],
     "imageUrls": [
       "/species-images/maslak-zwyczajny.jpg"
     ],
@@ -135,7 +150,8 @@
     "habitat": "Ciepłe lasy liściaste na wapiennym podłożu, zwłaszcza pod dębami i grabami",
     "season": "Czerwiec - wrzesień",
     "lookalikes": [
-      "borowik-szlachetny"
+      "borowik-szlachetny",
+      "krasnoborowik-ceglastopory"
     ],
     "imageUrls": [
       "/species-images/borowik-szatanski.jpg"
@@ -180,7 +196,10 @@
     "description": "Kapelusz kasztanowobrązowy, aksamitny w suchą pogodę. Rurki żółtawe do oliwkowych, miąższ pod skórką i w rurkach lekko niebieszczeje po przecięciu (znacznie słabiej niż u borowika szatańskiego). Smaczny, bardzo popularny grzyb jadalny.",
     "habitat": "Lasy iglaste, zwłaszcza sosnowe i świerkowe, na kwaśnych glebach",
     "season": "Czerwiec - listopad",
-    "lookalikes": [],
+    "lookalikes": [
+      "podgrzybek-zajaczek",
+      "goryczak-zolciowy"
+    ],
     "imageUrls": [
       "/species-images/podgrzybek-brunatny.jpg"
     ],
@@ -194,7 +213,10 @@
     "description": "Trzon smukły, biało-szary, pokryty ciemnymi, szorstkimi łuseczkami (stąd nazwa). Kapelusz brązowy do szarobrązowego, rurki jasnoszare. Miąższ na przekroju lekko różowieje lub szarzeje, nie niebieszczeje gwałtownie. Bardzo popularny w Polsce, rośnie zwykle pod brzozami.",
     "habitat": "Lasy brzozowe i mieszane z domieszką brzozy",
     "season": "Czerwiec - listopad",
-    "lookalikes": [],
+    "lookalikes": [
+      "kozlarz-czerwony",
+      "kozlarz-pomaranczowozolty"
+    ],
     "imageUrls": [
       "/species-images/kozlarz-babka.jpg"
     ],
@@ -209,7 +231,9 @@
     "habitat": "Pnie, karpy i korzenie drzew liściastych i iglastych",
     "season": "Sierpień - listopad",
     "lookalikes": [
-      "helmowka-jadowita"
+      "helmowka-jadowita",
+      "maslanka-wiazkowa",
+      "zaslonak-rudy"
     ],
     "imageUrls": [
       "/species-images/opienka-miodowa.jpg"
@@ -225,7 +249,9 @@
     "habitat": "Martwe drewno drzew iglastych i liściastych, pniaki, gałęzie",
     "season": "Wrzesień - listopad",
     "lookalikes": [
-      "opienka-miodowa"
+      "opienka-miodowa",
+      "plomiennica-zimowa",
+      "maslanka-wiazkowa"
     ],
     "imageUrls": [
       "/species-images/helmowka-jadowita.jpg"
@@ -286,7 +312,9 @@
     "season": "Lipiec - październik",
     "lookalikes": [
       "muchomor-sromotnikowy",
-      "muchomor-jadowity"
+      "muchomor-jadowity",
+      "purchawka-chropowata",
+      "tegoskor-cytrynowy"
     ],
     "imageUrls": [
       "/species-images/purchawka-olbrzymia.jpg"
@@ -316,7 +344,8 @@
     "habitat": "Lasy liściaste i mieszane, głównie pod topolami i osikami",
     "season": "Czerwiec - październik",
     "lookalikes": [
-      "kozlarz-babka"
+      "kozlarz-babka",
+      "kozlarz-pomaranczowozolty"
     ],
     "imageUrls": [
       "/species-images/kozlarz-czerwony.jpg"
@@ -332,7 +361,8 @@
     "habitat": "Wyłącznie pod modrzewiami - nasadzenia leśne i parki",
     "season": "Czerwiec - listopad",
     "lookalikes": [
-      "maslak-zwyczajny"
+      "maslak-zwyczajny",
+      "maslak-ziarnisty"
     ],
     "imageUrls": [
       "/species-images/maslak-zolty.jpg"
@@ -356,20 +386,18 @@
   {
     "id": "muchomor-plamisty",
     "nameCommon": "Muchomor plamisty",
-    "nameLatin": "Amanita excelsa",
-    "edibility": "warunkowo-jadalny",
-    "description": "Kapelusz szarobrązowy z szarawymi, łatwo znikającymi płatkami, trzon z pierścieniem i bulwiastą, bezkołnierzykową nasadą (bez wyraźnej wolwy jak u trujących muchomorów). Mało atrakcyjny kulinarnie i łatwy do pomylenia z niebezpiecznymi gatunkami - w praktyce odradza się zbierania przez początkujących.",
-    "habitat": "Lasy liściaste i iglaste, na żyznych glebach",
-    "season": "Lipiec - październik",
+    "nameLatin": "Amanita pantherina",
+    "edibility": "trujący",
+    "description": "Kapelusz oliwkowo- do ciemnobrązowego, pokryty drobnymi, czysto białymi łatkami, brzeg wyraźnie prążkowany. Trzon biały z pierścieniem i bulwiastą nasadą otoczoną wyraźnym, kołnierzykowatym wałeczkiem. Miąższ po uszkodzeniu NIE czerwienieje - to najważniejsza różnica wobec jadalnego dopiero po ugotowaniu muchomora czerwieniejącego.",
+    "habitat": "Lasy liściaste i iglaste, na glebach piaszczystych i wapiennych",
+    "season": "Lipiec - Październik",
     "lookalikes": [
-      "muchomor-sromotnikowy",
-      "muchomor-jadowity",
-      "muchomor-czerwony"
+      "muchomor-czerwieniejacy",
+      "muchomor-twardawy",
+      "muchomor-czerwony",
+      "muchomor-sromotnikowy"
     ],
-    "imageUrls": [
-      "/species-images/muchomor-plamisty.jpg"
-    ],
-    "preparationTips": "Ze względu na duże ryzyko pomyłki z trującymi muchomorami i niską wartość kulinarną, zbieranie tego gatunku nie jest polecane nawet doświadczonym grzybiarzom."
+    "imageUrls": []
   },
   {
     "id": "pieczarka-karbolowa",
@@ -380,7 +408,8 @@
     "habitat": "Parki, ogrody, przydroża, skraje lasów liściastych - lubi żyzne, nawożone gleby",
     "season": "Czerwiec - październik",
     "lookalikes": [
-      "pieczarka-lakowa"
+      "pieczarka-lakowa",
+      "wlokniak-ceglasty"
     ],
     "imageUrls": [
       "/species-images/pieczarka-karbolowa.jpg"
@@ -397,7 +426,9 @@
     "season": "Maj - październik",
     "lookalikes": [
       "pieczarka-karbolowa",
-      "muchomor-sromotnikowy"
+      "muchomor-sromotnikowy",
+      "wlokniak-ceglasty",
+      "lejkowka-jadowita"
     ],
     "imageUrls": [
       "/species-images/pieczarka-lakowa.jpg"
@@ -412,7 +443,10 @@
     "description": "Rośnie kępkami na pniach i kłodach drzew liściastych, głównie zimą i wczesną wiosną, często po odwilży po mrozach. Kapelusz pomarańczowo-brązowy, śluzowaty, trzon aksamitnie owłosiony, ciemniejący ku dołowi.",
     "habitat": "Martwe drzewa liściaste, zwłaszcza wierzby i topole, pniaki, powalone kłody",
     "season": "Listopad - marzec",
-    "lookalikes": [],
+    "lookalikes": [
+      "helmowka-jadowita",
+      "maslanka-wiazkowa"
+    ],
     "imageUrls": [
       "/species-images/plomiennica-zimowa.jpg"
     ],
@@ -431,5 +465,248 @@
       "/species-images/siedzun-sosnowy.jpg"
     ],
     "preparationTips": "Czyszczenie: wymaga dokładnego mycia - w fałdach zbiera się piasek i igliwie, namocz na chwilę i wypłucz. Suszenie: dobrze się suszy, zachowuje strukturę. Gotowanie: smażony, duszony - ceniony za chrupką, mięsistą konsystencję; sprawdź lokalny status ochronny przed zbiorem."
+  },
+  {
+    "id": "podgrzybek-zajaczek",
+    "nameCommon": "Podgrzybek zajączek",
+    "nameLatin": "Xerocomus subtomentosus",
+    "edibility": "jadalny",
+    "description": "Kapelusz oliwkowobrązowy do żółtobrązowego, suchy i wyraźnie zamszowy w dotyku, u starszych okazów pękający w drobną siateczkę. Rurki i pory jasnożółte, po uciśnięciu lekko niebieszczejące. Trzon jasny, bez siateczki, miąższ żółtawy o łagodnym smaku.",
+    "habitat": "Lasy liściaste i iglaste, skraje dróg leśnych i polan, często w mchu",
+    "season": "Czerwiec - Październik",
+    "lookalikes": [
+      "podgrzybek-brunatny",
+      "goryczak-zolciowy"
+    ],
+    "imageUrls": [],
+    "preparationTips": "Czyszczenie: przetrzyj wilgotną szmatką, skórki nie trzeba zdejmować. Suszenie: kroić w plastry ok. 5 mm - aromat słabszy niż u borowika, ale dobry do zup. Mrożenie: krótko podsmaż przed zamrożeniem. Gotowanie: dobry duszony i do sosów; starsze okazy bywają wiotkie i wodniste, warto zbierać młode."
+  },
+  {
+    "id": "krasnoborowik-ceglastopory",
+    "nameCommon": "Krasnoborowik ceglastopory (borowik ceglastoporowy)",
+    "nameLatin": "Neoboletus luridiformis (syn. Neoboletus erythropus)",
+    "edibility": "warunkowo-jadalny",
+    "description": "Kapelusz ciemnobrązowy, aksamitny. Pory po spodniej stronie ceglastoczerwone do pomarańczowych, trzon żółty gęsto pokryty czerwonymi punktami, bez siateczki. Miąższ żółty, po przekrojeniu natychmiast intensywnie granatowieje - to cecha rozpoznawcza gatunku, nie oznaka trucizny.",
+    "habitat": "Lasy liściaste i iglaste, na kwaśnych glebach pod bukami i świerkami",
+    "season": "Czerwiec - Październik",
+    "lookalikes": [
+      "borowik-szatanski",
+      "borowik-szlachetny"
+    ],
+    "imageUrls": [],
+    "preparationTips": "UWAGA: na surowo i niedogotowany jest trujący - wymaga obowiązkowego gotowania (minimum 15-20 minut, wodę odlać). Czyszczenie: przetrzyj szmatką, odrzuć rozmiękłe fragmenty. Gotowanie: po obgotowaniu dobry duszony i do sosów, granatowe zabarwienie miąższu znika podczas obróbki. Suszenie: możliwe, ale ze względu na wymóg gotowania bezpieczniej mrozić po obgotowaniu."
+  },
+  {
+    "id": "kozlarz-pomaranczowozolty",
+    "nameCommon": "Koźlarz pomarańczowożółty",
+    "nameLatin": "Leccinum versipelle",
+    "edibility": "jadalny",
+    "description": "Kapelusz pomarańczowy do ceglastego, trzon biały gęsto pokryty ciemnymi, niemal czarnymi łuseczkami - to odróżnia go od koźlarza czerwonego, u którego łuseczki są rudawe. Miąższ po przekrojeniu szarzeje, a następnie czernieje, co jest dla tego gatunku normalne.",
+    "habitat": "Lasy z brzozami, także wilgotne brzeziny i obrzeża torfowisk",
+    "season": "Czerwiec - Październik",
+    "lookalikes": [
+      "kozlarz-czerwony",
+      "kozlarz-babka"
+    ],
+    "imageUrls": [],
+    "preparationTips": "Czyszczenie: z twardszego trzonu zdejmij skórkę. Suszenie: kroić w plastry - po wysuszeniu mocno ciemnieje, co nie psuje smaku. Mrożenie: krótko obgotuj lub podsmaż przed zamrożeniem. Gotowanie: dobry do zup i sosów, miąższ ciemnieje podczas obróbki."
+  },
+  {
+    "id": "maslak-ziarnisty",
+    "nameCommon": "Maślak ziarnisty",
+    "nameLatin": "Suillus granulatus",
+    "edibility": "jadalny",
+    "description": "Kapelusz żółtobrązowy, śliski i lepki przy wilgotnej pogodzie. W odróżnieniu od maślaka zwyczajnego NIE ma pierścienia na trzonie, a młode pory wydzielają mleczne kropelki, które zasychają na trzonie w drobne ziarenka - stąd nazwa.",
+    "habitat": "Lasy i zadrzewienia sosnowe, na glebach piaszczystych i wapiennych",
+    "season": "Czerwiec - Listopad",
+    "lookalikes": [
+      "maslak-zwyczajny",
+      "maslak-zolty"
+    ],
+    "imageUrls": [],
+    "preparationTips": "Czyszczenie: zdejmij śluzowatą skórkę z kapelusza - u części osób wywołuje dolegliwości żołądkowe. Suszenie: możliwe, ale maślaki tracą wtedy sporo aromatu. Mrożenie: obgotuj 5-10 minut przed zamrożeniem. Gotowanie: dobry duszony i marynowany."
+  },
+  {
+    "id": "lejkowiec-dety",
+    "nameCommon": "Lejkowiec dęty (Trąbka śmierci)",
+    "nameLatin": "Craterellus cornucopioides",
+    "edibility": "jadalny",
+    "description": "Ciemnoszary do niemal czarnego, pusty w środku owocnik w kształcie trąbki, bez wyraźnego podziału na kapelusz i trzon. Spód gładki lub delikatnie pofałdowany, bez blaszek. Mimo złowrogiej nazwy zwyczajowej to gatunek jadalny i bardzo aromatyczny - trudny do wypatrzenia, bo zlewa się z ciemną ściółką.",
+    "habitat": "Lasy liściaste, zwłaszcza pod bukami i dębami, na wilgotnej ściółce, zwykle w dużych grupach",
+    "season": "Sierpień - Listopad",
+    "lookalikes": [],
+    "imageUrls": [],
+    "preparationTips": "Czyszczenie: przekrój wzdłuż i wypłucz - w pustym wnętrzu trąbki zbiera się ściółka i owady. Suszenie: bardzo dobry do suszenia, po zmieleniu daje aromatyczną przyprawę do sosów. Gotowanie: mocny, ciemny smak, dobrze łączy się z mięsem i makaronem - niewielka ilość wystarcza."
+  },
+  {
+    "id": "czernidlak-kolpakowaty",
+    "nameCommon": "Czernidłak kołpakowaty",
+    "nameLatin": "Coprinus comatus",
+    "edibility": "jadalny",
+    "description": "Młody owocnik jest wydłużony, walcowaty i biały, pokryty odstającymi łuskami jak kołpak. Z wiekiem blaszki różowieją, potem czernieją, a owocnik rozpływa się w czarną ciecz - wtedy nie nadaje się już do jedzenia. Nie mylić z czernidłakiem pospolitym (Coprinopsis atramentaria), który w połączeniu z alkoholem powoduje zatrucie.",
+    "habitat": "Trawniki, łąki, pobocza dróg i tereny ruderalne - poza lasem",
+    "season": "Maj - Listopad",
+    "lookalikes": [],
+    "imageUrls": [],
+    "preparationTips": "Zbieraj wyłącznie młode, białe okazy z jeszcze nierozpłyniętymi blaszkami i przygotuj je tego samego dnia - rozpad postępuje także po zerwaniu, również w lodówce. Czyszczenie: nie moczyć, tylko wytrzeć. Gotowanie: delikatny smak, dobry smażony na maśle i w zupie krem. Nie nadaje się do suszenia."
+  },
+  {
+    "id": "twardzioszek-przydrozny",
+    "nameCommon": "Twardzioszek przydrożny",
+    "nameLatin": "Marasmius oreades",
+    "edibility": "jadalny",
+    "description": "Mały grzyb o płowym, garbatym kapeluszu i żylastym, bardzo sprężystym trzonie, który się wygina zamiast łamać. Blaszki rzadkie, szerokie, kremowe. Rośnie w trawie, często w charakterystycznych kręgach zwanych czarcimi kręgami.",
+    "habitat": "Łąki, pastwiska, trawniki i pobocza dróg - w otwartym terenie, nie w lesie",
+    "season": "Maj - Listopad",
+    "lookalikes": [
+      "lejkowka-jadowita",
+      "pieczarka-lakowa"
+    ],
+    "imageUrls": [],
+    "preparationTips": "UWAGA: w tym samym siedlisku i również w kręgach rośnie trująca lejkówka jadowita - sprawdź sprężysty, żylasty trzon i rzadkie blaszki, zanim cokolwiek zabierzesz. Czyszczenie: twarde trzony odetnij, używa się głównie kapeluszy. Suszenie: bardzo dobry, zachowuje mocny, słodkawo-migdałowy aromat. Gotowanie: klasyczny dodatek do sosów i zup."
+  },
+  {
+    "id": "muchomor-czerwieniejacy",
+    "nameCommon": "Muchomor czerwieniejący",
+    "nameLatin": "Amanita rubescens",
+    "edibility": "warunkowo-jadalny",
+    "description": "Kapelusz różowobrązowy z szarawymi łatkami, trzon z pierścieniem. Cechą rozstrzygającą jest czerwienienie: każde uszkodzenie - nadgryzienie przez ślimaki, przekrojenie, nasada trzonu - z czasem wyraźnie różowieje i czerwienieje. Bez tej reakcji nie wolno przyjąć, że to ten gatunek.",
+    "habitat": "Lasy liściaste i iglaste, na glebach kwaśnych",
+    "season": "Czerwiec - Listopad",
+    "lookalikes": [
+      "muchomor-plamisty",
+      "muchomor-twardawy",
+      "muchomor-sromotnikowy"
+    ],
+    "imageUrls": [],
+    "preparationTips": "UWAGA: na surowo jest trujący (hemolizyna rozkładana dopiero w wysokiej temperaturze) - wymaga obowiązkowej obróbki termicznej, minimum 15-20 minut gotowania. To gatunek dla osób pewnie odróżniających muchomory: w tym samym siedlisku rośnie trujący muchomor plamisty i śmiertelnie trujący muchomor sromotnikowy. Przy jakiejkolwiek wątpliwości zostaw go w lesie."
+  },
+  {
+    "id": "zolciak-siarkowy",
+    "nameCommon": "Żółciak siarkowy (Kurczak z lasu)",
+    "nameLatin": "Laetiporus sulphureus",
+    "edibility": "warunkowo-jadalny",
+    "description": "Dachówkowato ułożone, siarkowożółte do pomarańczowych, półkoliste owocniki rosnące wprost na pniach drzew, bez trzonu i bez blaszek - spód jest porowaty. Młode są miękkie i soczyste, starsze twardnieją, bledną i nie nadają się do jedzenia.",
+    "habitat": "Na pniach drzew liściastych - wierzb, dębów, czereśni, robinii",
+    "season": "Maj - Wrzesień",
+    "lookalikes": [],
+    "imageUrls": [],
+    "preparationTips": "Zbieraj wyłącznie młode, miękkie brzegi owocnika. Wymaga obróbki termicznej - na surowo i niedogotowany powoduje dolegliwości żołądkowe, a u części osób również po ugotowaniu, więc przy pierwszej próbie zjedz tylko małą porcję. Odradza się okazy z wierzb i robinii (gorzkie, częściej źle tolerowane). Gotowanie: konsystencją przypomina mięso drobiowe, dobry panierowany i smażony."
+  },
+  {
+    "id": "purchawka-chropowata",
+    "nameCommon": "Purchawka chropowata",
+    "nameLatin": "Lycoperdon perlatum",
+    "edibility": "jadalny",
+    "description": "Gruszkowaty, biały owocnik pokryty drobnymi kolcami i brodawkami, które odpadają, zostawiając siateczkowaty wzór. Jadalny wyłącznie póki miąższ w przekroju jest czysto biały i jednolity - z wiekiem żółknie, brązowieje i zamienia się w pył zarodników.",
+    "habitat": "Lasy liściaste i iglaste, na ściółce, często w grupach",
+    "season": "Czerwiec - Listopad",
+    "lookalikes": [
+      "tegoskor-cytrynowy",
+      "purchawka-olbrzymia",
+      "muchomor-sromotnikowy"
+    ],
+    "imageUrls": [],
+    "preparationTips": "ZAWSZE przekrój każdy owocnik wzdłuż: biały, jednolity miąższ = purchawka; ciemny, fioletowoczarny = trujący tęgoskór; widoczny zarys kapelusza i blaszek = młody muchomor, możliwe śmiertelne zatrucie. Czyszczenie: obierz skórkę. Gotowanie: smażona na maśle lub w panierce. Nie nadaje się do suszenia."
+  },
+  {
+    "id": "muchomor-twardawy",
+    "nameCommon": "Muchomor twardawy",
+    "nameLatin": "Amanita excelsa",
+    "edibility": "warunkowo-jadalny",
+    "description": "Kapelusz szarobrązowy z szarawymi, łatwo zmywanymi przez deszcz łatkami, brzeg nieprążkowany. Trzon z pierścieniem i bulwiastą nasadą bez wyraźnego kołnierzyka, miąższ po uszkodzeniu nie czerwienieje. Mało atrakcyjny kulinarnie i łatwy do pomylenia z trującym muchomorem plamistym.",
+    "habitat": "Lasy liściaste i iglaste, na żyznych glebach",
+    "season": "Lipiec - Październik",
+    "lookalikes": [
+      "muchomor-plamisty",
+      "muchomor-czerwieniejacy",
+      "muchomor-sromotnikowy",
+      "muchomor-jadowity"
+    ],
+    "imageUrls": [],
+    "preparationTips": "Ze względu na duże ryzyko pomyłki z trującym muchomorem plamistym i niską wartość kulinarną zbieranie tego gatunku nie jest polecane nawet doświadczonym grzybiarzom."
+  },
+  {
+    "id": "muchomor-cytrynowy",
+    "nameCommon": "Muchomor cytrynowy",
+    "nameLatin": "Amanita citrina",
+    "edibility": "niejadalny",
+    "description": "Kapelusz bladożółty do cytrynowego, rzadziej niemal biały, z płaskimi, szarawymi łatkami. Trzon z pierścieniem i wyraźnie kulistą, obrzeżoną bulwą, miąższ pachnie surowym ziemniakiem. Niejadalny z powodu nieprzyjemnego smaku, ale groźny z innego powodu: bardzo łatwo pomylić go ze śmiertelnie trującym muchomorem sromotnikowym, zwłaszcza gdy deszcz zmyje łatki z kapelusza.",
+    "habitat": "Lasy iglaste i liściaste, na kwaśnych, piaszczystych glebach",
+    "season": "Lipiec - Listopad",
+    "lookalikes": [
+      "muchomor-sromotnikowy",
+      "muchomor-jadowity"
+    ],
+    "imageUrls": []
+  },
+  {
+    "id": "tegoskor-cytrynowy",
+    "nameCommon": "Tęgoskór cytrynowy (Tęgoskór pospolity)",
+    "nameLatin": "Scleroderma citrinum",
+    "edibility": "trujący",
+    "description": "Kulisty, nieforemny owocnik o grubej, twardej, żółtobrązowej skórce pokrytej gruboziarnistymi łuskami. Rozstrzyga przekrojenie: wnętrze jest zwarte i ciemne - fioletowoczarne z białym marmurkowaniem, nie czysto białe jak u jadalnych purchawek. Powoduje dolegliwości żołądkowo-jelitowe.",
+    "habitat": "Lasy liściaste i iglaste, na kwaśnych, piaszczystych glebach i w mchu",
+    "season": "Lipiec - Listopad",
+    "lookalikes": [
+      "purchawka-chropowata",
+      "purchawka-olbrzymia"
+    ],
+    "imageUrls": []
+  },
+  {
+    "id": "maslanka-wiazkowa",
+    "nameCommon": "Maślanka wiązkowa",
+    "nameLatin": "Hypholoma fasciculare",
+    "edibility": "trujący",
+    "description": "Rośnie gęstymi wiązkami na pniakach, podobnie jak opieńka. Kapelusz siarkowożółty z rdzawym środkiem, blaszki od początku zielonkawożółte (nie białawe i kremowe jak u opieńki), z wiekiem oliwkowoczarne. Trzon bez pierścienia, miąższ bardzo gorzki.",
+    "habitat": "Na pniakach i korzeniach drzew liściastych i iglastych, w wiązkach",
+    "season": "Maj - Grudzień",
+    "lookalikes": [
+      "opienka-miodowa",
+      "plomiennica-zimowa",
+      "helmowka-jadowita"
+    ],
+    "imageUrls": []
+  },
+  {
+    "id": "lejkowka-jadowita",
+    "nameCommon": "Lejkówka jadowita",
+    "nameLatin": "Clitocybe rivulosa (dawniej Clitocybe dealbata)",
+    "edibility": "trujący",
+    "description": "Mały, biały do kremowego grzyb o początkowo płaskim, potem lejkowatym kapeluszu, często z koncentrycznymi, wodnistymi strefami. Blaszki białawe, zbiegające po trzonie. Rośnie w trawie i w kręgach - dokładnie tam, gdzie jadalny twardzioszek przydrożny. Zawiera muskarynę: ślinotok, pocenie, zaburzenia widzenia i pracy serca pojawiają się 15-120 minut po zjedzeniu.",
+    "habitat": "Trawniki, łąki, pastwiska i pobocza dróg, często w kręgach",
+    "season": "Lipiec - Listopad",
+    "lookalikes": [
+      "twardzioszek-przydrozny",
+      "pieczarka-lakowa"
+    ],
+    "imageUrls": []
+  },
+  {
+    "id": "zaslonak-rudy",
+    "nameCommon": "Zasłonak rudy",
+    "nameLatin": "Cortinarius orellanus",
+    "edibility": "śmiertelnie-trujący",
+    "description": "Kapelusz rudopomarańczowy do cynamonowego, suchy i delikatnie filcowaty, blaszki rdzawe i rzadkie. U młodych owocników blaszki osłania pajęczynowata zasnówka. Zawiera orellaninę, która nieodwracalnie niszczy nerki, a pierwsze objawy pojawiają się dopiero po 2-17 dniach - gdy nikt nie łączy już choroby ze zjedzonym grzybem.",
+    "habitat": "Lasy liściaste, zwłaszcza pod dębami i brzozami, na kwaśnych glebach",
+    "season": "Lipiec - Październik",
+    "lookalikes": [
+      "opienka-miodowa"
+    ],
+    "imageUrls": []
+  },
+  {
+    "id": "wlokniak-ceglasty",
+    "nameCommon": "Włókniak ceglasty (dawniej strzępiak ceglasty)",
+    "nameLatin": "Inosperma erubescens (dawniej Inocybe erubescens)",
+    "edibility": "trujący",
+    "description": "Kapelusz białawy do kremowego, włóknisto-postrzępiony i promieniście popękany, z wiekiem oraz po uszkodzeniu wyraźnie czerwieniejący. Owocniki wyrastają wiosną i wczesnym latem w lasach liściastych i parkach - w porze zbierania majówek i pieczarek. Zawiera duże ilości muskaryny, a opisane zatrucia bywały śmiertelne.",
+    "habitat": "Lasy liściaste, parki i aleje, zwłaszcza pod bukami i lipami, na glebach wapiennych",
+    "season": "Maj - Lipiec",
+    "lookalikes": [
+      "pieczarka-lakowa"
+    ],
+    "imageUrls": []
   }
 ]
