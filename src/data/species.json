@@ -397,7 +397,9 @@
       "muchomor-czerwony",
       "muchomor-sromotnikowy"
     ],
-    "imageUrls": []
+    "imageUrls": [
+      "/species-images/muchomor-plamisty.jpg"
+    ]
   },
   {
     "id": "pieczarka-karbolowa",
@@ -478,7 +480,9 @@
       "podgrzybek-brunatny",
       "goryczak-zolciowy"
     ],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/podgrzybek-zajaczek.jpg"
+    ],
     "preparationTips": "Czyszczenie: przetrzyj wilgotną szmatką, skórki nie trzeba zdejmować. Suszenie: kroić w plastry ok. 5 mm - aromat słabszy niż u borowika, ale dobry do zup. Mrożenie: krótko podsmaż przed zamrożeniem. Gotowanie: dobry duszony i do sosów; starsze okazy bywają wiotkie i wodniste, warto zbierać młode."
   },
   {
@@ -493,7 +497,9 @@
       "borowik-szatanski",
       "borowik-szlachetny"
     ],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/krasnoborowik-ceglastopory.jpg"
+    ],
     "preparationTips": "UWAGA: na surowo i niedogotowany jest trujący - wymaga obowiązkowego gotowania (minimum 15-20 minut, wodę odlać). Czyszczenie: przetrzyj szmatką, odrzuć rozmiękłe fragmenty. Gotowanie: po obgotowaniu dobry duszony i do sosów, granatowe zabarwienie miąższu znika podczas obróbki. Suszenie: możliwe, ale ze względu na wymóg gotowania bezpieczniej mrozić po obgotowaniu."
   },
   {
@@ -508,7 +514,9 @@
       "kozlarz-czerwony",
       "kozlarz-babka"
     ],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/kozlarz-pomaranczowozolty.jpg"
+    ],
     "preparationTips": "Czyszczenie: z twardszego trzonu zdejmij skórkę. Suszenie: kroić w plastry - po wysuszeniu mocno ciemnieje, co nie psuje smaku. Mrożenie: krótko obgotuj lub podsmaż przed zamrożeniem. Gotowanie: dobry do zup i sosów, miąższ ciemnieje podczas obróbki."
   },
   {
@@ -523,7 +531,9 @@
       "maslak-zwyczajny",
       "maslak-zolty"
     ],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/maslak-ziarnisty.jpg"
+    ],
     "preparationTips": "Czyszczenie: zdejmij śluzowatą skórkę z kapelusza - u części osób wywołuje dolegliwości żołądkowe. Suszenie: możliwe, ale maślaki tracą wtedy sporo aromatu. Mrożenie: obgotuj 5-10 minut przed zamrożeniem. Gotowanie: dobry duszony i marynowany."
   },
   {
@@ -535,7 +545,9 @@
     "habitat": "Lasy liściaste, zwłaszcza pod bukami i dębami, na wilgotnej ściółce, zwykle w dużych grupach",
     "season": "Sierpień - Listopad",
     "lookalikes": [],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/lejkowiec-dety.jpg"
+    ],
     "preparationTips": "Czyszczenie: przekrój wzdłuż i wypłucz - w pustym wnętrzu trąbki zbiera się ściółka i owady. Suszenie: bardzo dobry do suszenia, po zmieleniu daje aromatyczną przyprawę do sosów. Gotowanie: mocny, ciemny smak, dobrze łączy się z mięsem i makaronem - niewielka ilość wystarcza."
   },
   {
@@ -547,7 +559,9 @@
     "habitat": "Trawniki, łąki, pobocza dróg i tereny ruderalne - poza lasem",
     "season": "Maj - Listopad",
     "lookalikes": [],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/czernidlak-kolpakowaty.jpg"
+    ],
     "preparationTips": "Zbieraj wyłącznie młode, białe okazy z jeszcze nierozpłyniętymi blaszkami i przygotuj je tego samego dnia - rozpad postępuje także po zerwaniu, również w lodówce. Czyszczenie: nie moczyć, tylko wytrzeć. Gotowanie: delikatny smak, dobry smażony na maśle i w zupie krem. Nie nadaje się do suszenia."
   },
   {
@@ -562,7 +576,9 @@
       "lejkowka-jadowita",
       "pieczarka-lakowa"
     ],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/twardzioszek-przydrozny.jpg"
+    ],
     "preparationTips": "UWAGA: w tym samym siedlisku i również w kręgach rośnie trująca lejkówka jadowita - sprawdź sprężysty, żylasty trzon i rzadkie blaszki, zanim cokolwiek zabierzesz. Czyszczenie: twarde trzony odetnij, używa się głównie kapeluszy. Suszenie: bardzo dobry, zachowuje mocny, słodkawo-migdałowy aromat. Gotowanie: klasyczny dodatek do sosów i zup."
   },
   {
@@ -578,7 +594,9 @@
       "muchomor-twardawy",
       "muchomor-sromotnikowy"
     ],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/muchomor-czerwieniejacy.jpg"
+    ],
     "preparationTips": "UWAGA: na surowo jest trujący (hemolizyna rozkładana dopiero w wysokiej temperaturze) - wymaga obowiązkowej obróbki termicznej, minimum 15-20 minut gotowania. To gatunek dla osób pewnie odróżniających muchomory: w tym samym siedlisku rośnie trujący muchomor plamisty i śmiertelnie trujący muchomor sromotnikowy. Przy jakiejkolwiek wątpliwości zostaw go w lesie."
   },
   {
@@ -590,7 +608,9 @@
     "habitat": "Na pniach drzew liściastych - wierzb, dębów, czereśni, robinii",
     "season": "Maj - Wrzesień",
     "lookalikes": [],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/zolciak-siarkowy.jpg"
+    ],
     "preparationTips": "Zbieraj wyłącznie młode, miękkie brzegi owocnika. Wymaga obróbki termicznej - na surowo i niedogotowany powoduje dolegliwości żołądkowe, a u części osób również po ugotowaniu, więc przy pierwszej próbie zjedz tylko małą porcję. Odradza się okazy z wierzb i robinii (gorzkie, częściej źle tolerowane). Gotowanie: konsystencją przypomina mięso drobiowe, dobry panierowany i smażony."
   },
   {
@@ -606,7 +626,9 @@
       "purchawka-olbrzymia",
       "muchomor-sromotnikowy"
     ],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/purchawka-chropowata.jpg"
+    ],
     "preparationTips": "ZAWSZE przekrój każdy owocnik wzdłuż: biały, jednolity miąższ = purchawka; ciemny, fioletowoczarny = trujący tęgoskór; widoczny zarys kapelusza i blaszek = młody muchomor, możliwe śmiertelne zatrucie. Czyszczenie: obierz skórkę. Gotowanie: smażona na maśle lub w panierce. Nie nadaje się do suszenia."
   },
   {
@@ -623,7 +645,9 @@
       "muchomor-sromotnikowy",
       "muchomor-jadowity"
     ],
-    "imageUrls": [],
+    "imageUrls": [
+      "/species-images/muchomor-twardawy.jpg"
+    ],
     "preparationTips": "Ze względu na duże ryzyko pomyłki z trującym muchomorem plamistym i niską wartość kulinarną zbieranie tego gatunku nie jest polecane nawet doświadczonym grzybiarzom."
   },
   {
@@ -638,7 +662,9 @@
       "muchomor-sromotnikowy",
       "muchomor-jadowity"
     ],
-    "imageUrls": []
+    "imageUrls": [
+      "/species-images/muchomor-cytrynowy.jpg"
+    ]
   },
   {
     "id": "tegoskor-cytrynowy",
@@ -652,7 +678,9 @@
       "purchawka-chropowata",
       "purchawka-olbrzymia"
     ],
-    "imageUrls": []
+    "imageUrls": [
+      "/species-images/tegoskor-cytrynowy.jpg"
+    ]
   },
   {
     "id": "maslanka-wiazkowa",
@@ -667,7 +695,9 @@
       "plomiennica-zimowa",
       "helmowka-jadowita"
     ],
-    "imageUrls": []
+    "imageUrls": [
+      "/species-images/maslanka-wiazkowa.jpg"
+    ]
   },
   {
     "id": "lejkowka-jadowita",
@@ -681,7 +711,9 @@
       "twardzioszek-przydrozny",
       "pieczarka-lakowa"
     ],
-    "imageUrls": []
+    "imageUrls": [
+      "/species-images/lejkowka-jadowita.jpg"
+    ]
   },
   {
     "id": "zaslonak-rudy",
@@ -694,7 +726,9 @@
     "lookalikes": [
       "opienka-miodowa"
     ],
-    "imageUrls": []
+    "imageUrls": [
+      "/species-images/zaslonak-rudy.jpg"
+    ]
   },
   {
     "id": "wlokniak-ceglasty",
@@ -707,6 +741,8 @@
     "lookalikes": [
       "pieczarka-lakowa"
     ],
-    "imageUrls": []
+    "imageUrls": [
+      "/species-images/wlokniak-ceglasty.jpg"
+    ]
   }
 ]
