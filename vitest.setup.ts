@@ -47,3 +47,12 @@ if (typeof Element !== 'undefined' && !Element.prototype.animate) {
     })
   } as typeof Element.prototype.animate
 }
+
+// fake-indexeddb klonuje zapisane `Blob`-y (zdjęcia znalezisk) do zwykłych obiektów, a natywne
+// `URL.createObjectURL` z Node przyjmuje wyłącznie prawdziwy Blob i rzuca `The "obj" argument must
+// be an instance of Blob`. Wybuchało to losowo (np. JournalView "do uzupełnienia") - tylko gdy
+// `FindingThumbnail` zdążył odczytać zdjęcie z bazy przed końcem testu. Testy, które sprawdzają
+// wywołania, nadal nadpisują to własnym `vi.spyOn`/`vi.stubGlobal`.
+let objectUrlCounter = 0
+URL.createObjectURL = () => `blob:test-${++objectUrlCounter}`
+URL.revokeObjectURL = () => {}

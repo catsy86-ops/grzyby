@@ -798,7 +798,7 @@ błędów w konsoli.
 Next.js):**
 
 Realne, zgodne z obecnym stosem, warte dodania:
-- [ ] **Wirtualizacja list** (TanStack Virtual) w `JournalView.tsx`/`EncyclopediaView.tsx` -
+- [-] **Wirtualizacja list** (TanStack Virtual) w `JournalView.tsx`/`EncyclopediaView.tsx` -
       rozważone i **świadomie odłożone** (2026-09-14): pierwotny problem, który ten punkt miał
       rozwiązać (`useLiveQuery(() => db.findings.toArray())` bez limitu, Faza 9), jest już
       naprawiony - lista w `JournalView.tsx` jest paginowana (`PAGE_SIZE = 100`, "Załaduj
@@ -1094,7 +1094,7 @@ precache z Fazy 4).
 - [x] `sonner.tsx` sprawdzony - już używa tokenów motywu (`--normal-bg` itd.) i własnych ikon per
       typ toastu. `richColors` świadomie pominięte - kolidowałoby z tym spójnym, tokenowym stylem
       (nadpisałoby `--normal-bg` twardymi kolorami per typ).
-- [ ] Decyzja **do wyraźnej zgody użytkownika**: czy dodać `android.permission.INTERNET` do
+- [x] *(zrobione 2026-09-15, commit `b8ba7cd`, Faza 20)* Decyzja **do wyraźnej zgody użytkownika**: czy dodać `android.permission.INTERNET` do
       `android/AndroidManifest.xml` dla natywnego widgetu (dziś celowo bez internetu) - zmienia
       model bezpieczeństwa tego wariantu, nie realizować bez potwierdzenia.
 
