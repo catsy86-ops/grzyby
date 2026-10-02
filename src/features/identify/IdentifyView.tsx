@@ -5,6 +5,7 @@ import { CameraIcon, LightbulbIcon, Loader2Icon, TriangleAlertIcon } from 'lucid
 import { INPUT_SIZE, isModelAvailable, loadDatasetReviewed, type Prediction } from '../../utils/mushroomModel'
 import { identifyMushroomInWorker } from '../../utils/mushroomWorkerClient'
 import { PredictionCard } from './PredictionCard'
+import { CameraMushroomIllustration } from '../../components/icons/illustrations'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
@@ -166,8 +167,9 @@ export function IdentifyView() {
               whileTap={{ scale: 0.92 }}
               className="mx-auto flex flex-col items-center gap-2 rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
+              {/* Motyw aparatu z grzybem w kadrze (Plan D) zamiast gołej ikony lucide. */}
               <span className="flex size-18 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-floating)] ring-4 ring-primary/20">
-                <CameraIcon className="size-8" />
+                <CameraMushroomIllustration className="size-11" />
               </span>
               <span className="text-sm font-medium">Wybierz lub zrób zdjęcie</span>
             </motion.button>

@@ -66,3 +66,46 @@ export function CameraMushroomIllustration({ className }: { className?: string }
     </svg>
   )
 }
+
+// Pinezka mapy z grzybem w środku - brak zapisanych grzybowisk (lista na mapie, SpotManager).
+export function EmptySpotsIllustration({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+      <path
+        d="M32 56s-15-14.2-15-26a15 15 0 0 1 30 0c0 11.8-15 26-15 26Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M24.5 30c0-4.1 3.4-7.5 7.5-7.5s7.5 3.4 7.5 7.5c0 .6-.4 1-1 1h-13c-.6 0-1-.4-1-1Z"
+        fill="var(--color-amber-700)"
+        opacity="0.85"
+      />
+      <path d="M29.5 31h5l-.6 5.5a1.9 1.9 0 0 1-3.8 0L29.5 31Z" fill="currentColor" opacity="0.55" />
+      <circle cx="29" cy="27" r="0.9" fill="var(--color-amber-200)" opacity="0.85" />
+      <circle cx="34" cy="26" r="0.7" fill="var(--color-amber-200)" opacity="0.85" />
+      <path d="M12 58h40" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="2 5" />
+    </svg>
+  )
+}
+
+// Spokojny las z księżycem - centrum powiadomień, gdy nic nie wymaga uwagi.
+export function QuietForestIllustration({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+      <path d="M46 10a7 7 0 1 0 6.5 9.6A5.5 5.5 0 0 1 46 10Z" fill="var(--color-amber-200)" opacity="0.9" />
+      <path d="M20 16 9 36h7l-6 11h20l-6-11h7L20 16Z" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M20 47v6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M40 26 32 41h5l-4 8h14l-4-8h5l-8-15Z" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M40 49v4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <path
+        d="M49 51c0-2.2 1.8-4 4-4s4 1.8 4 4c0 .3-.2.5-.5.5h-7c-.3 0-.5-.2-.5-.5Z"
+        fill="var(--color-amber-700)"
+        opacity="0.85"
+      />
+      <path d="M8 53.5h50" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}

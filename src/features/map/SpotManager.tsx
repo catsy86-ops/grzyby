@@ -15,7 +15,7 @@ import {
   TrashIcon,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { EmptyBasketIllustration } from '../../components/icons/illustrations'
+import { EmptySpotsIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useSpotMushroomOutlook } from '../../hooks/useSpotMushroomOutlook'
@@ -517,7 +517,7 @@ export function SpotManager({
                 transition={{ duration: 0.2 }}
                 className="flex flex-col items-center gap-2 py-6 text-center text-muted-foreground"
               >
-                <EmptyBasketIllustration className="size-12 text-muted-foreground" />
+                <EmptySpotsIllustration className="size-12 text-muted-foreground" />
                 <p className="text-sm">Brak zapisanych grzybowisk.</p>
               </motion.div>
             )}

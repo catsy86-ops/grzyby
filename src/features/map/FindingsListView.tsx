@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import { MapPinnedIcon } from 'lucide-react'
 import { EdibilityBadge, speciesCardClassName } from '../../components/EdibilityBadge'
-import { EmptyBasketIllustration, EmptySearchIllustration } from '../../components/icons/illustrations'
+import { EmptySearchIllustration, EmptySpotsIllustration } from '../../components/icons/illustrations'
 import { Card, CardContent } from '../../components/ui/card'
 import speciesData from '../../data/species.json'
 import type { Finding, Spot, Species } from '../../db/schema'
@@ -50,7 +50,7 @@ export function FindingsListView({ findings, spots, userPosition }: FindingsList
             transition={{ duration: 0.2 }}
             className="flex flex-col items-center gap-2 py-6 text-center text-muted-foreground"
           >
-            <EmptyBasketIllustration className="size-12 text-muted-foreground" />
+            <EmptySpotsIllustration className="size-12 text-muted-foreground" />
             <p className="text-sm">Brak zapisanych grzybowisk.</p>
           </motion.div>
         )}

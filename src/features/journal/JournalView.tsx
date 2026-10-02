@@ -4,7 +4,7 @@ import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { toast } from 'sonner'
 import { ListFilterIcon, MapIcon } from 'lucide-react'
-import { EmptyBasketIllustration } from '../../components/icons/illustrations'
+import { EmptyBasketIllustration, EmptySearchIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import { vibrateNotice, vibrateSuccess } from '../../utils/haptics'
@@ -641,12 +641,12 @@ export function JournalView() {
             transition={{ duration: 0.2 }}
             className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground md:col-span-2 lg:col-span-3"
           >
-            <EmptyBasketIllustration className="size-14 text-muted-foreground" />
             {/* Dwa różne puste stany: zupełnie pusty dziennik (nowy użytkownik - wskazujemy, gdzie
                 dodać pierwsze znalezisko) vs. filtr bez wyników (dane są, tylko odsiane). Wcześniej
                 oba pokazywały "dla wybranego filtru", co myliło, gdy żadnego filtru nie było. */}
             {pageQueryResult?.length === 0 ? (
               <>
+                <EmptyBasketIllustration className="size-14 text-muted-foreground" />
                 <p className="text-sm font-medium text-foreground">Kosz jest jeszcze pusty</p>
                 <p className="max-w-xs text-sm">
                   Dodaj pierwsze znalezisko z mapy - przyciskiem „+” w prawym dolnym rogu.
@@ -657,7 +657,10 @@ export function JournalView() {
                 </Button>
               </>
             ) : (
-              <p className="text-sm">Brak zapisanych znalezisk dla wybranego filtru.</p>
+              <>
+                <EmptySearchIllustration className="size-14 text-muted-foreground" />
+                <p className="text-sm">Brak zapisanych znalezisk dla wybranego filtru.</p>
+              </>
             )}
           </motion.div>
         )}

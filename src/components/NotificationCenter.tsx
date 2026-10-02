@@ -8,6 +8,7 @@ import { exportData } from '../utils/exportImport'
 import type { NotificationAction, NotificationItem } from '../utils/notificationCenter'
 import { Button } from './ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from './ui/drawer'
+import { QuietForestIllustration } from './icons/illustrations'
 
 const ACTION_ICON: Record<NotificationAction, typeof DownloadIcon> = {
   export: DownloadIcon,
@@ -58,7 +59,10 @@ export function NotificationCenter({ open, onOpenChange }: NotificationCenterPro
         </DrawerHeader>
         <div className="flex flex-col gap-2 px-4 pb-4">
           {items.length === 0 && (
-            <p className="py-6 text-center text-sm text-muted-foreground">Nic nie wymaga uwagi.</p>
+            <div className="flex flex-col items-center gap-2 py-6 text-center text-muted-foreground">
+              <QuietForestIllustration className="size-14" />
+              <p className="text-sm">Nic nie wymaga uwagi.</p>
+            </div>
           )}
           {items.map((item) => {
             const Icon = ACTION_ICON[item.action]
