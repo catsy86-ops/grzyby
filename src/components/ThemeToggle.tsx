@@ -16,9 +16,9 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       aria-label={isDark ? 'Przełącz na jasny motyw' : 'Przełącz na ciemny motyw'}
-      className="flex size-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-[color,background-color,transform] hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50 active:translate-y-px"
+      className="flex size-10 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-[color,background-color,transform] hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50 active:translate-y-px"
     >
-      {mounted && (isDark ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />)}
+      {mounted && (isDark ? <SunIcon className="size-5" /> : <MoonIcon className="size-5" />)}
     </button>
   )
 }

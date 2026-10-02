@@ -185,7 +185,7 @@ function NavButton({
       }
     >
       <motion.span
-        className="relative flex h-8 w-14 items-center justify-center rounded-full"
+        className="relative flex h-9 w-16 items-center justify-center rounded-full"
         whileTap={{ scale: 0.85 }}
         transition={{ type: 'spring', stiffness: 400, damping: 15 }}
       >
@@ -196,10 +196,10 @@ function NavButton({
             transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
           />
         )}
-        {/* size-4.5 (18px) - rozmiar ikon nawigacyjnych, patrz konwencja rozmiarów ikon w index.css */}
-        <Icon className={`relative size-4.5 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+        {/* size-5 (20px) - na telefonie większa niż konwencyjne 18px, czytelniejsza w słońcu */}
+        <Icon className={`relative size-5 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
       </motion.span>
-      <span className={`text-[11px] leading-none transition-colors ${isActive ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
+      <span className={`text-xs leading-none transition-colors ${isActive ? 'font-semibold text-primary' : 'font-medium text-muted-foreground'}`}>
         {tab.label}
       </span>
     </button>
@@ -281,7 +281,7 @@ function App() {
           osobne. */}
       <header className="safe-area-top relative flex flex-col overflow-hidden bg-primary text-primary-foreground shadow-[var(--shadow-card)]">
         <AnimatedHeaderBackground />
-        <div className="relative z-10 flex items-center gap-2 px-4 pb-3 pt-4">
+        <div className="relative z-10 flex items-center gap-1 px-3 pb-3 pt-4">
           <ThemeToggle />
           <div className="flex flex-1 items-center justify-center gap-1.5">
             <HeaderLogo />
@@ -303,9 +303,9 @@ function App() {
                 ? `Powiadomienia (${notificationItems.length})`
                 : 'Powiadomienia'
             }
-            className="relative flex size-9 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-[color,background-color,transform] hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50 active:translate-y-px"
+            className="relative flex size-10 shrink-0 items-center justify-center rounded-full text-primary-foreground/80 outline-none transition-[color,background-color,transform] hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-3 focus-visible:ring-primary-foreground/50 active:translate-y-px"
           >
-            <BellIcon className="size-4.5" />
+            <BellIcon className="size-5" />
             {notificationItems.length > 0 && (
               <span
                 aria-hidden="true"
@@ -321,9 +321,9 @@ function App() {
             type="button"
             onClick={() => setShowToolsMenu(true)}
             aria-label="Narzędzia"
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground outline-none ring-1 ring-primary-foreground/25 transition-[background-color,transform] hover:bg-primary-foreground/25 focus-visible:ring-3 focus-visible:ring-primary-foreground/50 active:translate-y-px"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground outline-none ring-1 ring-primary-foreground/25 transition-[background-color,transform] hover:bg-primary-foreground/25 focus-visible:ring-3 focus-visible:ring-primary-foreground/50 active:translate-y-px"
           >
-            <WrenchIcon className="size-4.5" />
+            <WrenchIcon className="size-5" />
           </button>
         </div>
       </header>
@@ -373,7 +373,7 @@ function App() {
           <KeepAliveViews activeTab={activeTab} mapHeaderActionsSlot={headerMapActionsEl} />
         </main>
       </div>
-      <nav className="safe-area-bottom relative z-10 flex border-t border-border bg-card/95 px-1 pt-1 shadow-[var(--shadow-floating)] backdrop-blur supports-[backdrop-filter]:bg-card/80 md:hidden">
+      <nav className="nav-bar safe-area-bottom relative z-10 flex border-t border-border bg-card/95 px-1 pt-1 shadow-[var(--shadow-floating)] backdrop-blur supports-[backdrop-filter]:bg-card/80 md:hidden">
         {TABS.map((tab) => (
           <NavButton
             key={tab.key}

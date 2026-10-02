@@ -410,6 +410,25 @@ body {
   --muted-foreground: oklch(0.85 0 0);
 }
 
+/* Kontrast w słońcu: grubsza baza tekstu, wyraźniejszy pierścień fokusu, a pasek nawigacji bez
+   półprzezroczystości i rozmycia (w pełnym słońcu dawały szarą "mgłę" zamiast czytelnego tła). */
+.forest-mode body {
+  font-weight: 500;
+}
+
+.forest-mode {
+  --ring: var(--primary);
+}
+
+.forest-mode .nav-bar {
+  background-color: var(--card);
+  backdrop-filter: none;
+}
+
+.forest-mode .nav-bar svg {
+  stroke-width: 2.5;
+}
+
 .forest-mode button,
 .forest-mode a[role='button'] {
   min-height: 2.75rem;

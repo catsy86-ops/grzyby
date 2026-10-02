@@ -106,7 +106,7 @@ export function CookingTimer({ open, onOpenChange }: { open: boolean; onOpenChan
                 max={180}
                 value={customMinutes}
                 onChange={(e) => setCustomMinutes(e.target.value)}
-                className="mt-1 block h-8 w-full rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="mt-1 block h-10 w-full rounded-md md:h-8 border border-border bg-background px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               />
             </label>
             <Button

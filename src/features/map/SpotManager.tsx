@@ -239,7 +239,7 @@ function SpotRow({
         <CardContent className="flex items-center gap-2 pt-0">
           <p className="shrink-0 text-xs text-muted-foreground">Sprawdzić ponownie w:</p>
           <Select value={revisitMonth != null ? String(revisitMonth) : NONE_MONTH} onValueChange={handleChangeRevisitMonth}>
-            <SelectTrigger className="h-8 flex-1 text-xs">
+            <SelectTrigger className="flex-1 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
