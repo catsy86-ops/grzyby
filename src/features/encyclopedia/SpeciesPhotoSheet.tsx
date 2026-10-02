@@ -6,12 +6,6 @@ import type { Species } from '../../db/schema'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
 import { getSeasonDotClass, isInSeason } from '../../utils/seasonFilter'
 
-// Wspólny `layoutId` zdjęcia na karcie i w tym arkuszu - motion animuje przejście miniatury w duży
-// nagłówek (i z powrotem przy zamknięciu), zamiast dwóch niezależnych obrazków.
-export function speciesPhotoLayoutId(speciesId: string) {
-  return `species-photo-${speciesId}`
-}
-
 // Duży podgląd gatunku po dotknięciu zdjęcia na karcie Atlasu. Zamknięcie: przycisk X, Escape,
 // dotknięcie tła albo przeciągnięcie arkusza w dół (jak natywny bottom sheet).
 export function SpeciesPhotoSheet({ species, onClose }: { species: Species; onClose: () => void }) {
@@ -55,7 +49,9 @@ export function SpeciesPhotoSheet({ species, onClose }: { species: Species; onCl
       >
         <div className="relative aspect-[4/3] w-full shrink-0 bg-muted">
           <motion.img
-            layoutId={speciesPhotoLayoutId(species.id)}
+            // Ten sam `layoutId` co zdjęcie na karcie w EncyclopediaView - motion animuje przejście
+            // miniatury w duży nagłówek (i z powrotem przy zamknięciu).
+            layoutId={`species-photo-${species.id}`}
             src={species.imageUrls[0]}
             alt={species.nameCommon}
             draggable={false}

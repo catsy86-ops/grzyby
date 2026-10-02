@@ -1,13 +1,5 @@
 import { useEffect, useState } from 'react'
-
-type DayPhase = 'swit' | 'dzien' | 'zmierzch' | 'noc'
-
-export function getDayPhase(hour: number): DayPhase {
-  if (hour >= 5 && hour < 8) return 'swit'
-  if (hour >= 8 && hour < 18) return 'dzien'
-  if (hour >= 18 && hour < 21) return 'zmierzch'
-  return 'noc'
-}
+import { getDayPhase, type DayPhase } from '../utils/dayPhase'
 
 // Delikatna poświata nakładana na zielony nagłówek wg pory dnia - poranna mgła o świcie,
 // ciepłe światło o zmierzchu, chłodniejszy granat nocą. W dzień brak nakładki (czysty kolor marki).

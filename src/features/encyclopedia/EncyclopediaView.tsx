@@ -39,7 +39,7 @@ import { SpeciesShapeIcon } from '../../components/icons/speciesShapeIcons'
 import { ForestAssistant } from './ForestAssistant'
 import { LookalikeQuiz } from './LookalikeQuiz'
 import { SpeciesComparePicker } from './SpeciesComparePicker'
-import { SpeciesPhotoSheet, speciesPhotoLayoutId } from './SpeciesPhotoSheet'
+import { SpeciesPhotoSheet } from './SpeciesPhotoSheet'
 
 const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
   { label: 'Wszystkie', value: 'wszystkie' },
@@ -293,7 +293,7 @@ export function EncyclopediaView() {
                   >
                     {photoSpecies?.id !== s.id && (
                       <motion.img
-                        layoutId={speciesPhotoLayoutId(s.id)}
+                        layoutId={`species-photo-${s.id}`}
                         src={s.imageUrls[0]}
                         alt={s.nameCommon}
                         loading="lazy"

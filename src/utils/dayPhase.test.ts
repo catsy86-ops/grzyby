@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getDayPhase } from './TimeOfDayGlow'
+import { getDayPhase } from './dayPhase'
 
 describe('getDayPhase', () => {
   it('dzieli dobę na świt, dzień, zmierzch i noc', () => {

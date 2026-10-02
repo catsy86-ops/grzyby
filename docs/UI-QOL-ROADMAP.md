@@ -142,3 +142,23 @@ Najwyższy stosunek wartość/koszt, w kolejności:
 Rozszerzenie atlasu (Część 3 pkt 6) jest największą potencjalną wartością dla użytkownika końcowego,
 ale to praca redakcyjna rozłożona w czasie, nie jednorazowa sesja kodowania - warto zacząć
 niezależnie od reszty, po trochu, gdy jest ochota na pisanie treści zamiast kodu.
+
+---
+
+## Plan mobilny (2026-10-02, agent `frontend-expert`) - zrealizowany
+
+- [x] Cele dotyku: przyciski/pola/przełączniki 40px na telefonie (`md:` wraca do 32px), ikony nagłówka 40px.
+- [x] Pasek nawigacji: ikony 20px, podpisy 12px; tryb "W lesie": pełne tło paska, grubsze ikony, font 500, bez tekstury papieru.
+- [x] Toasty na dole nad paskiem nawigacji; wibracje przy usunięciu/cofnięciu znaleziska i starcie/końcu wyprawy.
+- [x] Formularz znaleziska: przewijane pola + przyklejone Anuluj/Zapisz, ostylowany wybór zdjęć; safe-area w stopkach paneli.
+- [x] Fix: 7 list `Select` pokazywało surowe `__none__` zamiast etykiety (brak `items`).
+- [x] "Rozpoznaj": okrągły przycisk aparatu, pasek pewności w kolorze jadalności.
+- [x] Skeleton ładującego się wykresu Dziennika, tło pod zdjęciami Atlasu.
+- [x] Przesuwanie palcem między zakładkami (`hooks/useTabSwipe.ts`, wyłączone na Mapie).
+- [x] Znalezisko "wyrasta" na mapie po zapisie; wybuch zarodników przy pierwszym znalezisku gatunku.
+- [x] Atlas jako kolekcja: licznik X/45 i odznaka "W kolekcji".
+- [x] Poświata nagłówka wg pory dnia (`components/TimeOfDayGlow.tsx`).
+- [x] Podgląd gatunku po dotknięciu zdjęcia (`SpeciesPhotoSheet.tsx`, wspólny layoutId, zamykanie gestem w dół).
+- Świadomie pominięte: przesuwanie kart w Dzienniku (konflikt z gestem zakładek + ryzyko przypadkowego usunięcia),
+  pull-to-refresh (dane odświeżają się same przez `useLiveQuery`), sepia na nieznalezionych gatunkach (kolor
+  zdjęcia jest istotny przy rozpoznawaniu), przełącznik wibracji (brak ekranu Ustawień).
