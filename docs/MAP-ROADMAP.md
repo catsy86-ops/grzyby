@@ -1,5 +1,11 @@
 # Plan rozbudowy mapy - propozycje do wyboru
 
+> **Status (2026-10-02): zrealizowany.** Sprawdzone w kodzie: nawigacja do grzybowiska
+> (`useSpotNavigation`), prognoza per spot (`useSpotMushroomOutlook`), ślad GPS wyprawy
+> (`useTripTrail`), heatmapa (`MapLayers`), warianty podkładu (`data/mapLayers.ts`), udostępnianie
+> (`shareFinding.ts`), throttling GPS w trybie oszczędzania baterii (`useMapGeolocation`).
+> Świadomie pominięte: geofencing (pkt 8), artefakt klasteryzacji (kosmetyka).
+
 Wygenerowane 2026-09-17 przez dwóch równoległych agentów (funkcje/UX grzybiarza w terenie +
 strona techniczna/architektura), na bazie stanu mapy PO sesji poprawek tego samego dnia (patrz
 `ROADMAP.md` i historia commitów - kontrolki Leaflet na tokenach motywu, animacje markerów,

@@ -353,8 +353,10 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
         />
       )}
 
-      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col items-end gap-2">
-        {!isListView && (
+      {/* Komunikaty na dole po lewej, obok kolumny przycisków (right-20 zostawia na nią miejsce) -
+          wcześniej siedziały nad przyciskami po prawej i zasłaniały środek mapy na telefonie. */}
+      {!isListView && (
+        <div className="pointer-events-none absolute bottom-6 left-3 right-20 z-[1000] flex flex-col items-start gap-2 *:pointer-events-auto">
           <MapOverlayMessages
             tileLoadIssue={tileLoadIssue}
             onDismissTileLoadIssue={() => setTileLoadIssue(false)}
@@ -362,7 +364,9 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
             onDismissLocateError={clearLocateError}
             showPinHint={!pinPosition}
           />
-        )}
+        </div>
+      )}
+      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col items-end gap-2">
         <MapToolbar
           isListView={isListView}
           onToggleListView={() => setIsListView((v) => !v)}

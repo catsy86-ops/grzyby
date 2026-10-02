@@ -220,7 +220,7 @@ agentów (audyt reszty UI, plan funkcji mapy, plan techniczny mapy).
       Dziennika (teal-700) i Bazy wiedzy (sky-600, reużyty z pinezek kuratorowanych grzybowisk).
 - [x] **View Transitions API między tabami** (progresywne wzbogacenie - natywny crossfade w
       Chrome/Chromium, AnimatePresence bez zmian jako fallback).
-- [ ] **Plan rozbudowy mapy (funkcje + strona techniczna) spisany, NIEZAIMPLEMENTOWANY** -
+- [x] **Plan rozbudowy mapy (funkcje + strona techniczna) - zrealizowany (status w MAP-ROADMAP.md, 2026-10-02)** -
       dwóch równoległych agentów (UX grzybiarza w terenie / architektura i wydajność) dało
       pełną listę propozycji, zapisaną w **`docs/MAP-ROADMAP.md`**. Do podjęcia po powrocie
       użytkownika - żaden punkt stamtąd nie jest pilny.
