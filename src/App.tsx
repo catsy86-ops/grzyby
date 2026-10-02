@@ -25,6 +25,7 @@ import { useOverdueTripReminder } from './hooks/useOverdueTripReminder'
 import { useStormWarning } from './hooks/useStormWarning'
 import { useTripNotificationCleanup } from './hooks/useTripNotificationCleanup'
 import { useTabSwipe } from './hooks/useTabSwipe'
+import { TimeOfDayGlow } from './components/TimeOfDayGlow'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
@@ -293,6 +294,7 @@ function App() {
           (AnimatedHeaderBackground) i cień, więc czytają się jako jeden spójny pasek, nie dwa
           osobne. */}
       <header className="safe-area-top relative flex flex-col overflow-hidden bg-primary text-primary-foreground shadow-[var(--shadow-card)]">
+        <TimeOfDayGlow />
         <AnimatedHeaderBackground />
         <div className="relative z-10 flex items-center gap-1 px-3 pb-3 pt-4">
           <ThemeToggle />
