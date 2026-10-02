@@ -16,6 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
+import { vibrateSuccess } from '../../utils/haptics'
 
 const LONG_TRIP_NOTIFIED_KEY = 'lysy-long-trip-notified-id'
 
@@ -89,6 +90,7 @@ export function TripManager() {
       notes: '',
       plannedReturnAt,
     })
+    vibrateSuccess()
     setActiveTripId(id)
     setNewTripName('')
     setPlannedReturnHours('')
@@ -99,6 +101,7 @@ export function TripManager() {
   async function handleEndTrip() {
     if (activeTripId == null) return
     await db.trips.update(activeTripId, { endedAt: Date.now() })
+    vibrateSuccess()
     setActiveTripId(null)
 
     // Best-effort: brak GPS/zasięgu w lesie jest normalny przy kończeniu wyprawy, więc

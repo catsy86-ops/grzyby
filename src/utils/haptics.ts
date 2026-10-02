@@ -4,3 +4,8 @@
 export function vibrateSuccess() {
   navigator.vibrate?.(15)
 }
+
+// Dwa krótkie impulsy - odróżnialne bez patrzenia od pojedynczego "zapisano" (usunięcie/cofnięcie).
+export function vibrateNotice() {
+  navigator.vibrate?.([10, 60, 10])
+}

@@ -384,7 +384,13 @@ function App() {
           />
         ))}
       </nav>
-      <Toaster position="top-center" />
+      {/* Na dole, nad paskiem nawigacji - w zasięgu kciuka (np. "Cofnij" po usunięciu znaleziska),
+          zamiast u góry ekranu, gdzie jedną ręką trudno sięgnąć. mobileOffset omija pasek nawigacji
+          i pasek gestów systemu. */}
+      <Toaster
+        position="bottom-center"
+        mobileOffset={{ bottom: 'calc(env(safe-area-inset-bottom) + 76px)' }}
+      />
       <StorageInfoDrawer
         open={activeTool === 'storage-info'}
         onOpenChange={(open) => setActiveTool(open ? 'storage-info' : null)}

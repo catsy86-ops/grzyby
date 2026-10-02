@@ -7,6 +7,7 @@ import { ListFilterIcon, MapIcon } from 'lucide-react'
 import { EmptyBasketIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
+import { vibrateNotice, vibrateSuccess } from '../../utils/haptics'
 import speciesData from '../../data/species.json'
 import type { Finding, Species } from '../../db/schema'
 import { edibilityChartColor } from '../../components/EdibilityBadge'
@@ -293,12 +294,14 @@ export function JournalView() {
       await db.findings.delete(id)
     })
     setConfirmDeleteId(null)
+    vibrateNotice()
     toast.success('Usunięto znalezisko.', {
       duration: 8000,
       action: {
         label: 'Cofnij',
         onClick: () => {
           if (!deletedFinding) return
+          vibrateSuccess()
           void db.transaction('rw', db.findings, db.photos, async () => {
             await db.findings.put(deletedFinding)
             for (const photo of deletedPhotos) await db.photos.put(photo)
