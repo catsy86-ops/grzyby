@@ -3,7 +3,7 @@ import type { MutableRefObject } from 'react'
 import { CircleMarker, Marker, Popup, useMap, useMapEvent } from 'react-leaflet'
 import type L from 'leaflet'
 import { TrashIcon } from 'lucide-react'
-import { createClusterIcon, findingMarkerIconFor } from '../../components/icons/mapMarkerIcons'
+import { createClusterIcon, findingMarkerIconFor, freshFindingMarkerIconFor } from '../../components/icons/mapMarkerIcons'
 import { EdibilityBadge } from '../../components/EdibilityBadge'
 import speciesData from '../../data/species.json'
 import { db } from '../../db/db'
@@ -38,6 +38,9 @@ const speciesById = new Map((speciesData as Species[]).map((s) => [s.id, s]))
 // drogą do usunięcia znaleziska był Dziennik - w terenie, stojąc przy konkretnym miejscu na
 // mapie, to nadmiarowy krok. Logika usuwania (transakcja findings+photos) lustrzana wobec
 // `JournalView.handleDelete` - to samo znalezisko, ten sam wymóg skasowania powiązanego zdjęcia.
+// Znalezisko zapisane przed chwilą dostaje jednorazową animację "wyrastania" na mapie.
+const FRESH_FINDING_MS = 6000
+
 function FindingMarker({
   finding,
   species,
@@ -59,7 +62,14 @@ function FindingMarker({
 
   return (
     <>
-      <Marker position={position} icon={findingMarkerIconFor(species?.edibility)}>
+      <Marker
+        position={position}
+        icon={
+          Date.now() - finding.createdAt < FRESH_FINDING_MS
+            ? freshFindingMarkerIconFor(species?.edibility)
+            : findingMarkerIconFor(species?.edibility)
+        }
+      >
         <Popup>
           <div className="text-sm">
             <p className="font-semibold">{finding.speciesNameGuess ?? 'Nieokreślony gatunek'}</p>

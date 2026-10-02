@@ -155,6 +155,20 @@ export function findingMarkerIconFor(edibility: EdibilityStatus | null | undefin
   return icon
 }
 
+// Wariant dla świeżo zapisanego znaleziska - ta sama pinezka owinięta w `.marker-sprout`
+// (index.css), która jednorazowo "wyrasta" od dołu. Animowany jest wewnętrzny element, nie
+// zewnętrzny divIcon - na tym Leaflet sam ustawia `transform` do pozycjonowania markera.
+const freshFindingIconCache = new Map<string, L.DivIcon>()
+export function freshFindingMarkerIconFor(edibility: EdibilityStatus | null | undefined): L.DivIcon {
+  const key = edibility ?? 'nieznany'
+  const cached = freshFindingIconCache.get(key)
+  if (cached) return cached
+  const base = findingMarkerIconFor(edibility).options
+  const icon = L.divIcon({ ...base, html: `<div class="marker-sprout">${base.html as string}</div>` })
+  freshFindingIconCache.set(key, icon)
+  return icon
+}
+
 // Zachowane dla wywołań bez znanego gatunku (np. przed dociągnięciem danych).
 export const findingMarkerIcon = findingMarkerIconFor(null)
 

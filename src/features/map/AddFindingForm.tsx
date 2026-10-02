@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { Input } from '../../components/ui/input'
+import { SporeBurst } from '../../components/SporeBurst'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { Textarea } from '../../components/ui/textarea'
 
@@ -80,6 +81,7 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
   // `onClose(true)` jest opóźnione o czas animacji (patrz handleSubmit), żeby użytkownik zdążył
   // ją zobaczyć zanim szuflada zacznie się zsuwać.
   const [justSaved, setJustSaved] = useState(false)
+  const [firstOfSpecies, setFirstOfSpecies] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Ostrzeżenie o prawdopodobnym duplikacie (ten sam gatunek+grzybowisko w ostatnich 2 minutach,
   // patrz utils/duplicateFindingCheck.ts) - `null` = nie wykryto lub użytkownik już potwierdził
@@ -138,6 +140,9 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
         })),
       )
 
+      // Pierwsze znalezisko danego gatunku dostaje dodatkową nagrodę (wybuch zarodników + inny toast).
+      const isFirstOfSpecies = species != null && (await db.findings.where('speciesId').equals(species.id).count()) === 0
+
       await db.transaction('rw', db.findings, db.photos, async () => {
         const findingId = await db.findings.add({
           speciesId: species?.id ?? null,
@@ -160,11 +165,18 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
       // Potwierdzenie zapisu - dotąd formularz po prostu cicho się zamykał, bez żadnego
       // sygnału "udało się". Ten sam moment co w Dzienniku (pusty koszyk -> pierwszy wpis),
       // tylko odwrotnie - to jest "nagroda" za dodanie znaleziska w terenie.
-      toast.success(species ? `Dodano do dziennika: ${species.nameCommon}` : 'Dodano znalezisko do dziennika')
+      toast.success(
+        isFirstOfSpecies
+          ? `Nowy gatunek w kolekcji: ${species.nameCommon}!`
+          : species
+            ? `Dodano do dziennika: ${species.nameCommon}`
+            : 'Dodano znalezisko do dziennika',
+      )
+      setFirstOfSpecies(isFirstOfSpecies)
       rememberLastSpeciesId(species?.id ?? null)
       vibrateSuccess()
       setJustSaved(true)
-      setTimeout(() => onClose(true), 380)
+      setTimeout(() => onClose(true), isFirstOfSpecies ? 650 : 380)
       return
     } catch (err) {
       // Natywny DOMException (rzucany przez IndexedDB przy przekroczeniu limitu) NIE dziedziczy
@@ -383,7 +395,8 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
             <Button type="button" variant="ghost" onClick={() => onClose(false)}>
               Anuluj
             </Button>
-            <Button type="submit" disabled={saving || justSaved}>
+            <Button type="submit" disabled={saving || justSaved} className="relative overflow-visible">
+              {justSaved && firstOfSpecies && <SporeBurst />}
               <AnimatePresence mode="wait" initial={false}>
                 {justSaved ? (
                   <motion.span
