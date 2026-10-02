@@ -13,6 +13,55 @@ zakres i priorytet.
 
 ---
 
+## Faza 28 - Plan rozwoju po domknięciu wszystkich roadmap (2026-10-02, "podaj plan rozwoju")
+
+Punkt wyjścia: wszystkie `docs/*-ROADMAP.md` zamknięte, wątek drzewostanów (MAP-ROADMAP.md, "Dodatkowe
+warstwy") zakończony filtrem "Drzewostan" w Dzienniku. Plan ułożony na podstawie stanu kodu z tego dnia, nic
+jeszcze nie zrobione. Kolejność = priorytet.
+
+### Etap 1 - Bezpieczeństwo danych i porządki (małe, warto od razu, jedna zmiana)
+
+- [ ] **`navigator.storage.persist()`** - w `src/` nie ma ani `persist()`, ani `persisted()`, a wszystkie
+      dane (znaleziska, zdjęcia, miejscówki) żyją wyłącznie w IndexedDB. Bez trwałego przechowywania Chrome
+      może je usunąć przy braku miejsca, a Safari w zwykłej karcie (PWA niezainstalowana na ekranie głównym)
+      kasuje dane po 7 dniach nieużywania. Do zrobienia: prośba o trwałość przy pierwszym znalezisku + stan
+      ("chronione / mogą zostać usunięte") w "Pamięć i dane" (`StorageInfoDrawer.tsx`, `utils/storageInfo.ts`).
+- [ ] **README nieaktualny** - nadal twierdzi, że "Model nie jest jeszcze dołączony" (model alpha jest w
+      `public/models/` od Fazy 20), lista funkcji pochodzi z początków projektu.
+- [ ] **E2E w CI** - `.github/workflows/ci.yml` uruchamia tylko lint, vitest i build; 4 scenariusze
+      Playwright (`e2e/`) nie są odpalane automatycznie.
+
+### Etap 2 - Skaner AI na pełny atlas (największa luka produktu, wymaga czasu użytkownika)
+
+- [ ] Stan dziś: model alpha (Faza 20) rozpoznaje **19 z 45 gatunków** atlasu + klasę `inne`
+      (`public/models/metadata.json`), trenowany na 428 zdjęciach, 69,4% trafień na 85 zdjęciach
+      walidacyjnych. 26 gatunków z atlasu (m.in. dodane w Fazie 26) skaner w ogóle nie zna.
+- [ ] Zbiór danych: 80-150 zdjęć/gatunek na licencjach CC, z ręcznym przeglądem
+      (`scripts/prepare-dataset/README.md`).
+- [ ] Trening od nowa na 45 gatunków (`train.py`, Docker - patrz `docs/MODEL-TRAINING.md`).
+- [ ] Raport per gatunek (`train.py` już generuje classification report + confusion matrix) z naciskiem na
+      to, czy trujące gatunki nie są mylone z jadalnymi (np. muchomor sromotnikowy - gąska zielonka). Zdjęcie
+      etykiety "alpha" dopiero po tej ocenie.
+
+### Etap 3 - Funkcje terenowe
+
+- [ ] **"Gdzie szukać"** - wybierasz gatunek, apka wskazuje pobliskie pasujące drzewostany (np. borowik ->
+      buczyny 80+ lat), na bazie BDL i `data/speciesTrees.ts`. **Najpierw rozpoznanie**: czy BDL udostępnia
+      wyszukiwanie wydzieleń po gatunku/wieku drzew (WFS lub podobne) - sam kafelkowy WMS i GetFeatureInfo
+      w punkcie (to, co używamy dziś) do tego nie wystarczą.
+- [ ] **Test terenowy na fizycznym telefonie** - dotąd tylko emulator (Pixel_4a) i przeglądarka na
+      komputerze. Lista do sprawdzenia: GPS i jego dokładność w lesie, zużycie baterii (tryb oszczędzania),
+      praca offline (pobrany obszar mapy, nakładki z cache), kompas, dyktowanie notatek, skaner.
+
+### Etap 4 - Do decyzji użytkownika (nie zaczynać bez jego inicjatywy)
+
+- [ ] **Konto + synchronizacja / tryb rodzinny** - świadomie odłożone 2026-09-19. Dziś dane są na jednym
+      urządzeniu, jedyną kopią jest ręczny eksport JSON. Jeśli wróci: Supabase (darmowy plan) jako dodatek
+      do trybu offline, nie jego zastępstwo.
+- [ ] **Publikacja w Google Play** - dziś Android to wrapper WebView (`android/`) instalowany ręcznie.
+
+---
+
 ## Faza 27 - PWA share_target + audyt wszystkich .md (2026-09-21, "uruchom agentów i przeanalizuj wszystkie pliki md")
 
 - [x] **PWA `share_target`** (ostatni punkt z Fazy 25 wymagający zgody, zgoda uzyskana) - migracja
