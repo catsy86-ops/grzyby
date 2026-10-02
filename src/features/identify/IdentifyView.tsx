@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { CameraIcon, LightbulbIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
-import { CameraMushroomIllustration } from '../../components/icons/illustrations'
 import { INPUT_SIZE, isModelAvailable, loadDatasetReviewed, type Prediction } from '../../utils/mushroomModel'
 import { identifyMushroomInWorker } from '../../utils/mushroomWorkerClient'
 import { PredictionCard } from './PredictionCard'
@@ -152,13 +151,27 @@ export function IdentifyView() {
             onChange={handleFileChange}
             className="hidden"
           />
-          {!imageUrl && (
-            <CameraMushroomIllustration className="mx-auto mb-3 size-16 text-muted-foreground" />
+          {/* Bez zdjęcia: duży, okrągły "spust migawki" - główna akcja ekranu, łatwa do trafienia
+              kciukiem i w rękawiczkach. Po wyborze zdjęcia wraca skromniejszy przycisk zmiany. */}
+          {imageUrl ? (
+            <Button type="button" variant="outline" disabled={loading} onClick={() => fileInputRef.current?.click()}>
+              <CameraIcon />
+              Zmień zdjęcie
+            </Button>
+          ) : (
+            <motion.button
+              type="button"
+              disabled={loading}
+              onClick={() => fileInputRef.current?.click()}
+              whileTap={{ scale: 0.92 }}
+              className="mx-auto flex flex-col items-center gap-2 rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <span className="flex size-18 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-floating)] ring-4 ring-primary/20">
+                <CameraIcon className="size-8" />
+              </span>
+              <span className="text-sm font-medium">Wybierz lub zrób zdjęcie</span>
+            </motion.button>
           )}
-          <Button type="button" variant="outline" disabled={loading} onClick={() => fileInputRef.current?.click()}>
-            <CameraIcon />
-            {imageUrl ? 'Zmień zdjęcie' : 'Wybierz lub zrób zdjęcie'}
-          </Button>
           <p className="mt-2 text-xs text-muted-foreground">lub przeciągnij zdjęcie tutaj</p>
         </div>
 

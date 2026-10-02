@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import { NotebookPenIcon } from 'lucide-react'
 import type { Prediction } from '../../utils/mushroomModel'
-import { EdibilityBadge } from '../../components/EdibilityBadge'
+import { EdibilityBadge, edibilityChartColor } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
@@ -73,7 +73,18 @@ export function PredictionCard({ prediction, rank }: { prediction: Prediction; r
             <p className="font-medium">
               #{rank} {displayName(species, labelRaw)}
             </p>
-            <span className="text-sm text-muted-foreground">{confidencePct}%</span>
+            <span className="text-sm tabular-nums text-muted-foreground">{confidencePct}%</span>
+          </div>
+          {/* Pasek pewności w kolorze jadalności (ta sama skala co pasek na kartach Atlasu) -
+              jednym rzutem oka: jak pewny jest wynik i czy to grzyb bezpieczny czy groźny. */}
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+            <motion.div
+              className="h-full rounded-full"
+              style={{ backgroundColor: species ? edibilityChartColor(species.edibility) : 'var(--muted-foreground)' }}
+              initial={{ width: 0 }}
+              animate={{ width: `${confidencePct}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: isTopMatch ? 0.15 : 0 }}
+            />
           </div>
           {species && (
             <>
