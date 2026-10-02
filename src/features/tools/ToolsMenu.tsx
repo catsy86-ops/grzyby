@@ -1,4 +1,4 @@
-import { BackpackIcon, BatteryIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, MoonIcon, PhoneCallIcon, SparklesIcon, TimerIcon, TreePineIcon } from 'lucide-react'
+import { BackpackIcon, BatteryIcon, BugOffIcon, CheckIcon, HardDriveIcon, HeartPulseIcon, MoonIcon, PhoneCallIcon, SparklesIcon, TimerIcon, TreePineIcon, VibrateIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
@@ -89,6 +89,9 @@ export function ToolsMenu({
   const isWidePanel = useMediaQuery('(min-width: 1024px)')
   const powerSaveMode = useAppStore((s) => s.powerSaveMode)
   const setPowerSaveMode = useAppStore((s) => s.setPowerSaveMode)
+  const hapticsEnabled = useAppStore((s) => s.hapticsEnabled)
+  const setHapticsEnabled = useAppStore((s) => s.setHapticsEnabled)
+  const canVibrate = typeof navigator !== 'undefined' && 'vibrate' in navigator
   const batteryStatus = useBatteryStatus()
   const powerSaveActive = isPowerSaveActive(powerSaveMode, batteryStatus)
 
@@ -141,6 +144,27 @@ export function ToolsMenu({
             </span>
             {isDark && <CheckIcon className="size-4 shrink-0 text-primary" />}
           </button>
+          {/* Tylko tam, gdzie przeglądarka w ogóle umie wibrować (Android) - na iOS/desktopie
+              przełącznik niczego by nie zmieniał. Alarm timera kuchennego celowo go ignoruje. */}
+          {canVibrate && (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={hapticsEnabled}
+              aria-label="Wibracje"
+              onClick={() => setHapticsEnabled(!hapticsEnabled)}
+              className={`flex items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 ${hapticsEnabled ? 'bg-primary/5' : ''}`}
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <VibrateIcon className="size-4.5" />
+              </span>
+              <span className="flex-1">
+                <span className="block font-medium">Wibracje</span>
+                <span className="block text-xs text-muted-foreground">Krótkie potwierdzenie zapisu i usunięcia</span>
+              </span>
+              {hapticsEnabled && <CheckIcon className="size-4 shrink-0 text-primary" />}
+            </button>
+          )}
         </div>
         <div className="mx-4 my-1 border-t border-border" />
         <div className="flex flex-col gap-0.5 px-4 pb-2" role="radiogroup" aria-label="Oszczędzanie baterii">

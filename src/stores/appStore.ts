@@ -22,6 +22,8 @@ interface AppState {
   setNavigationTargetSpotId: (id: number | null) => void
   forestMode: boolean
   setForestMode: (enabled: boolean) => void
+  hapticsEnabled: boolean
+  setHapticsEnabled: (enabled: boolean) => void
   mapLayerId: MapLayerId
   setMapLayerId: (id: MapLayerId) => void
   powerSaveMode: PowerSaveMode
@@ -85,6 +87,8 @@ export const useAppStore = create<AppState>()(
       setNavigationTargetSpotId: (id) => set({ navigationTargetSpotId: id }),
       forestMode: false,
       setForestMode: (enabled) => set({ forestMode: enabled }),
+      hapticsEnabled: true,
+      setHapticsEnabled: (enabled) => set({ hapticsEnabled: enabled }),
       mapLayerId: DEFAULT_MAP_LAYER_ID,
       setMapLayerId: (id) => set({ mapLayerId: id }),
       powerSaveMode: 'auto',
@@ -111,6 +115,7 @@ export const useAppStore = create<AppState>()(
         returnPoint: state.returnPoint,
         navigationTargetSpotId: state.navigationTargetSpotId,
         forestMode: state.forestMode,
+        hapticsEnabled: state.hapticsEnabled,
         mapLayerId: state.mapLayerId,
         powerSaveMode: state.powerSaveMode,
         emergencyInfo: state.emergencyInfo,
