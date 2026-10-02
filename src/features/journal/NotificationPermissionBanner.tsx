@@ -32,13 +32,13 @@ export function NotificationPermissionBanner() {
   // spokojny w tonie i bez przycisku, który i tak by nie zadziałał.
   if (permission === 'denied') {
     return (
-      <Alert className="flex items-center justify-between gap-2">
+      <Alert className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <AlertDescription className="text-current">
           Powiadomienia są zablokowane, więc nie dostaniesz ostrzeżenia o burzy, przypomnienia
           o kleszczach ani o przeciągającej się wyprawie. Możesz to zmienić w ustawieniach witryny
           w przeglądarce.
         </AlertDescription>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 gap-2 self-end sm:self-auto">
           <Button size="sm" variant="ghost" onClick={handleDismiss}>
             Rozumiem
           </Button>
@@ -48,12 +48,12 @@ export function NotificationPermissionBanner() {
   }
 
   return (
-    <Alert className="flex items-center justify-between gap-2">
+    <Alert className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <AlertDescription className="text-current">
         Włącz powiadomienia, aby dostać ostrzeżenie o burzy, przypomnienie o kleszczach i o tym,
         że wyprawa trwa bardzo długo.
       </AlertDescription>
-      <div className="flex shrink-0 gap-2">
+      <div className="flex shrink-0 gap-2 self-end sm:self-auto">
         <Button size="sm" onClick={handleEnable}>
           Włącz
         </Button>

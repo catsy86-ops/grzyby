@@ -32,14 +32,16 @@ export function MapOverlayMessages({
           exit={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.18 }}
         >
-          <Alert variant="destructive-soft" className="max-w-56 shadow">
+          {/* bg-card zamiast półprzezroczystego bg-destructive/10 wariantu - na tle kafli mapy
+              czerwony tekst na przezroczystym tle zlewał się z ulicami i był nieczytelny. */}
+          <Alert variant="destructive-soft" className="max-w-64 bg-card shadow-md">
             <AlertDescription className="text-current">
               Brak zapisanych kafelków mapy dla tego obszaru offline. Pobierz obszar będąc online.
             </AlertDescription>
             <Button
               variant="ghost"
               size="sm"
-              className="mt-1 h-auto p-0 text-xs underline"
+              className="-mb-2 min-h-11 px-0 text-xs underline"
               onClick={onDismissTileLoadIssue}
             >
               Rozumiem
@@ -55,12 +57,12 @@ export function MapOverlayMessages({
           exit={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.18 }}
         >
-          <Alert variant="destructive-soft" className="max-w-56 shadow">
+          <Alert variant="destructive-soft" className="max-w-64 bg-card shadow-md">
             <AlertDescription className="text-current">{locateError}</AlertDescription>
             <Button
               variant="ghost"
               size="sm"
-              className="mt-1 h-auto p-0 text-xs underline"
+              className="-mb-2 min-h-11 px-0 text-xs underline"
               onClick={onDismissLocateError}
             >
               Rozumiem

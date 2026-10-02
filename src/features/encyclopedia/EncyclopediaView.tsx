@@ -103,9 +103,12 @@ export function EncyclopediaView() {
     // szerokości telefonu nawet na desktopie, więc treść pływała wąską kolumną w pustej
     // przestrzeni. Lista kart niżej dostaje odpowiadającą siatkę 2/3 kolumn.
     <div className="mx-auto flex h-full max-w-2xl flex-col gap-4 overflow-y-auto p-4 md:max-w-4xl lg:max-w-6xl">
-      <div className="flex items-center justify-between gap-2">
+      {/* Na telefonie tytuł nad przyciskami (nie obok) - w jednym rzędzie trzy przyciski
+          wypychały tytuł do trzech linii, a "Leśny asystent" wystawał poza ekran. Rząd
+          przycisków przewija się poziomo jako zabezpieczenie na bardzo wąskich ekranach. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
         <h1 className="text-heading-md font-semibold tracking-tight">Baza wiedzy o gatunkach</h1>
-        <div className="flex shrink-0 gap-2">
+        <div className="-mx-4 flex shrink-0 gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setCompareOpen(true)}>
             <GitCompareIcon className="size-4" />
             Porównaj
@@ -139,20 +142,23 @@ export function EncyclopediaView() {
           padding odtwarza szerokość kontenera (który ma własny `p-4`), a tło + blur sprawiają,
           że treść listy znika POD paskiem zamiast prześwitywać zza niego przy scrollu. */}
       <div className="sticky top-0 z-10 -mx-4 flex flex-col gap-2 bg-background/95 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-        <div className="flex gap-2">
+        {/* flex-wrap: na telefonie pole wyszukiwania dostaje cały rząd (basis-full), a dwa
+            przełączniki dzielą rząd pod nim - wcześniej obok nich pole kurczyło się do kilku
+            znaków i placeholder był ucięty. */}
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
           <Input
             type="search"
             placeholder="Szukaj gatunku..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1"
+            className="basis-full sm:basis-auto sm:flex-1"
           />
           <Toggle
             variant="outline"
             pressed={seasonOnly}
             onPressedChange={setSeasonOnly}
             aria-label="Pokaż tylko gatunki w sezonie teraz"
-            className="shrink-0 gap-1.5"
+            className="flex-1 gap-1.5 sm:flex-none"
           >
             <LeafIcon />
             W sezonie
@@ -162,7 +168,7 @@ export function EncyclopediaView() {
             pressed={protectedOnly}
             onPressedChange={setProtectedOnly}
             aria-label="Pokaż tylko gatunki chronione"
-            className="shrink-0 gap-1.5"
+            className="flex-1 gap-1.5 sm:flex-none"
           >
             <ScaleIcon />
             Chronione
@@ -273,7 +279,7 @@ export function EncyclopediaView() {
                   karty, ale odróżnialna od wagi przycisków (font-semibold) w tym samym widoku. */}
               <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                 <p className="font-[550]">{s.nameCommon}</p>
-                <div className="flex shrink-0 gap-1.5">
+                <div className="flex flex-wrap gap-1.5">
                   {s.legalProtection && (
                     <Badge
                       variant="secondary"
@@ -320,7 +326,7 @@ export function EncyclopediaView() {
                   przescrollowanie ściany tekstu na każdej karcie. */}
               <Collapsible defaultOpen={false}>
                 <CollapsibleTrigger
-                  className="group/details mt-2 flex items-center gap-1 text-xs font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="group/details mt-1 -mb-2 flex min-h-11 items-center gap-1 rounded-md text-xs font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   Szczegóły
                   <ChevronDownIcon className="size-3.5 transition-transform group-data-[panel-open]/details:rotate-180" />
