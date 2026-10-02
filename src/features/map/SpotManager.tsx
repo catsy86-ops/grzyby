@@ -238,7 +238,11 @@ function SpotRow({
       {revisitPickerOpen && (
         <CardContent className="flex items-center gap-2 pt-0">
           <p className="shrink-0 text-xs text-muted-foreground">Sprawdzić ponownie w:</p>
-          <Select value={revisitMonth != null ? String(revisitMonth) : NONE_MONTH} onValueChange={handleChangeRevisitMonth}>
+          <Select
+            value={revisitMonth != null ? String(revisitMonth) : NONE_MONTH}
+            items={[{ value: NONE_MONTH, label: '-- brak flagi --' }, ...MONTH_NAMES.map((label, index) => ({ value: String(index + 1), label }))]}
+            onValueChange={handleChangeRevisitMonth}
+          >
             <SelectTrigger className="flex-1 text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -294,6 +298,7 @@ function SpotRow({
           </DialogDescription>
           <Select
             value={mergeTargetId || NONE_MERGE_TARGET}
+            items={[{ value: NONE_MERGE_TARGET, label: '-- wybierz grzybowisko --' }, ...otherSpots.map((s) => ({ value: String(s.id), label: s.name }))]}
             onValueChange={(value) => setMergeTargetId(value == null || value === NONE_MERGE_TARGET ? '' : value)}
           >
             <SelectTrigger className="w-full">

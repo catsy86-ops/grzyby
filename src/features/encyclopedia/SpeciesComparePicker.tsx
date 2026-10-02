@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 const species = [...ALL_SPECIES].sort((a, b) => a.nameCommon.localeCompare(b.nameCommon, 'pl'))
 const NONE = '__none__'
+// `items` dla Select - patrz komentarz w AddFindingForm.tsx (bez nich zamknięte pole pokazuje "__none__").
+const items = [{ value: NONE, label: '-- wybierz --' }, ...species.map((s) => ({ value: s.id, label: `${s.nameCommon} (${s.nameLatin})` }))]
 
 interface SpeciesComparePickerProps {
   open: boolean
@@ -48,6 +50,7 @@ export function SpeciesComparePicker({ open, onOpenChange }: SpeciesComparePicke
               Pierwszy gatunek
               <Select
                 value={speciesAId || NONE}
+                items={items}
                 onValueChange={(value) => setSpeciesAId(value == null || value === NONE ? '' : value)}
               >
                 <SelectTrigger className="mt-1 w-full">
@@ -69,6 +72,7 @@ export function SpeciesComparePicker({ open, onOpenChange }: SpeciesComparePicke
               Drugi gatunek
               <Select
                 value={speciesBId || NONE}
+                items={items}
                 onValueChange={(value) => setSpeciesBId(value == null || value === NONE ? '' : value)}
               >
                 <SelectTrigger className="mt-1 w-full">

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { toast } from 'sonner'
-import { CheckIcon, MicIcon, MinusIcon, PlusIcon } from 'lucide-react'
+import { CameraIcon, CheckIcon, MicIcon, MinusIcon, PlusIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { db } from '../../db/db'
 import speciesData from '../../data/species.json'
@@ -26,6 +26,9 @@ import { Textarea } from '../../components/ui/textarea'
 
 const NONE_SPECIES = '__none__'
 const NONE_SPOT = '__none__'
+// `items` dla Select - bez nich Base UI pokazuje w zamkniętym polu surową wartość (np. "__none__")
+// zamiast etykiety, dopóki lista nie zostanie choć raz otwarta.
+const SPECIES_ITEMS = [{ value: NONE_SPECIES, label: '-- nieokreślony --' }, ...(speciesData as Species[]).map((s) => ({ value: s.id, label: `${s.nameCommon} (${s.nameLatin})` }))]
 
 interface AddFindingFormProps {
   initialPosition: [number, number] | null
@@ -195,11 +198,15 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
           )}
         </DrawerHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 pt-2">
+        {/* Pola przewijają się, a Anuluj/Zapisz zostają przyklejone do dołu panelu - przy kilku
+            zdjęciach i ostrzeżeniach przycisk zapisu nie ucieka poza ekran telefonu. */}
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 pt-2">
           <label className="block text-sm">
             Gatunek (opcjonalnie)
             <Select
               value={speciesId || NONE_SPECIES}
+              items={SPECIES_ITEMS}
               onValueChange={(value) => {
                 setSpeciesId(value == null || value === NONE_SPECIES ? '' : value)
                 setDuplicateWarning(null)
@@ -225,6 +232,7 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
               Grzybowisko (opcjonalnie)
               <Select
                 value={spotId === '' ? NONE_SPOT : String(spotId)}
+                items={[{ value: NONE_SPOT, label: '-- brak --' }, ...spots.map((s) => ({ value: String(s.id), label: s.name }))]}
                 onValueChange={(value) => {
                   setSpotId(value == null || value === NONE_SPOT ? '' : Number(value))
                   setDuplicateWarning(null)
@@ -246,15 +254,22 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
             </label>
           )}
 
+          {/* Natywne pole pliku ("Choose Files / No file chosen") ukryte - po angielsku i nie do
+              ostylowania; cały label działa jako duży przycisk aparatu. */}
           <label className="block text-sm">
             Zdjęcia
-            <Input
+            <span className="mt-1 flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 px-3 text-sm font-medium transition-colors hover:bg-muted has-focus-visible:ring-3 has-focus-visible:ring-ring/50">
+              <CameraIcon className="size-4" />
+              {photos.length === 0 ? 'Zrób lub wybierz zdjęcie' : photos.length === 1 ? 'Wybrano 1 zdjęcie - zmień' : 'Zmień zdjęcia'}
+            </span>
+            <input
               type="file"
               accept="image/*"
               capture="environment"
               multiple
+              aria-label="Zdjęcia"
               onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
-              className="mt-1 h-auto"
+              className="sr-only"
             />
             {photos.length > 1 && (
               <p className="mt-1 text-xs text-muted-foreground">Wybrano {photos.length} zdjęć.</p>
@@ -363,7 +378,8 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
             </Alert>
           )}
 
-          <div className="flex justify-end gap-2 pt-1">
+          </div>
+          <div className="flex shrink-0 justify-end gap-2 border-t border-border/60 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
             <Button type="button" variant="ghost" onClick={() => onClose(false)}>
               Anuluj
             </Button>

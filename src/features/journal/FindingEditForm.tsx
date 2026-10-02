@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../../components/ui/textarea'
 
 const NONE_SPECIES = '__none__'
+// `items` - patrz ten sam komentarz w AddFindingForm.tsx.
+const SPECIES_ITEMS = [{ value: NONE_SPECIES, label: '-- nieokreślony --' }, ...(speciesData as Species[]).map((s) => ({ value: s.id, label: `${s.nameCommon} (${s.nameLatin})` }))]
 
 export interface FindingEditValues {
   speciesId: string | null
@@ -128,6 +130,7 @@ export function FindingEditForm({ finding, onCancel, onSave }: FindingEditFormPr
           Gatunek
           <Select
             value={editSpeciesId || NONE_SPECIES}
+            items={SPECIES_ITEMS}
             onValueChange={(value) => setEditSpeciesId(value == null || value === NONE_SPECIES ? '' : value)}
           >
             <SelectTrigger className="mt-1 w-full">
