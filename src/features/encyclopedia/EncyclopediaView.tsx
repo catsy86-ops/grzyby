@@ -257,7 +257,7 @@ export function EncyclopediaView() {
             <CardContent>
             <motion.div whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
               {s.imageUrls[0] && (
-                <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg">
+                <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-muted">
                   <img src={s.imageUrls[0]} alt={s.nameCommon} loading="lazy" className="size-full object-cover" />
                   {/* Winieta u dołu zdjęcia, tonowana kolorem jadalności (ta sama skala co lewy
                       pasek karty) - łączy fotografię z systemem kolorów bezpieczeństwa zamiast

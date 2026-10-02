@@ -574,9 +574,9 @@ export function JournalView() {
       )}
 
       {/* recharts dociąga się osobnym chunkiem (patrz komentarz przy lazyRetry(JournalBarChart)
-          wyżej) - `fallback={null}` zamiast skeletonu, wykresy po prostu pojawiają się chwilę po
-          reszcie strony. */}
-      <Suspense fallback={null}>
+          wyżej) - skeleton o wysokości wykresu (h-56, jak w JournalBarChart), ale tylko gdy jakiś
+          wykres faktycznie się pojawi - inaczej lista pod spodem "skakałaby" w dół po załadowaniu. */}
+      <Suspense fallback={chartData.length > 0 ? <Skeleton className="h-56 w-full rounded-xl" /> : null}>
         {/* Kolor słupka wg jadalności gatunku (skala z EdibilityBadge, patrz `chartData`) zamiast
             płaskiego zielonego - wykres pokazuje na pierwszy rzut oka nie tylko liczbę zbiorów, ale
             i to, czy sezon był "bezpieczny" (przewaga zielonych słupków) czy nie. */}
