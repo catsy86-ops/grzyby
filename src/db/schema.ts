@@ -55,9 +55,11 @@ export interface Finding {
   reactionNotes?: string
   // Drzewostan w miejscu znaleziska z Banku Danych o Lasach - dopisywany w tle po zapisie, tylko
   // przy włączonej nakładce "Drzewostany" (świadoma zgoda na wysyłanie współrzędnych do BDL),
-  // patrz utils/findingForestStand.ts. Brak pola = nie pobrano (offline, poza lasem, nakładka
-  // wyłączona). Usuwany przy zmianie lokalizacji znaleziska w edycji.
-  forestStand?: FindingForestStand
+  // patrz utils/findingForestStand.ts. `undefined` = jeszcze nie sprawdzono (offline, nakładka
+  // wyłączona, znalezisko sprzed tej funkcji), `null` = sprawdzono, ale w tym miejscu nie ma
+  // wydzielenia leśnego - żeby "Uzupełnij drzewostan" nie odpytywało w kółko punktów poza lasem.
+  // Kasowany (`undefined`) przy zmianie lokalizacji znaleziska w edycji.
+  forestStand?: FindingForestStand | null
 }
 
 export interface FindingForestStand {

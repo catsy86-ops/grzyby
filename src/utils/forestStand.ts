@@ -1,3 +1,4 @@
+import { pluralPl } from './pluralPl'
 import { getMapOverlays } from '../data/mapLayers'
 import { normalizeTreeCode, siteTypeName, TREE_NAMES, type TreeCode } from '../data/forestCodes'
 
@@ -90,10 +91,7 @@ export async function fetchForestStand(lat: number, lon: number, signal?: AbortS
   return parseForestStand(await response.text())
 }
 
-// "1 rok", "23 lata", "12 lat", "136 lat" - polska odmiana liczebnika.
+// "1 rok", "23 lata", "12 lat", "136 lat".
 export function formatStandAge(age: number): string {
-  if (age === 1) return '1 rok'
-  const lastDigit = age % 10
-  const lastTwo = age % 100
-  return lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14) ? `${age} lata` : `${age} lat`
+  return `${age} ${pluralPl(age, 'rok', 'lata', 'lat')}`
 }

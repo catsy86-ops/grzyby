@@ -72,6 +72,7 @@ import { FindingCard } from './FindingCard'
 import { FindingEditForm, type FindingEditValues } from './FindingEditForm'
 import { JournalExportMenu } from './JournalExportMenu'
 import { SeasonSummary } from './SeasonSummary'
+import { ForestStandBackfill } from './ForestStandBackfill'
 import { TripManager } from './TripManager'
 import { TripsHistory } from './TripsHistory'
 import { formatDateTime } from '../../utils/formatDate'
@@ -546,6 +547,7 @@ export function JournalView() {
       </div>
 
       <SeasonSummary />
+      <ForestStandBackfill />
       <TripManager />
       <TripsHistory selectedTripId={tripFilter} onSelectTrip={setTripFilter} />
 

@@ -145,3 +145,6 @@ techniczny z realnym wpływem na doświadczenie w terenie (bateria).
   Karta w Dzienniku: "pod bukiem, 136 lat · las świeży"; zmiana lokalizacji kasuje stary opis. Podsumowanie
   sezonu: "Borowik szlachetny znajdujesz najczęściej pod bukiem (4 z 5)" (`utils/treeInsight.ts`, min. 3
   znaleziska z drzewostanem, drzewo w >= 50% przypadków).
+- [x] **Uzupełnij drzewostan** dla starszych znalezisk (`ForestStandBackfill.tsx` w Dzienniku, tylko przy włączonej
+  nakładce Drzewostany): zapytania po kolei, z postępem i "Przerwij". `forestStand: null` = sprawdzono, to nie las
+  (nie odpytujemy ponownie); błąd sieci zostawia `undefined` do ponowienia.
