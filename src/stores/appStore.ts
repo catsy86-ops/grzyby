@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { db } from '../db/db'
-import { DEFAULT_MAP_LAYER_ID, type MapLayerId } from '../data/mapLayers'
+import { DEFAULT_MAP_LAYER_ID, type MapLayerId, type MapOverlayId } from '../data/mapLayers'
 
 export type ActiveTab = 'mapa' | 'rozpoznaj' | 'dziennik' | 'baza-wiedzy'
 
@@ -26,6 +26,8 @@ interface AppState {
   setHapticsEnabled: (enabled: boolean) => void
   mapLayerId: MapLayerId
   setMapLayerId: (id: MapLayerId) => void
+  mapOverlayIds: MapOverlayId[]
+  toggleMapOverlay: (id: MapOverlayId) => void
   powerSaveMode: PowerSaveMode
   setPowerSaveMode: (mode: PowerSaveMode) => void
   emergencyInfo: EmergencyInfo
@@ -91,6 +93,13 @@ export const useAppStore = create<AppState>()(
       setHapticsEnabled: (enabled) => set({ hapticsEnabled: enabled }),
       mapLayerId: DEFAULT_MAP_LAYER_ID,
       setMapLayerId: (id) => set({ mapLayerId: id }),
+      mapOverlayIds: [],
+      toggleMapOverlay: (id) =>
+        set((state) => ({
+          mapOverlayIds: state.mapOverlayIds.includes(id)
+            ? state.mapOverlayIds.filter((overlayId) => overlayId !== id)
+            : [...state.mapOverlayIds, id],
+        })),
       powerSaveMode: 'auto',
       setPowerSaveMode: (mode) => set({ powerSaveMode: mode }),
       emergencyInfo: { bloodType: '', allergies: '', contactName: '', contactPhone: '' },
@@ -117,6 +126,7 @@ export const useAppStore = create<AppState>()(
         forestMode: state.forestMode,
         hapticsEnabled: state.hapticsEnabled,
         mapLayerId: state.mapLayerId,
+        mapOverlayIds: state.mapOverlayIds,
         powerSaveMode: state.powerSaveMode,
         emergencyInfo: state.emergencyInfo,
         ambientAudioVolume: state.ambientAudioVolume,

@@ -118,3 +118,16 @@ Najwyższy stosunek wartość/koszt: **funkcja 1 (nawigacja do grzybowiska)** i 
 (prognoza per spot)** z Części 1 - małe, zero nowych zależności, bezpośrednio reużywają już
 istniejący kod. Z Części 2 warto **najpierw** ustalić throttling GPS (pkt 1) - jedyny punkt
 techniczny z realnym wpływem na doświadczenie w terenie (bateria).
+
+---
+
+## Dodatkowe warstwy (2026-10-02)
+
+- [x] Podkład **Satelitarna** - ortofotomapa GUGiK (WMS `PZGIK/ORTO/WMS/StandardResolution`, EPSG:3857 tylko
+  w WMS 1.1.1; `HighResolution` zwraca w 3857 puste kafle). Serwer losowo daje 404 (~40%), stąd
+  `utils/wmsTileRetry.ts` (do 3 ponowień). GUGiK zabrania harvestingu, więc "Pobierz obszar offline" przy tym
+  podkładzie pobiera mapę standardową (`getOfflineMapLayer`).
+- [x] Nakładki (wiele naraz, `appStore.mapOverlayIds`): **Drzewostany** (Bank Danych o Lasach - gatunek i wiek
+  drzew w wydzieleniu, od z14), **Obszary chronione** (GDOŚ: rezerwaty + parki narodowe), **Szlaki piesze**
+  (Waymarked Trails). Render wspólny w `features/map/MapTileLayers.tsx`.
+- Nakładki/ortofotomapa nie są cache'owane przez Service Workera (tylko OSM/OpenTopoMap) - działają wyłącznie online.

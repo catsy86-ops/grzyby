@@ -54,3 +54,22 @@ describe('useAppStore - mapLayerId', () => {
     expect(useAppStore.getState().mapLayerId).toBe('topo')
   })
 })
+
+describe('useAppStore - mapOverlayIds', () => {
+  afterEach(() => {
+    useAppStore.setState({ mapOverlayIds: [] })
+  })
+
+  it('domyślnie bez nakładek', () => {
+    expect(useAppStore.getState().mapOverlayIds).toEqual([])
+  })
+
+  it('włącza i wyłącza nakładki niezależnie od siebie', () => {
+    const { toggleMapOverlay } = useAppStore.getState()
+    toggleMapOverlay('forest')
+    toggleMapOverlay('trails')
+    expect(useAppStore.getState().mapOverlayIds).toEqual(['forest', 'trails'])
+    toggleMapOverlay('forest')
+    expect(useAppStore.getState().mapOverlayIds).toEqual(['trails'])
+  })
+})

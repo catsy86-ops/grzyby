@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Circle, MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet'
+import { Circle, MapContainer, Marker, Polyline, Popup } from 'react-leaflet'
 import { useLiveQuery } from 'dexie-react-hooks'
 import L from 'leaflet'
 import {
@@ -12,7 +12,7 @@ import {
 } from '../../components/icons/mapMarkerIcons'
 import { db } from '../../db/db'
 import { szczecinSpots } from '../../data/szczecinSpots'
-import { getMapLayer } from '../../data/mapLayers'
+import { getMapLayer, getMapOverlays, getOfflineMapLayer } from '../../data/mapLayers'
 import speciesData from '../../data/species.json'
 import type { Species, Spot } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
@@ -32,6 +32,7 @@ import { OfflineAreaDownload } from './OfflineAreaDownload'
 import { SpotManager } from './SpotManager'
 import { SzczecinSpotsPanel } from './SzczecinSpotsPanel'
 import { FindingMarkers, FindingsHeatmap, MapClickHandler, MapInstanceCapture, RecenterOnLocate } from './MapLayers'
+import { MapTileLayer } from './MapTileLayers'
 import { MapStatusBadges } from './MapStatusBadges'
 import { MapOverlayMessages } from './MapOverlayMessages'
 import { MapToolbar } from './MapToolbar'
@@ -193,6 +194,9 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
   const mapLayerId = useAppStore((s) => s.mapLayerId)
   const setMapLayerId = useAppStore((s) => s.setMapLayerId)
   const activeMapLayer = getMapLayer(mapLayerId)
+  const mapOverlayIds = useAppStore((s) => s.mapOverlayIds)
+  const toggleMapOverlay = useAppStore((s) => s.toggleMapOverlay)
+  const activeMapOverlays = getMapOverlays(mapOverlayIds)
 
   const findingPosition = pinPosition ?? userPosition
 
@@ -230,13 +234,10 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
           maxBoundsViscosity={1}
           minZoom={REGION_MIN_ZOOM}
         >
-          <TileLayer
-            key={activeMapLayer.id}
-            attribution={activeMapLayer.attribution}
-            url={activeMapLayer.urlTemplate}
-            maxZoom={activeMapLayer.maxZoom}
-            eventHandlers={tileLayerEventHandlers}
-          />
+          <MapTileLayer key={activeMapLayer.id} def={activeMapLayer} eventHandlers={tileLayerEventHandlers} />
+          {activeMapOverlays.map((overlay) => (
+            <MapTileLayer key={overlay.id} def={overlay} />
+          ))}
           <RecenterOnLocate
             position={recenterTarget && isInsideRegion(recenterTarget) ? recenterTarget : null}
             suppressNextRef={suppressNextRecenterRef}
@@ -394,6 +395,8 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
             onSaveReturnPoint={handleSaveReturnPoint}
             mapLayerId={mapLayerId}
             onChangeMapLayer={setMapLayerId}
+            mapOverlayIds={mapOverlayIds}
+            onToggleMapOverlay={toggleMapOverlay}
             findingsCount={filteredFindings?.length ?? 0}
             isHeatmapView={isHeatmapView}
             onToggleHeatmapView={() => setIsHeatmapView((v) => !v)}
@@ -439,7 +442,7 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
           const center = mapRef.current?.getCenter()
           return center ? [center.lat, center.lng] : null
         }}
-        activeLayer={activeMapLayer}
+        activeLayer={getOfflineMapLayer(mapLayerId)}
       />
 
       <SpotManager

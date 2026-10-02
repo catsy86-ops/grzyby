@@ -29,7 +29,7 @@ import {
 } from '../../components/ui/dropdown-menu'
 import { buildLocationSmsUrl } from '../../utils/locationSms'
 import type { Position } from '../../utils/bearing'
-import { MAP_LAYERS, type MapLayerId } from '../../data/mapLayers'
+import { MAP_LAYERS, MAP_OVERLAYS, type MapLayerId, type MapOverlayId } from '../../data/mapLayers'
 import { MIN_FINDINGS_FOR_HEATMAP } from '../../utils/heatmapStyle'
 import type { Species } from '../../db/schema'
 import type { ActiveSheet } from './MapView'
@@ -42,6 +42,8 @@ interface MapHeaderActionsProps {
   onSaveReturnPoint: () => void
   mapLayerId: MapLayerId
   onChangeMapLayer: (id: MapLayerId) => void
+  mapOverlayIds: MapOverlayId[]
+  onToggleMapOverlay: (id: MapOverlayId) => void
   findingsCount: number
   isHeatmapView: boolean
   onToggleHeatmapView: () => void
@@ -72,6 +74,8 @@ export function MapHeaderActions({
   onSaveReturnPoint,
   mapLayerId,
   onChangeMapLayer,
+  mapOverlayIds,
+  onToggleMapOverlay,
   findingsCount,
   isHeatmapView,
   onToggleHeatmapView,
@@ -107,7 +111,7 @@ export function MapHeaderActions({
         <DropdownMenuTrigger render={<button type="button" aria-label="Więcej narzędzi mapy" className={headerButtonClass} />}>
           <MoreVerticalIcon className="size-5" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent side="bottom" align="end" className="w-56">
+        <DropdownMenuContent side="bottom" align="end" className="w-64">
           <DropdownMenuGroup>
             <DropdownMenuLabel>Warstwa mapy</DropdownMenuLabel>
             <DropdownMenuRadioGroup
@@ -121,6 +125,24 @@ export function MapHeaderActions({
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Nakładki</DropdownMenuLabel>
+            {MAP_OVERLAYS.map((overlay) => (
+              <DropdownMenuCheckboxItem
+                key={overlay.id}
+                checked={mapOverlayIds.includes(overlay.id)}
+                onCheckedChange={() => onToggleMapOverlay(overlay.id)}
+                className="items-start"
+              >
+                <LayersIcon className="mt-0.5" />
+                <span className="flex flex-col">
+                  {overlay.label}
+                  <span className="text-xs text-muted-foreground">{overlay.description}</span>
+                </span>
+              </DropdownMenuCheckboxItem>
+            ))}
           </DropdownMenuGroup>
           {speciesOptions.length > 0 && (
             <>

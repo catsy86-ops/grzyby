@@ -10,6 +10,8 @@ const baseProps = {
   onSaveReturnPoint: vi.fn(),
   mapLayerId: 'street' as const,
   onChangeMapLayer: vi.fn(),
+  mapOverlayIds: [],
+  onToggleMapOverlay: vi.fn(),
   findingsCount: 0,
   isHeatmapView: false,
   onToggleHeatmapView: vi.fn(),
@@ -76,6 +78,19 @@ describe('MapHeaderActions', () => {
     fireEvent.click(screen.getByText('Terenowa'))
 
     expect(onChangeMapLayer).toHaveBeenCalledWith('topo')
+  })
+
+  it('menu narzędzi pozwala włączyć nakładkę i pokazuje zaznaczone', () => {
+    const onToggleMapOverlay = vi.fn()
+    render(<MapHeaderActions {...baseProps} mapOverlayIds={['protected']} onToggleMapOverlay={onToggleMapOverlay} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Więcej narzędzi mapy' }))
+    expect(screen.getByRole('menuitemcheckbox', { name: /Obszary chronione/ })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('menuitemcheckbox', { name: /Drzewostany/ })).toHaveAttribute('aria-checked', 'false')
+
+    fireEvent.click(screen.getByText('Drzewostany'))
+
+    expect(onToggleMapOverlay).toHaveBeenCalledWith('forest')
   })
 
   it('blokuje przełącznik mapy cieplnej, gdy znalezisk jest mniej niż próg', () => {
