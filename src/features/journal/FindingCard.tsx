@@ -1,5 +1,5 @@
 import { motion } from 'motion/react'
-import { PencilIcon, Share2Icon, TrashIcon } from 'lucide-react'
+import { PencilIcon, Share2Icon, TrashIcon, TreePineIcon } from 'lucide-react'
 import type { Finding, Species } from '../../db/schema'
 import { EdibilityBadge, speciesCardClassName } from '../../components/EdibilityBadge'
 import { Button } from '../../components/ui/button'
@@ -7,6 +7,7 @@ import { Card, CardContent } from '../../components/ui/card'
 import { formatWeight } from '../../utils/tripStats'
 import { computeDryingRatioPercent } from '../../utils/dryingRatio'
 import { formatDateTime } from '../../utils/formatDate'
+import { describeForestStand } from '../../utils/findingForestStand'
 import { ConsumptionTracker } from './ConsumptionTracker'
 import { FindingThumbnail } from './FindingThumbnail'
 
@@ -72,6 +73,12 @@ export function FindingCard({ finding, species, index, onShare, onEdit, onDelete
                   </>
                 )}
               </p>
+              {finding.forestStand && (
+                <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                  <TreePineIcon className="size-3.5 shrink-0" aria-hidden />
+                  {describeForestStand(finding.forestStand)}
+                </p>
+              )}
               {finding.notes && <p className="mt-1 text-sm text-foreground/80">{finding.notes}</p>}
               <ConsumptionTracker finding={finding} />
             </div>

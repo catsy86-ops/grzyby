@@ -79,4 +79,21 @@ describe('SeasonSummary', () => {
     await waitFor(() => expect(screen.getByText(`Sezon ${now.getFullYear()}`)).toBeInTheDocument())
     expect(screen.queryByText(/wypraw znajdujesz średnio/)).not.toBeInTheDocument()
   })
+
+  it('pokazuje, pod jakim drzewem najczęściej znajdujesz gatunek', async () => {
+    const thisYear = `${new Date().getFullYear()}-09-15`
+    const beech = { treeCode: 'BK' as const, treeName: 'Buk', age: 120, siteType: null }
+    await db.findings.bulkAdd([
+      findingAt(thisYear, { speciesId: 'borowik-szlachetny', forestStand: beech }),
+      findingAt(thisYear, { speciesId: 'borowik-szlachetny', forestStand: beech }),
+      findingAt(thisYear, {
+        speciesId: 'borowik-szlachetny',
+        forestStand: { treeCode: 'DB', treeName: 'Dąb', age: 90, siteType: null },
+      }),
+    ])
+
+    render(<SeasonSummary />)
+
+    expect(await screen.findByText(/Borowik szlachetny znajdujesz najczęściej pod bukiem \(2 z 3\)/)).toBeInTheDocument()
+  })
 })

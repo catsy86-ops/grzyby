@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { CameraIcon, CheckIcon, MicIcon, MinusIcon, PlusIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { db } from '../../db/db'
+import { attachForestStand } from '../../utils/findingForestStand'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { useActiveTrip } from '../../stores/useActiveTrip'
@@ -143,7 +144,7 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
       // Pierwsze znalezisko danego gatunku dostaje dodatkową nagrodę (wybuch zarodników + inny toast).
       const isFirstOfSpecies = species != null && (await db.findings.where('speciesId').equals(species.id).count()) === 0
 
-      await db.transaction('rw', db.findings, db.photos, async () => {
+      const savedFindingId = await db.transaction('rw', db.findings, db.photos, async () => {
         const findingId = await db.findings.add({
           speciesId: species?.id ?? null,
           speciesNameGuess: species?.nameCommon ?? null,
@@ -161,7 +162,9 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
         for (const { blob, thumbnailBlob } of compressedPhotos) {
           await db.photos.add({ findingId, blob, thumbnailBlob })
         }
+        return findingId
       })
+      if (initialPosition) void attachForestStand(savedFindingId, initialPosition[0], initialPosition[1])
       // Potwierdzenie zapisu - dotąd formularz po prostu cicho się zamykał, bez żadnego
       // sygnału "udało się". Ten sam moment co w Dzienniku (pusty koszyk -> pierwszy wpis),
       // tylko odwrotnie - to jest "nagroda" za dodanie znaleziska w terenie.

@@ -3,6 +3,10 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/db'
 import { StatTile, StatTileRow } from './StatTiles'
 import { Card, CardContent } from '../../components/ui/card'
+import speciesData from '../../data/species.json'
+import { TREE_UNDER } from '../../data/forestCodes'
+import type { Species } from '../../db/schema'
+import { computeTreeInsights } from '../../utils/treeInsight'
 import {
   computeRainyTripInsight,
   countSpeciesDiversity,
@@ -39,6 +43,10 @@ export function SeasonSummary() {
     () => (allTrips && allFindings ? computeRainyTripInsight(allTrips, allFindings) : null),
     [allTrips, allFindings],
   )
+
+  // Też całościowo, nie per rok - drzewostan zapisuje się tylko przy włączonej nakładce
+  // Drzewostany, więc takich znalezisk przybywa powoli.
+  const treeInsights = useMemo(() => (allFindings ? computeTreeInsights(allFindings) : []), [allFindings])
 
   const stats = useMemo(() => {
     if (!allFindings) return null
@@ -82,7 +90,17 @@ export function SeasonSummary() {
               : `☀️ Podczas suchych wypraw znajdujesz średnio ${rainyInsight.avgFindingsDry.toFixed(1)} znalezisk, w deszczowych ${rainyInsight.avgFindingsRainy.toFixed(1)}.`}
           </p>
         )}
+        {treeInsights.map((insight) => (
+          <p key={insight.speciesId} className="text-xs text-muted-foreground">
+            🌲 {speciesName(insight.speciesId)} znajdujesz najczęściej {TREE_UNDER[insight.treeCode]} ({insight.count} z{' '}
+            {insight.total}).
+          </p>
+        ))}
       </CardContent>
     </Card>
   )
+}
+
+function speciesName(id: string): string {
+  return (speciesData as Species[]).find((species) => species.id === id)?.nameCommon.split(' (')[0] ?? id
 }

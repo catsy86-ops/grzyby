@@ -1,3 +1,5 @@
+import type { TreeCode } from '../data/forestCodes'
+
 export type EdibilityStatus = 'jadalny' | 'warunkowo-jadalny' | 'niejadalny' | 'trujący' | 'śmiertelnie-trujący'
 
 export interface Species {
@@ -51,6 +53,18 @@ export interface Finding {
   consumedAt?: number | null
   reactionSeverity?: ReactionSeverity | null
   reactionNotes?: string
+  // Drzewostan w miejscu znaleziska z Banku Danych o Lasach - dopisywany w tle po zapisie, tylko
+  // przy włączonej nakładce "Drzewostany" (świadoma zgoda na wysyłanie współrzędnych do BDL),
+  // patrz utils/findingForestStand.ts. Brak pola = nie pobrano (offline, poza lasem, nakładka
+  // wyłączona). Usuwany przy zmianie lokalizacji znaleziska w edycji.
+  forestStand?: FindingForestStand
+}
+
+export interface FindingForestStand {
+  treeCode: TreeCode | null
+  treeName: string
+  age: number | null
+  siteType: string | null
 }
 
 // Zdjęcia trzymane w osobnej tabeli, żeby listy/mapa (findings.toArray()) nie musiały

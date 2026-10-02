@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { ListFilterIcon, MapIcon } from 'lucide-react'
 import { EmptyBasketIllustration, EmptySearchIllustration } from '../../components/icons/illustrations'
 import { db } from '../../db/db'
+import { attachForestStand } from '../../utils/findingForestStand'
 import { useAppStore } from '../../stores/appStore'
 import { vibrateNotice, vibrateSuccess } from '../../utils/haptics'
 import speciesData from '../../data/species.json'
@@ -331,6 +332,11 @@ export function JournalView() {
           )
         : null
 
+      // Drzewostan opisuje miejsce - po przeniesieniu znaleziska jest nieaktualny, więc go usuwamy
+      // (`undefined` w Dexie.update kasuje pole) i, jeśli wolno, pobieramy na nowo dla nowej pozycji.
+      const original = await db.findings.get(id)
+      const locationChanged = original?.latitude !== values.latitude || original?.longitude !== values.longitude
+
       await db.transaction('rw', db.findings, db.photos, async () => {
         await db.findings.update(id, {
           speciesId: values.speciesId,
@@ -341,6 +347,7 @@ export function JournalView() {
           quantity: values.quantity,
           latitude: values.latitude,
           longitude: values.longitude,
+          ...(locationChanged ? { forestStand: undefined } : {}),
         })
         if (newPhoto) {
           await db.photos.where('findingId').equals(id).delete()
@@ -349,6 +356,9 @@ export function JournalView() {
           await db.photos.where('findingId').equals(id).delete()
         }
       })
+      if (locationChanged && values.latitude != null && values.longitude != null) {
+        void attachForestStand(id, values.latitude, values.longitude)
+      }
       setEditingId(null)
     } catch (err) {
       // Dexie przechwytuje natywne błędy IndexedDB (w tym QuotaExceededError) i remapuje je na

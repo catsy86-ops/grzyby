@@ -139,3 +139,9 @@ techniczny z realnym wpływem na doświadczenie w terenie (bateria).
   typowe dla tego drzewa i ostrzeżenie o trujących. Powiązania gatunek-drzewo w `data/speciesTrees.ts` -
   wyłącznie drzewa wymienione wprost w polu `habitat` species.json (przy zmianie opisu siedliska trzeba
   zaktualizować i ten plik); gatunki chronione nie trafiają na listę "typowych".
+- [x] **Drzewostan przy znalezisku** - po zapisie znaleziska (i po zmianie jego lokalizacji w edycji) w tle
+  dopisywany jest `Finding.forestStand` z BDL (`utils/findingForestStand.ts`). **Tylko przy włączonej nakładce
+  Drzewostany** - współrzędne znalezisk (prywatne miejscówki) trafiają do BDL wyłącznie za tą świadomą zgodą.
+  Karta w Dzienniku: "pod bukiem, 136 lat · las świeży"; zmiana lokalizacji kasuje stary opis. Podsumowanie
+  sezonu: "Borowik szlachetny znajdujesz najczęściej pod bukiem (4 z 5)" (`utils/treeInsight.ts`, min. 3
+  znaleziska z drzewostanem, drzewo w >= 50% przypadków).

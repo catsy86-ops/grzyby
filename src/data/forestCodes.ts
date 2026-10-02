@@ -45,6 +45,29 @@ export const TREE_NAMES: Record<TreeCode, string> = {
   AK: 'Robinia (akacja)',
 }
 
+// "Pod czym" - do kart znalezisk i statystyk ("Borowik najczęściej pod bukiem").
+export const TREE_UNDER: Record<TreeCode, string> = {
+  SO: 'pod sosną',
+  SW: 'pod świerkiem',
+  JD: 'pod jodłą',
+  MD: 'pod modrzewiem',
+  DG: 'pod daglezją',
+  BK: 'pod bukiem',
+  DB: 'pod dębem',
+  GB: 'pod grabem',
+  BRZ: 'pod brzozą',
+  OL: 'pod olszą',
+  OS: 'pod osiką',
+  TP: 'pod topolą',
+  LP: 'pod lipą',
+  JS: 'pod jesionem',
+  KL: 'pod klonem',
+  JW: 'pod jaworem',
+  WZ: 'pod wiązem',
+  WB: 'pod wierzbą',
+  AK: 'pod robinią',
+}
+
 // BDL zapisuje kody wielkimi literami, czasem z polskimi znakami ("ŚW") - normalizujemy do
 // kluczy TREE_NAMES. Nieznany kod (rzadkie gatunki) zwraca null, a karta pokaże surowy skrót.
 export function normalizeTreeCode(raw: string): TreeCode | null {

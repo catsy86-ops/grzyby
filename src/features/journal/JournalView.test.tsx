@@ -66,6 +66,37 @@ describe('JournalView - edycja lokalizacji i zdjęcia', () => {
     })
   })
 
+  it('pokazuje drzewostan na karcie i kasuje go po zmianie lokalizacji (opisuje stare miejsce)', async () => {
+    const id = await addFinding({
+      latitude: 52.1,
+      longitude: 19.5,
+      forestStand: { treeCode: 'BK', treeName: 'Buk', age: 136, siteType: 'las świeży' },
+    })
+    vi.mocked(geolocation.getCurrentPosition).mockResolvedValue({ latitude: 53.4, longitude: 14.5 })
+
+    render(<JournalView />)
+    expect(await screen.findByText('pod bukiem, 136 lat · las świeży')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edytuj znalezisko' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Użyj obecnej (GPS)' }))
+    await waitFor(() => expect(screen.getByText('53.40000, 14.50000')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+
+    await waitFor(async () => expect((await db.findings.get(id))?.latitude).toBe(53.4))
+    expect((await db.findings.get(id))?.forestStand).toBeUndefined()
+  })
+
+  it('zachowuje drzewostan, gdy edycja nie zmienia lokalizacji', async () => {
+    const id = await addFinding({ forestStand: { treeCode: 'SO', treeName: 'Sosna', age: 97, siteType: null } })
+
+    render(<JournalView />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Edytuj znalezisko' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }))
+
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Zapisz' })).not.toBeInTheDocument())
+    expect((await db.findings.get(id))?.forestStand?.treeCode).toBe('SO')
+  })
+
   it('pozwala usunąć lokalizację znaleziska', async () => {
     const id = await addFinding({ latitude: 52.1, longitude: 19.5 })
 
