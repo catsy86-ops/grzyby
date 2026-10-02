@@ -148,3 +148,6 @@ techniczny z realnym wpływem na doświadczenie w terenie (bateria).
 - [x] **Uzupełnij drzewostan** dla starszych znalezisk (`ForestStandBackfill.tsx` w Dzienniku, tylko przy włączonej
   nakładce Drzewostany): zapytania po kolei, z postępem i "Przerwij". `forestStand: null` = sprawdzono, to nie las
   (nie odpytujemy ponownie); błąd sieci zostawia `undefined` do ponowienia.
+- [x] **Filtr "Drzewostan"** w Dzienniku (menu "Sortowanie i filtry"): znaleziska pod wybranym drzewem
+  (`listFindingTrees` w `utils/journalFilters.ts`, opcje od najczęstszego drzewa, tylko gdy któreś znalezisko
+  ma drzewostan). Licznik wyników z polską odmianą (1 wynik, 2 wyniki, 5 wyników).

@@ -28,7 +28,9 @@ import { exportFindingsToGpx } from '../../utils/gpxExport'
 import { exportFindingsToCsv } from '../../utils/csvExport'
 import { findOverlappingConsumedFindings } from '../../utils/reactionTracking'
 import { filterIncompleteFindings, isIncompleteFinding } from '../../utils/findingCompleteness'
-import { isWithinDateRange, type SortOrder } from '../../utils/journalFilters'
+import { isWithinDateRange, listFindingTrees, type SortOrder } from '../../utils/journalFilters'
+import { pluralPl } from '../../utils/pluralPl'
+import { TREE_NAMES, type TreeCode } from '../../data/forestCodes'
 import { rankSpotsByFindingCount } from '../../utils/spotStats'
 import {
   countSpeciesDiversity,
@@ -116,6 +118,8 @@ export function JournalView() {
   const [searchQuery, setSearchQuery] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  // "Pod jakim drzewem" - z `Finding.forestStand` (nakładka Drzewostany, patrz MAP-ROADMAP.md).
+  const [treeFilter, setTreeFilter] = useState<TreeCode | 'wszystkie'>('wszystkie')
   // "Do uzupełnienia" (ROZBUDOWA-ROADMAP.md Część 2 pkt 3) - znaleziska bez gatunku lub bez
   // zdjęcia, częste przy szybkim dyktowaniu głosowym w terenie. Zakres celowo ograniczony do
   // aktualnie wczytanej strony (ta sama `PAGE_SIZE`-owa logika co reszta widoku) - pełne
@@ -161,9 +165,18 @@ export function JournalView() {
     if (dateFrom || dateTo) {
       result = result.filter((f) => isWithinDateRange(f.createdAt, dateFrom, dateTo))
     }
+    if (treeFilter !== 'wszystkie') result = result.filter((f) => f.forestStand?.treeCode === treeFilter)
     if (showIncompleteOnly) result = result.filter((f) => isIncompleteFinding(f, photoFindingIdSet))
     return result
-  }, [findings, tripFilter, searchQuery, dateFrom, dateTo, showIncompleteOnly, photoFindingIdSet])
+  }, [findings, tripFilter, searchQuery, dateFrom, dateTo, treeFilter, showIncompleteOnly, photoFindingIdSet])
+
+  // Opcje z wczytanej strony (jak reszta filtrów). Wybrane drzewo zostaje na liście, nawet gdy
+  // ostatnie takie znalezisko zniknęło (edycja lokalizacji) - inaczej nie dałoby się go odznaczyć.
+  const treeOptions = useMemo(() => {
+    const trees = findings ? listFindingTrees(findings) : []
+    return treeFilter !== 'wszystkie' && !trees.includes(treeFilter) ? [...trees, treeFilter] : trees
+  }, [findings, treeFilter])
+  const hasActiveFilter = searchQuery.trim() !== '' || !!dateFrom || !!dateTo || treeFilter !== 'wszystkie'
 
   const confirmDeleteFinding = useMemo(
     () => (confirmDeleteId != null ? findings?.find((f) => f.id === confirmDeleteId) : undefined),
@@ -463,12 +476,12 @@ export function JournalView() {
                   variant="outline"
                   size="icon"
                   className="relative shrink-0"
-                  aria-label="Sortowanie i zakres dat"
+                  aria-label="Sortowanie i filtry"
                 />
               }
             >
               <ListFilterIcon />
-              {(sortOrder !== 'newest' || dateFrom || dateTo) && (
+              {(sortOrder !== 'newest' || dateFrom || dateTo || treeFilter !== 'wszystkie') && (
                 <span
                   aria-hidden="true"
                   className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-primary"
@@ -516,6 +529,25 @@ export function JournalView() {
                   </label>
                 </div>
               </DropdownMenuGroup>
+              {treeOptions.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Drzewostan</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      value={treeFilter}
+                      onValueChange={(v) => setTreeFilter(v as TreeCode | 'wszystkie')}
+                    >
+                      <DropdownMenuRadioItem value="wszystkie">Wszystkie</DropdownMenuRadioItem>
+                      {treeOptions.map((tree) => (
+                        <DropdownMenuRadioItem key={tree} value={tree}>
+                          {TREE_NAMES[tree]}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuGroup>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -523,7 +555,7 @@ export function JournalView() {
             kafla "znalezisk" z karty wyprawy poniżej) i "odbija się" animowaną liczbą przy każdej
             zmianie zapytania - natychmiastowa informacja zwrotna podczas pisania, nie dopiero po
             policzeniu kart w liście. */}
-        {(searchQuery.trim() !== '' || dateFrom || dateTo) && filteredFindings && (
+        {hasActiveFilter && filteredFindings && (
           <p
             aria-label={`Liczba wyników: ${filteredFindings.length}`}
             className="mt-1.5 flex items-baseline gap-1 text-xs text-muted-foreground"
@@ -541,7 +573,7 @@ export function JournalView() {
                 {filteredFindings.length}
               </motion.span>
             </AnimatePresence>
-            <span aria-hidden="true">{filteredFindings.length === 1 ? 'wynik' : 'wyników'}</span>
+            <span aria-hidden="true">{pluralPl(filteredFindings.length, 'wynik', 'wyniki', 'wyników')}</span>
           </p>
         )}
       </div>

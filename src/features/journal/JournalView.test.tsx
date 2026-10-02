@@ -472,7 +472,7 @@ describe('JournalView - sortowanie i filtr dat', () => {
     render(<JournalView />)
     await screen.findByText('Nowy')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i zakres dat' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i filtry' }))
     fireEvent.click(await screen.findByText('Najstarsze najpierw'))
 
     await waitFor(() => {
@@ -489,7 +489,7 @@ describe('JournalView - sortowanie i filtr dat', () => {
     render(<JournalView />)
     await screen.findByText('Za wcześnie')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i zakres dat' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i filtry' }))
     fireEvent.change(screen.getByLabelText('Od'), { target: { value: '2026-06-01' } })
     fireEvent.change(screen.getByLabelText('Do'), { target: { value: '2026-06-30' } })
 
@@ -506,12 +506,42 @@ describe('JournalView - sortowanie i filtr dat', () => {
     render(<JournalView />)
     await screen.findByText('Poza zakresem')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i zakres dat' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i filtry' }))
     fireEvent.change(screen.getByLabelText('Od'), { target: { value: '2026-06-01' } })
     await waitFor(() => expect(screen.queryByText('Poza zakresem')).not.toBeInTheDocument())
 
     fireEvent.click(screen.getByText('Wyczyść'))
     await waitFor(() => expect(screen.getByText('Poza zakresem')).toBeInTheDocument())
+  })
+
+  it('filtruje znaleziska po drzewie z drzewostanu', async () => {
+    await addFinding({ notes: 'Pod bukiem', forestStand: { treeCode: 'BK', treeName: 'Buk', age: 120, siteType: null } })
+    await addFinding({ notes: 'Pod sosną', forestStand: { treeCode: 'SO', treeName: 'Sosna', age: 80, siteType: null } })
+    await addFinding({ notes: 'Bez drzewostanu' })
+
+    render(<JournalView />)
+    await screen.findByText('Pod bukiem')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i filtry' }))
+    fireEvent.click(await screen.findByRole('menuitemradio', { name: 'Buk' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Pod bukiem')).toBeInTheDocument()
+      expect(screen.queryByText('Pod sosną')).not.toBeInTheDocument()
+      expect(screen.queryByText('Bez drzewostanu')).not.toBeInTheDocument()
+    })
+    expect(screen.getByLabelText('Liczba wyników: 1')).toBeInTheDocument()
+  })
+
+  it('nie pokazuje filtra drzewostanu, gdy żadne znalezisko go nie ma', async () => {
+    await addFinding({ notes: 'Zwykłe' })
+
+    render(<JournalView />)
+    await screen.findByText('Zwykłe')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sortowanie i filtry' }))
+    await screen.findByText('Najstarsze najpierw')
+    expect(screen.queryByText('Drzewostan')).not.toBeInTheDocument()
   })
 })
 
