@@ -131,3 +131,24 @@ export type MapOverlayId = MapOverlayDef['id']
 export function getMapOverlays(ids: readonly MapOverlayId[]): MapOverlayDef[] {
   return MAP_OVERLAYS.filter((overlay) => ids.includes(overlay.id))
 }
+
+// Kafle nakładek oglądane online zostają w Cache Storage (patrz sw.ts), żeby w lesie bez zasięgu
+// nadal było widać drzewostany/szlaki tam, gdzie się już wcześniej patrzyło. To zwykłe
+// zapamiętywanie obejrzanego, nie masowe pobieranie - "Pobierz obszar offline" nakładek nie
+// pobiera. Ortofotomapa GUGiK celowo poza tym cache'em (regulamin zabrania gromadzenia kafli).
+export const MAP_OVERLAYS_CACHE_NAME = 'map-overlays'
+
+const overlayHosts = new Set(MAP_OVERLAYS.map((overlay) => new URL(overlay.urlTemplate.replace(/\{[a-z]\}/g, '0')).host))
+
+export function isCacheableOverlayRequest(url: URL): boolean {
+  // Zapytania o atrybuty wydzielenia (karta "co tu rośnie") muszą być zawsze świeże.
+  return overlayHosts.has(url.host) && url.searchParams.get('REQUEST') !== 'GetFeatureInfo'
+}
+
+// Ponowienia kafli WMS (utils/wmsTileRetry.ts) dopisują `retry=N` - to ten sam obraz, więc klucz
+// cache'a jest bez tego parametru.
+export function overlayCacheKey(url: URL): string {
+  const key = new URL(url.href)
+  key.searchParams.delete('retry')
+  return key.href
+}

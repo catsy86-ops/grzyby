@@ -1,5 +1,7 @@
 import 'fake-indexeddb/auto'
 import '@testing-library/jest-dom/vitest'
+import { configure } from '@testing-library/react'
+import { MotionGlobalConfig } from 'motion/react'
 import { vi } from 'vitest'
 
 // jsdom nie implementuje matchMedia - potrzebne przez next-themes (ThemeProvider), sonner
@@ -56,3 +58,14 @@ if (typeof Element !== 'undefined' && !Element.prototype.animate) {
 let objectUrlCounter = 0
 URL.createObjectURL = () => `blob:test-${++objectUrlCounter}`
 URL.revokeObjectURL = () => {}
+
+// Animacje `motion` (np. wyjście slajdu onboardingu w AnimatePresence mode="wait") w jsdom
+// kręcą się na requestAnimationFrame i pod obciążeniem pełnego przebiegu potrafiły przekroczyć
+// domyślny 1 s `waitFor` - testy sprawdzają stan po animacji, nie samą animację.
+MotionGlobalConfig.skipAnimations = true
+
+// Domyślny 1 s `waitFor`/`findBy*` był za ciasny pod obciążeniem pełnego przebiegu (~120 plików
+// równolegle): np. AddFindingForm celowo odracza `onClose` o 380-650 ms na animację zapisu,
+// więc na sam zapis do bazy zostawało kilkaset ms. Testy nadal kończą się natychmiast, gdy
+// warunek jest spełniony - to tylko górny limit czekania.
+configure({ asyncUtilTimeout: 3000 })

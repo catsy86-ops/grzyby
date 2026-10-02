@@ -130,7 +130,9 @@ techniczny z realnym wpływem na doświadczenie w terenie (bateria).
 - [x] Nakładki (wiele naraz, `appStore.mapOverlayIds`): **Drzewostany** (Bank Danych o Lasach - gatunek i wiek
   drzew w wydzieleniu, od z14), **Obszary chronione** (GDOŚ: rezerwaty + parki narodowe), **Szlaki piesze**
   (Waymarked Trails). Render wspólny w `features/map/MapTileLayers.tsx`.
-- Nakładki/ortofotomapa nie są cache'owane przez Service Workera (tylko OSM/OpenTopoMap) - działają wyłącznie online.
+- [x] Obejrzane kafle nakładek zostają offline (cache `map-overlays` w `sw.ts`, kafle z `crossOrigin`, tylko 200,
+  60 dni / 3000 wpisów, osobna pozycja w "Pamięć i dane"). Ortofotomapa GUGiK celowo bez cache'a; karta
+  "co tu rośnie" (GetFeatureInfo) zawsze z sieci.
 - [x] **"Co tu rośnie"** - przy włączonej nakładce Drzewostany dotknięcie lasu otwiera kartę wydzielenia
   (`ForestStandPopup.tsx`): gatunek panujący, wiek, typ siedliska, powierzchnia (BDL WMS GetFeatureInfo,
   `utils/forestStand.ts` - serwer odpowiada raz GeoJSON-em, raz XML-em, parsujemy oba) oraz gatunki z atlasu

@@ -21,6 +21,12 @@ interface StorageInfoDrawerProps {
   onOpenChange: (open: boolean) => void
 }
 
+const CLEAR_DESCRIPTIONS: Record<string, string> = {
+  'map-tiles': 'Pobrane obszary mapy przestaną być dostępne offline - będziesz musiał(a) pobrać je ponownie będąc online.',
+  'map-overlays': 'Obejrzane wcześniej drzewostany, obszary chronione i szlaki przestaną być widoczne offline, dopóki nie obejrzysz ich ponownie online.',
+  'ai-model': 'Model rozpoznawania AI zostanie usunięty z pamięci podręcznej i pobierze się ponownie przy kolejnym uruchomieniu online.',
+}
+
 export function StorageInfoDrawer({ open, onOpenChange }: StorageInfoDrawerProps) {
   const [caches, setCaches] = useState<CacheInfo[] | null>(null)
   const [estimate, setEstimate] = useState<StorageEstimate | null>(null)
@@ -110,9 +116,7 @@ export function StorageInfoDrawer({ open, onOpenChange }: StorageInfoDrawerProps
           <AlertDialogHeader>
             <AlertDialogTitle>Wyczyścić "{pendingClear?.label}"?</AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingClear?.name === 'map-tiles'
-                ? 'Pobrane obszary mapy przestaną być dostępne offline - będziesz musiał(a) pobrać je ponownie będąc online.'
-                : 'Model rozpoznawania AI zostanie usunięty z pamięci podręcznej i pobierze się ponownie przy kolejnym uruchomieniu online.'}
+              {pendingClear && CLEAR_DESCRIPTIONS[pendingClear.name]}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

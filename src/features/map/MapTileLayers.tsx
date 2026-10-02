@@ -35,6 +35,9 @@ export function MapTileLayer({
     opacity: overlay?.opacity,
     // Nakładki nad podkładem i pod markerami (tilePane ma z-index 200, markery 600).
     zIndex: overlay ? 10 : undefined,
+    // Serwery nakładek wysyłają CORS - dzięki temu Service Worker cache'uje zwykłe odpowiedzi 200
+    // zamiast nieprzezroczystych (patrz sw.ts, cache 'map-overlays').
+    crossOrigin: overlay ? ('anonymous' as const) : undefined,
     eventHandlers: handlers,
   }
 

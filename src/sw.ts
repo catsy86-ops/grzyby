@@ -12,6 +12,7 @@ import { CacheFirst } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { SHARED_PHOTO_CACHE, SHARED_PHOTO_CACHE_KEY } from './utils/sharedPhoto'
+import { isCacheableOverlayRequest, MAP_OVERLAYS_CACHE_NAME, overlayCacheKey } from './data/mapLayers'
 
 declare let self: ServiceWorkerGlobalScope
 
@@ -28,6 +29,22 @@ registerRoute(
     plugins: [
       new ExpirationPlugin({ maxEntries: 4000, maxAgeSeconds: 60 * 60 * 24 * 90 }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),
+    ],
+  }),
+)
+
+// Nakładki (Drzewostany, Obszary chronione, Szlaki) - osobny cache, żeby dało się go wyczyścić
+// niezależnie od pobranych obszarów podkładu. Tylko 200: kafle są pobierane z `crossOrigin`
+// (MapTileLayers.tsx), więc nie ma tu nieprzezroczystych odpowiedzi, które Chrome liczy do limitu
+// pamięci po kilka MB każdą.
+registerRoute(
+  ({ url }) => isCacheableOverlayRequest(url),
+  new CacheFirst({
+    cacheName: MAP_OVERLAYS_CACHE_NAME,
+    plugins: [
+      { cacheKeyWillBeUsed: async ({ request }) => overlayCacheKey(new URL(request.url)) },
+      new ExpirationPlugin({ maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 60 }),
+      new CacheableResponsePlugin({ statuses: [200] }),
     ],
   }),
 )
