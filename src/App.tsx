@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { BellIcon, MapIcon, CameraIcon, NotebookTextIcon, BookOpenIcon, WifiOffIcon, WrenchIcon } from 'lucide-react'
@@ -24,6 +24,7 @@ import { useSpotRevisitReminders } from './hooks/useSpotRevisitReminders'
 import { useOverdueTripReminder } from './hooks/useOverdueTripReminder'
 import { useStormWarning } from './hooks/useStormWarning'
 import { useTripNotificationCleanup } from './hooks/useTripNotificationCleanup'
+import { useTabSwipe } from './hooks/useTabSwipe'
 import { ThemeToggle } from './components/ThemeToggle'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAndroidWidgetSync } from './hooks/useAndroidWidgetSync'
@@ -246,6 +247,18 @@ function App() {
     })
   }
 
+  const mainRef = useRef<HTMLElement>(null)
+  const activeTabIndex = TABS.findIndex((t) => t.key === activeTab)
+  useTabSwipe(mainRef, {
+    enabled: activeTab !== 'mapa',
+    onSwipeLeft: () => {
+      if (activeTabIndex < TABS.length - 1) changeTab(TABS[activeTabIndex + 1].key)
+    },
+    onSwipeRight: () => {
+      if (activeTabIndex > 0) changeTab(TABS[activeTabIndex - 1].key)
+    },
+  })
+
   useEffect(() => {
     document.documentElement.classList.toggle('forest-mode', forestMode)
   }, [forestMode])
@@ -367,6 +380,7 @@ function App() {
           {TABS.find((t) => t.key === activeTab)?.label}, widok załadowany
         </p>
         <main
+          ref={mainRef}
           className="relative z-0 min-h-0 flex-1 overflow-hidden"
           style={supportsViewTransitions ? { viewTransitionName: 'tab-content' } : undefined}
         >
