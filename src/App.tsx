@@ -286,6 +286,11 @@ function App() {
           <div className="flex flex-1 items-center justify-center gap-1.5">
             <HeaderLogo />
           </div>
+          {/* Akcje mapy (Zlokalizuj/Grzybowiska/Więcej) wstawiane portalem z MapView - w tym samym
+              rzędzie co dzwonek i narzędzia, zamiast osobnego drugiego paska pod nagłówkiem. */}
+          {activeTab === 'mapa' && (
+            <div ref={setHeaderMapActionsEl} className="flex shrink-0 items-center" />
+          )}
           {/* Dzwonek celowo tej samej, subtelnej wagi co ThemeToggle (hover-only, bez stałej
               obwódki/tła) - w odróżnieniu od "Narzędzia" to nie jest wejście do osobnego zestawu
               funkcji, tylko podgląd stanu innych, już istniejących mechanizmów (backup/wyprawa/
@@ -321,12 +326,6 @@ function App() {
             <WrenchIcon className="size-4.5" />
           </button>
         </div>
-        {activeTab === 'mapa' && (
-          <div
-            ref={setHeaderMapActionsEl}
-            className="relative z-10 flex items-center justify-end gap-0.5 border-t border-primary-foreground/10 px-3 pb-2 pt-1.5"
-          />
-        )}
       </header>
       <AnimatePresence>
         {!isOnline && (
