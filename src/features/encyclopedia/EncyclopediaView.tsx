@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../../db/db'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   LeafIcon,
+  CheckIcon,
   CalendarClockIcon,
   ChefHatIcon,
   ChevronDownIcon,
@@ -48,6 +51,11 @@ const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
 
 export function EncyclopediaView() {
   const [query, setQuery] = useState('')
+  // Atlas jako kolekcja - gatunki, które użytkownik ma już w Dzienniku (uniqueKeys po indeksie,
+  // bez wczytywania całych rekordów znalezisk).
+  const foundSpeciesKeys = useLiveQuery(() => db.findings.orderBy('speciesId').uniqueKeys(), [])
+  const foundSpeciesIds = useMemo(() => new Set((foundSpeciesKeys ?? []).map(String)), [foundSpeciesKeys])
+  const foundCount = ALL_SPECIES.filter((sp) => foundSpeciesIds.has(sp.id)).length
   const [filter, setFilter] = useState<EdibilityStatus | 'wszystkie'>('wszystkie')
   const [seasonOnly, setSeasonOnly] = useState(false)
   const [protectedOnly, setProtectedOnly] = useState(false)
@@ -215,6 +223,22 @@ export function EncyclopediaView() {
         </ToggleGroup>
       </div>
 
+      {/* Postęp kolekcji - łączy Atlas z Dziennikiem: ile gatunków z bazy użytkownik już znalazł. */}
+      <div className="flex items-center gap-3 rounded-xl border border-brand-accent/30 bg-brand-accent/5 px-3 py-2">
+        <span className="text-xs font-medium text-foreground">Twoja kolekcja</span>
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+          <motion.div
+            className="h-full rounded-full bg-brand-accent"
+            initial={false}
+            animate={{ width: `${(foundCount / ALL_SPECIES.length) * 100}%` }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          />
+        </div>
+        <span className="text-xs font-semibold tabular-nums text-foreground">
+          {foundCount}/{ALL_SPECIES.length}
+        </span>
+      </div>
+
       {/* Liczba wyników reaguje na każdą zmianę filtra/wyszukiwania animowanym "odbiciem" liczby
           (AnimatePresence po kluczu = wartości) - bez tego zmiana filtra byłaby czytelna tylko po
           policzeniu kart w siatce, nie od razu, jednym spojrzeniem. */}
@@ -259,6 +283,12 @@ export function EncyclopediaView() {
               {s.imageUrls[0] && (
                 <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-muted">
                   <img src={s.imageUrls[0]} alt={s.nameCommon} loading="lazy" className="size-full object-cover" />
+                  {foundSpeciesIds.has(s.id) && (
+                    <span className="collected-badge absolute top-2 left-2 z-10 flex items-center gap-1 overflow-hidden rounded-full bg-brand-accent px-2 py-0.5 text-[11px] font-semibold text-white shadow">
+                      <CheckIcon className="size-3" />
+                      W kolekcji
+                    </span>
+                  )}
                   {/* Winieta u dołu zdjęcia, tonowana kolorem jadalności (ta sama skala co lewy
                       pasek karty) - łączy fotografię z systemem kolorów bezpieczeństwa zamiast
                       być oderwaną dekoracją, i daje zdjęciu głębi zamiast płaskiego object-cover. */}

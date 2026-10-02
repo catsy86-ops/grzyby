@@ -678,3 +678,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .marker-sprout { animation: none; }
 }
+
+/* Odznaka "W kolekcji" na zdjęciu gatunku w Atlasie - jednorazowy błysk światła przez plakietkę
+   (jak na karcie kolekcjonerskiej), potem statyczna. */
+.collected-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.55) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: collected-shine 1.4s ease-out 0.3s 1 forwards;
+}
+@keyframes collected-shine {
+  to { transform: translateX(120%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .collected-badge::after { animation: none; display: none; }
+}
