@@ -51,6 +51,8 @@ function FindingMarker({
   position: [number, number]
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
+  // Liczone raz, przy zamontowaniu markera - animacja ma zagrać tylko przy pojawieniu się na mapie.
+  const [isFresh] = useState(() => Date.now() - finding.createdAt < FRESH_FINDING_MS)
 
   async function handleDelete() {
     await db.transaction('rw', db.findings, db.photos, async () => {
@@ -65,7 +67,7 @@ function FindingMarker({
       <Marker
         position={position}
         icon={
-          Date.now() - finding.createdAt < FRESH_FINDING_MS
+          isFresh
             ? freshFindingMarkerIconFor(species?.edibility)
             : findingMarkerIconFor(species?.edibility)
         }
