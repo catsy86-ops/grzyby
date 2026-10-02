@@ -92,7 +92,7 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     id: 'forest',
     label: 'Drzewostany',
     // Kody z Banku Danych o Lasach: gatunek panujący + wiek, np. "SO80" = sosna, 80 lat.
-    description: 'Po przybliżeniu: SO80 = sosna 80 lat (ŚW świerk, BK buk, DB dąb, BRZ brzoza)',
+    description: 'Dotknij lasu: gatunek i wiek drzew oraz grzyby z atlasu typowe dla nich',
     urlTemplate: 'https://mapserver.bdl.lasy.gov.pl/ArcGIS/services/WMS_BDL/mapserver/WMSServer',
     attribution: '<a href="https://www.bdl.lasy.gov.pl">Bank Danych o Lasach</a>',
     minZoom: 14,

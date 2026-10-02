@@ -33,6 +33,7 @@ import { SpotManager } from './SpotManager'
 import { SzczecinSpotsPanel } from './SzczecinSpotsPanel'
 import { FindingMarkers, FindingsHeatmap, MapClickHandler, MapInstanceCapture, RecenterOnLocate } from './MapLayers'
 import { MapTileLayer } from './MapTileLayers'
+import { ForestStandPopup } from './ForestStandPopup'
 import { MapStatusBadges } from './MapStatusBadges'
 import { MapOverlayMessages } from './MapOverlayMessages'
 import { MapToolbar } from './MapToolbar'
@@ -276,6 +277,9 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
             <Marker position={pinPosition} icon={candidateMarkerIcon}>
               <Popup>Wybrane miejsce znaleziska</Popup>
             </Marker>
+          )}
+          {pinPosition && mapOverlayIds.includes('forest') && (
+            <ForestStandPopup key={pinPosition.join(',')} position={pinPosition} />
           )}
           {returnPoint && (
             <Marker position={[returnPoint.latitude, returnPoint.longitude]} icon={carMarkerIcon}>

@@ -131,3 +131,9 @@ techniczny z realnym wpływem na doświadczenie w terenie (bateria).
   drzew w wydzieleniu, od z14), **Obszary chronione** (GDOŚ: rezerwaty + parki narodowe), **Szlaki piesze**
   (Waymarked Trails). Render wspólny w `features/map/MapTileLayers.tsx`.
 - Nakładki/ortofotomapa nie są cache'owane przez Service Workera (tylko OSM/OpenTopoMap) - działają wyłącznie online.
+- [x] **"Co tu rośnie"** - przy włączonej nakładce Drzewostany dotknięcie lasu otwiera kartę wydzielenia
+  (`ForestStandPopup.tsx`): gatunek panujący, wiek, typ siedliska, powierzchnia (BDL WMS GetFeatureInfo,
+  `utils/forestStand.ts` - serwer odpowiada raz GeoJSON-em, raz XML-em, parsujemy oba) oraz gatunki z atlasu
+  typowe dla tego drzewa i ostrzeżenie o trujących. Powiązania gatunek-drzewo w `data/speciesTrees.ts` -
+  wyłącznie drzewa wymienione wprost w polu `habitat` species.json (przy zmianie opisu siedliska trzeba
+  zaktualizować i ten plik); gatunki chronione nie trafiają na listę "typowych".
