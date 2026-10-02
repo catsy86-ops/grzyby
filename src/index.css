@@ -414,6 +414,12 @@ body {
    półprzezroczystości i rozmycia (w pełnym słońcu dawały szarą "mgłę" zamiast czytelnego tła). */
 .forest-mode body {
   font-weight: 500;
+  /* Bez tekstury papieru - w pełnym słońcu każdy szum w tle obniża czytelność. */
+  background-image: none;
+}
+
+.forest-mode .paper-grain-surface {
+  background-image: none;
 }
 
 .forest-mode {

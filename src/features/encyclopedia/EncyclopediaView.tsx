@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/db'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
@@ -39,6 +39,7 @@ import { SpeciesShapeIcon } from '../../components/icons/speciesShapeIcons'
 import { ForestAssistant } from './ForestAssistant'
 import { LookalikeQuiz } from './LookalikeQuiz'
 import { SpeciesComparePicker } from './SpeciesComparePicker'
+import { SpeciesPhotoSheet, speciesPhotoLayoutId } from './SpeciesPhotoSheet'
 
 const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
   { label: 'Wszystkie', value: 'wszystkie' },
@@ -51,6 +52,8 @@ const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
 
 export function EncyclopediaView() {
   const [query, setQuery] = useState('')
+  const [photoSpecies, setPhotoSpecies] = useState<Species | null>(null)
+  const closePhotoSheet = useCallback(() => setPhotoSpecies(null), [])
   // Atlas jako kolekcja - gatunki, które użytkownik ma już w Dzienniku (uniqueKeys po indeksie,
   // bez wczytywania całych rekordów znalezisk).
   const foundSpeciesKeys = useLiveQuery(() => db.findings.orderBy('speciesId').uniqueKeys(), [])
@@ -282,9 +285,24 @@ export function EncyclopediaView() {
             <motion.div whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
               {s.imageUrls[0] && (
                 <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-muted">
-                  <img src={s.imageUrls[0]} alt={s.nameCommon} loading="lazy" className="size-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setPhotoSpecies(s)}
+                    aria-label={`Powiększ zdjęcie: ${s.nameCommon}`}
+                    className="block size-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  >
+                    {photoSpecies?.id !== s.id && (
+                      <motion.img
+                        layoutId={speciesPhotoLayoutId(s.id)}
+                        src={s.imageUrls[0]}
+                        alt={s.nameCommon}
+                        loading="lazy"
+                        className="size-full object-cover"
+                      />
+                    )}
+                  </button>
                   {foundSpeciesIds.has(s.id) && (
-                    <span className="collected-badge absolute top-2 left-2 z-10 flex items-center gap-1 overflow-hidden rounded-full bg-brand-accent px-2 py-0.5 text-[11px] font-semibold text-white shadow">
+                    <span className="collected-badge pointer-events-none absolute top-2 left-2 z-10 flex items-center gap-1 overflow-hidden rounded-full bg-brand-accent px-2 py-0.5 text-[11px] font-semibold text-white shadow">
                       <CheckIcon className="size-3" />
                       W kolekcji
                     </span>
@@ -405,6 +423,9 @@ export function EncyclopediaView() {
         )}
       </div>
 
+      <AnimatePresence>
+        {photoSpecies && <SpeciesPhotoSheet key={photoSpecies.id} species={photoSpecies} onClose={closePhotoSheet} />}
+      </AnimatePresence>
       <ForestAssistant open={assistantOpen} onOpenChange={setAssistantOpen} />
       <LookalikeQuiz open={quizOpen} onOpenChange={setQuizOpen} />
       <SpeciesComparePicker open={compareOpen} onOpenChange={setCompareOpen} />
