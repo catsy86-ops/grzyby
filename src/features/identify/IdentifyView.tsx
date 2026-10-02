@@ -126,7 +126,7 @@ export function IdentifyView() {
             <TriangleAlertIcon />
             <AlertDescription className="text-current">
               Zainstalowany model NIE przeszedł jeszcze formalnej, ręcznej recenzji zdjęć
-              treningowych (patrz <code>docs/MODEL-TRAINING.md</code>) - jego wyniki mogą być mniej
+              treningowych - jego wyniki mogą być mniej
               wiarygodne niż zwykle. Traktuj je z jeszcze większą rezerwą niż standardowe ostrzeżenie
               poniżej.
             </AlertDescription>

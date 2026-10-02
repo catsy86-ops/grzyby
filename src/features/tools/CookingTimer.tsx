@@ -88,9 +88,11 @@ export function CookingTimer({ open, onOpenChange }: { open: boolean; onOpenChan
           <p className="text-xs text-muted-foreground">
             Sugerowane czasy (patrz też porady przygotowania przy gatunku w Bazie wiedzy):
           </p>
+          {/* whitespace-normal: Button ma domyślnie nowrap, a najdłuższa etykieta ("Smardz/piestrzenica
+              - ...") wypychała na telefonie całe okno poza prawą krawędź ekranu. */}
           <div className="flex flex-col gap-1.5">
             {PRESETS.map((preset) => (
-              <Button key={preset.label} variant="outline" className="justify-start" onClick={() => start(preset.seconds)}>
+              <Button key={preset.label} variant="outline" className="h-auto min-h-11 justify-start whitespace-normal py-2 text-left" onClick={() => start(preset.seconds)}>
                 {preset.label}
               </Button>
             ))}
