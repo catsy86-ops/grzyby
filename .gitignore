@@ -48,3 +48,9 @@ scripts/prepare-dataset/raw/
 public/models/*
 !public/models/.gitkeep
 
+
+# Lokalne zrzuty ekranu / robocze warianty logo
+/*.gif
+/logo-w*.webp
+/shot*.mjs
+/scripts/*.gif

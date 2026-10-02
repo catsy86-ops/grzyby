@@ -66,4 +66,29 @@ describe('ToolsMenu', () => {
     expect(screen.getByRole('radio', { name: 'Zawsze włączone' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: /Auto/ })).toHaveAttribute('aria-checked', 'false')
   })
+
+  describe('przełącznik wibracji', () => {
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, 'vibrate')
+      useAppStore.setState({ hapticsEnabled: true })
+    })
+
+    it('jest ukryty, gdy przeglądarka nie obsługuje wibracji', () => {
+      render(<ToolsMenu open onOpenChange={vi.fn()} onSelect={vi.fn()} forestMode={false} onToggleForestMode={vi.fn()} />)
+      expect(screen.queryByRole('switch', { name: 'Wibracje' })).not.toBeInTheDocument()
+    })
+
+    it('przełącza hapticsEnabled w sklepie', () => {
+      Object.defineProperty(navigator, 'vibrate', { value: vi.fn(), configurable: true })
+      render(<ToolsMenu open onOpenChange={vi.fn()} onSelect={vi.fn()} forestMode={false} onToggleForestMode={vi.fn()} />)
+
+      const toggle = screen.getByRole('switch', { name: 'Wibracje' })
+      expect(toggle).toHaveAttribute('aria-checked', 'true')
+
+      fireEvent.click(toggle)
+
+      expect(useAppStore.getState().hapticsEnabled).toBe(false)
+      expect(toggle).toHaveAttribute('aria-checked', 'false')
+    })
+  })
 })

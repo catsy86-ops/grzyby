@@ -159,6 +159,8 @@ niezależnie od reszty, po trochu, gdy jest ochota na pisanie treści zamiast ko
 - [x] Atlas jako kolekcja: licznik X/45 i odznaka "W kolekcji".
 - [x] Poświata nagłówka wg pory dnia (`components/TimeOfDayGlow.tsx`).
 - [x] Podgląd gatunku po dotknięciu zdjęcia (`SpeciesPhotoSheet.tsx`, wspólny layoutId, zamykanie gestem w dół).
+- [x] Przełącznik "Wibracje" w menu Narzędzia (`appStore.hapticsEnabled`, tylko gdy `navigator.vibrate` istnieje;
+  alarm timera kuchennego celowo go ignoruje).
 - Świadomie pominięte: przesuwanie kart w Dzienniku (konflikt z gestem zakładek + ryzyko przypadkowego usunięcia),
   pull-to-refresh (dane odświeżają się same przez `useLiveQuery`), sepia na nieznalezionych gatunkach (kolor
-  zdjęcia jest istotny przy rozpoznawaniu), przełącznik wibracji (brak ekranu Ustawień).
+  zdjęcia jest istotny przy rozpoznawaniu).
