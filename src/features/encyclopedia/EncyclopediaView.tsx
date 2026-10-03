@@ -7,6 +7,7 @@ import {
   LeafIcon,
   CheckIcon,
   CalendarClockIcon,
+  CameraOffIcon,
   ChefHatIcon,
   ChevronDownIcon,
   CompassIcon,
@@ -36,6 +37,7 @@ import { daysUntilSeasonStart, getSeasonDotClass, isInSeason } from '../../utils
 import { HABITAT_TAG_LABELS, matchesHabitatTag, type HabitatTag } from '../../utils/speciesHabitatTags'
 import { SHAPE_GROUP_LABEL, getSpeciesShapeGroup } from '../../utils/speciesShape'
 import { SpeciesShapeIcon } from '../../components/icons/speciesShapeIcons'
+import { useScannerLabels } from '../../hooks/useScannerLabels'
 import { ForestAssistant } from './ForestAssistant'
 import { LookalikeQuiz } from './LookalikeQuiz'
 import { SpeciesComparePicker } from './SpeciesComparePicker'
@@ -52,6 +54,8 @@ const FILTERS: { label: string; value: EdibilityStatus | 'wszystkie' }[] = [
 
 export function EncyclopediaView() {
   const [query, setQuery] = useState('')
+  const scannerLabels = useScannerLabels()
+  const scannerKnownIds = useMemo(() => (scannerLabels ? new Set(scannerLabels) : null), [scannerLabels])
   const [photoSpecies, setPhotoSpecies] = useState<Species | null>(null)
   const closePhotoSheet = useCallback(() => setPhotoSpecies(null), [])
   // Atlas jako kolekcja - gatunki, które użytkownik ma już w Dzienniku (uniqueKeys po indeksie,
@@ -335,6 +339,12 @@ export function EncyclopediaView() {
                     >
                       <ScaleIcon className="size-3" />
                       Chroniony
+                    </Badge>
+                  )}
+                  {scannerKnownIds && !scannerKnownIds.has(s.id) && (
+                    <Badge variant="outline" className="gap-1 text-muted-foreground" title="Skaner AI nie rozpoznaje tego gatunku">
+                      <CameraOffIcon className="size-3" />
+                      Poza skanerem
                     </Badge>
                   )}
                   <EdibilityBadge edibility={s.edibility} />

@@ -24,7 +24,7 @@ operację `query` z `f=geojson`, paginacją i max 2000 rekordów; pola m.in. `sp
 `species_age`, `site_type_cd`, `adress_forest`. Do potwierdzenia: CORS na `/rest/`, format kodów `species_cd_d`.
 
 ### Na start
-- [ ] **1. Skaner mówi, czego nie zna** (S, bezpieczeństwo) - model zna 19 z 45 gatunków atlasu
+- [x] **1. Skaner mówi, czego nie zna** (2026-10-03: `utils/scannerCoverage.ts`, `hooks/useScannerLabels.ts`; karta zasięgu w Rozpoznaj, ostrzeżenie w wyniku, plakietka "Poza skanerem" w Atlasie) (S, bezpieczeństwo) - model zna 19 z 45 gatunków atlasu
       (`public/models/metadata.json`). Komunikat w `IdentifyView` z listą, plakietka "nieobjęty skanerem" w
       Atlasie, ostrzeżenie w `PredictionCard`, gdy wynik ma sobowtóra spoza modelu. Liczone z `metadata.json`,
       więc po retreningu zaktualizuje się samo.

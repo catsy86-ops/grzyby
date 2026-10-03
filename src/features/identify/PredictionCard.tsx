@@ -1,13 +1,15 @@
 import { motion } from 'motion/react'
-import { NotebookPenIcon } from 'lucide-react'
+import { CameraOffIcon, NotebookPenIcon } from 'lucide-react'
 import type { Prediction } from '../../utils/mushroomModel'
 import { EdibilityBadge, edibilityChartColor } from '../../components/EdibilityBadge'
 import { LookalikesWarning } from '../../components/LookalikesWarning'
+import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
 import speciesData from '../../data/species.json'
 import type { Species } from '../../db/schema'
 import { useAppStore } from '../../stores/appStore'
+import { getUncoveredLookalikes } from '../../utils/scannerCoverage'
 
 const LOW_CONFIDENCE_THRESHOLD = 0.4
 
@@ -22,7 +24,18 @@ function displayName(species: Prediction['species'], labelRaw: string): string {
   return labelRaw
 }
 
-export function PredictionCard({ prediction, rank }: { prediction: Prediction; rank: number }) {
+const DANGEROUS_EDIBILITY = new Set(['trujący', 'śmiertelnie-trujący'])
+
+export function PredictionCard({
+  prediction,
+  rank,
+  scannerLabels = null,
+}: {
+  prediction: Prediction
+  rank: number
+  // Etykiety klas modelu - `null` (jeszcze nie wczytane) = brak ostrzeżenia o sobowtórach spoza skanera.
+  scannerLabels?: string[] | null
+}) {
   const { species, confidence, labelRaw } = prediction
   const confidencePct = Math.round(confidence * 100)
   const isLowConfidence = confidence < LOW_CONFIDENCE_THRESHOLD
@@ -94,6 +107,7 @@ export function PredictionCard({ prediction, rank }: { prediction: Prediction; r
               </div>
               <p className="mt-2 text-sm text-foreground/80">{species.description}</p>
               <LookalikesWarning species={species} allSpecies={speciesData as Species[]} />
+              <UncoveredLookalikesWarning species={species} scannerLabels={scannerLabels} />
               <Button type="button" variant="outline" size="sm" className="mt-3 w-full" onClick={handleAddToJournal}>
                 <NotebookPenIcon />
                 Dodaj do dziennika
@@ -103,5 +117,32 @@ export function PredictionCard({ prediction, rank }: { prediction: Prediction; r
         </CardContent>
       </Card>
     </motion.div>
+  )
+}
+
+// Sobowtór, którego model nie zna, nigdy nie zostanie wskazany - zdjęcie takiego grzyba dostaje
+// etykietę gatunku podobnego. Osobno od LookalikesWarning (ten mówi "uważaj na podobne", ten
+// "skaner w ogóle nie potrafi ich odróżnić"), bo to dwie różne przyczyny pomyłki.
+function UncoveredLookalikesWarning({ species, scannerLabels }: { species: Species; scannerLabels: string[] | null }) {
+  if (!scannerLabels) return null
+  const uncovered = getUncoveredLookalikes(species, scannerLabels, speciesData as Species[])
+  if (uncovered.length === 0) return null
+  const hasDangerous = uncovered.some((s) => DANGEROUS_EDIBILITY.has(s.edibility))
+  return (
+    <Alert variant={hasDangerous ? 'destructive-soft' : 'warning'} className="mt-2 text-xs">
+      <CameraOffIcon />
+      <AlertTitle>Skaner nie zna podobnych gatunków</AlertTitle>
+      <AlertDescription className="text-current">
+        {uncovered.map((s, i) => (
+          <span key={s.id}>
+            {i > 0 && ', '}
+            {s.nameCommon}
+            {DANGEROUS_EDIBILITY.has(s.edibility) && <span className="font-semibold"> ({s.edibility})</span>}
+          </span>
+        ))}
+        {' '}- model nie potrafi ich rozpoznać, więc taki grzyb mógł zostać wskazany jako{' '}
+        {species.nameCommon}.
+      </AlertDescription>
+    </Alert>
   )
 }

@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { CameraIcon, LightbulbIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
+import { CameraIcon, CameraOffIcon, LightbulbIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
 import { INPUT_SIZE, isModelAvailable, loadDatasetReviewed, type Prediction } from '../../utils/mushroomModel'
 import { identifyMushroomInWorker } from '../../utils/mushroomWorkerClient'
 import { PredictionCard } from './PredictionCard'
+import { ALL_SPECIES } from '../../data/species'
+import { useScannerLabels } from '../../hooks/useScannerLabels'
+import { getScannerCoverage } from '../../utils/scannerCoverage'
 import { CameraMushroomIllustration } from '../../components/icons/illustrations'
 import { Alert, AlertDescription } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
@@ -32,6 +35,8 @@ export function IdentifyView() {
   const imageRef = useRef<HTMLImageElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [resultsListRef] = useAutoAnimate()
+  const scannerLabels = useScannerLabels()
+  const coverage = scannerLabels ? getScannerCoverage(scannerLabels, ALL_SPECIES) : null
 
   useEffect(() => {
     isModelAvailable().then(setModelReady)
@@ -233,7 +238,12 @@ export function IdentifyView() {
             </Alert>
           )}
           {predictions?.map((prediction, index) => (
-            <PredictionCard key={prediction.labelRaw + index} prediction={prediction} rank={index + 1} />
+            <PredictionCard
+              key={prediction.labelRaw + index}
+              prediction={prediction}
+              rank={index + 1}
+              scannerLabels={scannerLabels}
+            />
           ))}
         </div>
       </div>
@@ -241,22 +251,44 @@ export function IdentifyView() {
       {/* Druga kolumna dopiero od lg: (patrz komentarz przy kontenerze) - poniżej tego
           breakpointu ten sam element po prostu ląduje pod formularzem (kolejność źródłowa =
           kolejność wizualna w jednej kolumnie na mobile/tablecie pionowo), nie znika. */}
-      <Card className="lg:sticky lg:top-4">
-        <CardContent className="flex flex-col gap-3">
-          <h2 className="flex items-center gap-2 font-medium">
-            <LightbulbIcon className="size-4.5 text-brand-accent" />
-            Wskazówki dla lepszego rozpoznania
-          </h2>
-          <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
-            {PHOTO_TIPS.map((tip) => (
-              <li key={tip} className="flex gap-2.5">
-                <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-brand-accent" />
-                {tip}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-4 lg:sticky lg:top-4">
+        {coverage && coverage.uncovered.length > 0 && (
+          <Card>
+            <CardContent className="flex flex-col gap-2">
+              <h2 className="flex items-center gap-2 font-medium">
+                <CameraOffIcon className="size-4.5 text-brand-accent" />
+                Skaner zna {coverage.covered.length} z {ALL_SPECIES.length} gatunków atlasu
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Gatunku spoza tej listy skaner nie rozpozna - wskaże wtedy najbardziej podobny, który zna,
+                czasem z wysoką pewnością.
+              </p>
+              <details className="text-sm">
+                <summary className="cursor-pointer font-medium">Czego skaner nie rozpozna ({coverage.uncovered.length})</summary>
+                <p className="mt-1.5 text-muted-foreground">
+                  {coverage.uncovered.map((s) => s.nameCommon).join(', ')}
+                </p>
+              </details>
+            </CardContent>
+          </Card>
+        )}
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <h2 className="flex items-center gap-2 font-medium">
+              <LightbulbIcon className="size-4.5 text-brand-accent" />
+              Wskazówki dla lepszego rozpoznania
+            </h2>
+            <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
+              {PHOTO_TIPS.map((tip) => (
+                <li key={tip} className="flex gap-2.5">
+                  <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-brand-accent" />
+                  {tip}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

@@ -1,12 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ALL_SPECIES } from '../../data/species'
 import { IdentifyView } from './IdentifyView'
 import * as mushroomModel from '../../utils/mushroomModel'
 import * as mushroomWorkerClient from '../../utils/mushroomWorkerClient'
 
 vi.mock('../../utils/mushroomModel', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../utils/mushroomModel')>()
-  return { ...actual, isModelAvailable: vi.fn(), loadDatasetReviewed: vi.fn() }
+  return { ...actual, isModelAvailable: vi.fn(), loadDatasetReviewed: vi.fn(), loadClassLabels: vi.fn() }
 })
 
 vi.mock('../../utils/mushroomWorkerClient', () => ({
@@ -36,6 +37,7 @@ describe('IdentifyView', () => {
     // Domyślnie "zrecenzjonowany" w testach niezwiązanych z tą flagą - patrz opisane niżej testy
     // `datasetReviewed`, gdzie wartość jest jawnie nadpisywana.
     vi.mocked(mushroomModel.loadDatasetReviewed).mockResolvedValue(true)
+    vi.mocked(mushroomModel.loadClassLabels).mockResolvedValue(ALL_SPECIES.map((s) => s.id))
   })
 
   afterEach(() => {
@@ -171,4 +173,25 @@ describe('IdentifyView', () => {
     resolveIdentify([])
     await waitFor(() => expect(changePhotoButton).toBeEnabled())
   })
+
+  it('pokazuje, ilu gatunków atlasu skaner nie zna, i listę tych gatunków', async () => {
+    vi.mocked(mushroomModel.isModelAvailable).mockResolvedValue(true)
+    vi.mocked(mushroomModel.loadClassLabels).mockResolvedValue([ALL_SPECIES[0].id, 'inne'])
+    render(<IdentifyView />)
+
+    expect(
+      await screen.findByText(`Skaner zna 1 z ${ALL_SPECIES.length} gatunków atlasu`),
+    ).toBeInTheDocument()
+    expect(screen.getByText(`Czego skaner nie rozpozna (${ALL_SPECIES.length - 1})`)).toBeInTheDocument()
+  })
+
+  it('nie pokazuje karty zasięgu, gdy skaner zna cały atlas', async () => {
+    vi.mocked(mushroomModel.isModelAvailable).mockResolvedValue(true)
+    render(<IdentifyView />)
+
+    await screen.findByText('Wskazówki dla lepszego rozpoznania')
+    await waitFor(() => expect(mushroomModel.loadClassLabels).toHaveBeenCalled())
+    expect(screen.queryByText(/Skaner zna/)).not.toBeInTheDocument()
+  })
 })
+

@@ -74,4 +74,36 @@ describe('PredictionCard', () => {
     expect(useAppStore.getState().pendingIdentifiedSpeciesId).toBe('borowik-szlachetny')
     expect(useAppStore.getState().activeTab).toBe('mapa')
   })
+
+  it('ostrzega o sobowtórach, których skaner nie zna, z wyróżnieniem trujących', () => {
+    const prediction = makePrediction({
+      labelRaw: 'opienka-miodowa',
+      species: {
+        id: 'opienka-miodowa',
+        nameCommon: 'Opieńka miodowa',
+        nameLatin: 'Armillaria mellea',
+        edibility: 'warunkowo-jadalny',
+        description: 'Opis opieńki.',
+        habitat: 'Pnie',
+        season: 'jesień',
+        lookalikes: ['zaslonak-rudy'],
+        imageUrls: [],
+      },
+    })
+    render(<PredictionCard prediction={prediction} rank={1} scannerLabels={['opienka-miodowa', 'inne']} />)
+
+    expect(screen.getByText('Skaner nie zna podobnych gatunków')).toBeInTheDocument()
+    expect(screen.getByText(/mógł zostać wskazany jako/)).toHaveTextContent(/Zasłonak rudy/)
+    expect(screen.getByText(/mógł zostać wskazany jako/)).toHaveTextContent(/śmiertelnie-trujący/)
+  })
+
+  it('nie ostrzega o sobowtórach spoza skanera, gdy etykiety modelu nie są jeszcze znane', () => {
+    const prediction = makePrediction({
+      species: { ...makePrediction().species!, lookalikes: ['zaslonak-rudy'] },
+    })
+    render(<PredictionCard prediction={prediction} rank={1} />)
+
+    expect(screen.queryByText('Skaner nie zna podobnych gatunków')).not.toBeInTheDocument()
+  })
 })
+
