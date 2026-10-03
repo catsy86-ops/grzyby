@@ -13,6 +13,51 @@ zakres i priorytet.
 
 ---
 
+## Faza 29 - Plan rozbudowy funkcji (2026-10-03, agent planujący, "uruchom agenta w celu rozbudowy")
+
+Propozycje zweryfikowane w kodzie (żadna z nich jeszcze nie istnieje). Uzupełniają Fazę 28 - Etap 1 Fazy 28
+zamknięty tego samego dnia. Kolejność = priorytet.
+
+**Rozpoznanie BDL (blokada Etapu 3 Fazy 28) wstępnie zrobione:** warstwa REST
+`https://mapserver.bdl.lasy.gov.pl/ArcGIS/rest/services/WMS_BDL/MapServer/5` ("Wydzielenia PGL LP") ma
+operację `query` z `f=geojson`, paginacją i max 2000 rekordów; pola m.in. `species_cd_d` (gatunek drzew),
+`species_age`, `site_type_cd`, `adress_forest`. Do potwierdzenia: CORS na `/rest/`, format kodów `species_cd_d`.
+
+### Na start
+- [ ] **1. Skaner mówi, czego nie zna** (S, bezpieczeństwo) - model zna 19 z 45 gatunków atlasu
+      (`public/models/metadata.json`). Komunikat w `IdentifyView` z listą, plakietka "nieobjęty skanerem" w
+      Atlasie, ostrzeżenie w `PredictionCard`, gdy wynik ma sobowtóra spoza modelu. Liczone z `metadata.json`,
+      więc po retreningu zaktualizuje się samo.
+- [ ] **2. "Gdzie szukać" przez BDL REST** (M) - w `ForestAssistant` zapytanie o wydzielenia z drzewami
+      gatunku (`data/speciesTrees.ts`) w promieniu 3-5 km, wielokąty na mapie + lista najbliższych z
+      "Prowadź"/"Zapisz jako grzybowisko", cache w IndexedDB. Wiek drzew tylko jako filtr użytkownika, nie
+      rekomendacja (zasada z Faz 25-26). Najpierw: test CORS i kodów `species_cd_d`.
+- [ ] **3. Eksport zdjęć jako paczka treningowa + backup ZIP** (M) - `<species-id>/*.jpg` pod
+      `scripts/prepare-dataset/raw/` (tylko znaleziska z wybranym `speciesId`); przy okazji backup v2 jako ZIP
+      zamiast base64 w jednym JSON-ie (ryzyko braku pamięci). Nowa zależność `fflate` (lazy).
+
+### Następnie (małe, przed testem terenowym)
+- [ ] **4. Nakładka "Zakazy wstępu do lasu"** (S) - BDL `WMS_zakazy_wstepu_do_lasu` (i ew. zagrożenie
+      pożarowe) jako nowy wpis w `MAP_OVERLAYS`; w drugim kroku (M) jednorazowe sprawdzenie "czy tu wolno"
+      przy zapisie - tylko przy włączonej nakładce (ta sama zasada prywatności co drzewostan).
+- [ ] **5. Screen Wake Lock** (S) - podczas nawigacji do auta/grzybowiska i w `CompassPanel`; wyłączony w
+      trybie oszczędzania baterii, cichy fallback bez wsparcia.
+
+### Średnie / duże
+- [ ] **6. Skaner wieloujęciowy** (M) - do 3 zdjęć (kapelusz/spód/trzon), uśrednione prawdopodobieństwa,
+      ostrzeżenie "ujęcia się nie zgadzają".
+- [ ] **7. Import zdjęć z galerii po powrocie** (M) - czas z EXIF, lokalizacja z najbliższego w czasie punktu
+      śladu GPS wyprawy (`tripTrailPoints`), nie z GPS w EXIF.
+- [ ] **8. "Wróć po śladzie"** (S-M) - nawigacja wstecz po własnym śladzie, gdy nie zapisano auta.
+- [ ] **9. Offline'owa paczka drzewostanów okolic Szczecina** (L) - skrypt pobierający wydzielenia z BDL REST,
+      pobieranie na żądanie do IndexedDB; licencja/atrybucja BDL do sprawdzenia, zakres terenu do decyzji.
+- [ ] **10. Retrening jako pętla sezonowa** - Etap 2 Fazy 28 zasilany pkt 3 i 6.
+
+Test terenowy (Faza 28, Etap 3) - przenieść na koniec i rozszerzyć o wake lock, zakazy, "gdzie szukać" z
+cache i import z galerii.
+
+---
+
 ## Faza 28 - Plan rozwoju po domknięciu wszystkich roadmap (2026-10-02, "podaj plan rozwoju")
 
 Punkt wyjścia: wszystkie `docs/*-ROADMAP.md` zamknięte, wątek drzewostanów (MAP-ROADMAP.md, "Dodatkowe
