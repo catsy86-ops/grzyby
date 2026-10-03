@@ -17,6 +17,10 @@ zakres i priorytet.
 
 Endpointy sprawdzone przez agenta (GetMap w EPSG:3857 + nagłówki CORS, 2026-10-03). Kolejność = priorytet.
 
+**Szczegółowy plan wdrożenia krok po kroku: [`docs/MAPA-WARSTWY-PLAN.md`](MAPA-WARSTWY-PLAN.md)** (15 kroków w
+kolejności wykonania, z plikami, testami, weryfikacją i decyzjami; tam też poprawka: zakazy to WMS `LAYERS=3`,
+REST warstwa `0`).
+
 ### Błędy i poprawki istniejących warstw
 - [ ] **1. Cache offline OSM trafia ~1/3 kafli** - `offlineMapTiles.ts` zapisuje pod `a.tile...`, Leaflet
       rotuje `{s}` a/b/c, a trasa `map-tiles` w `sw.ts` (CacheFirst) nie normalizuje klucza -> dziury w mapie
