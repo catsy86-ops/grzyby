@@ -33,7 +33,7 @@ REST warstwa `0`).
       stały `zIndex` per nakładka (dziś wszystkie 10 - kolejność zależy od kolejności włączania). (S)
 - [ ] **4. Krótki cache dla warstw zmiennych** - pole `cache: 'long'|'short'|'none'` w `MapOverlayDef`; zakazy i
       pożary NetworkFirst 1 dzień (zakaz sprzed 50 dni offline = błędna informacja), radar bez cache. (S)
-- [ ] **5. Regulamin kafli OSM** - "Pobierz obszar offline" (do 4500 kafli) to prefetch zabroniony przez OSM
+- [x] **5. Regulamin kafli OSM** (2026-10-03: OSM bez subdomen, 2 zapytania naraz, informacja w panelu; domyślne 5 km zostaje) - "Pobierz obszar offline" (do 4500 kafli) to prefetch zabroniony przez OSM
       tile policy: CONCURRENCY 6 -> 2, limit dzienny, informacja; do zbadania źródło Geoportalu (licencja). (S-M)
 
 ### Nowe warstwy (darmowe, bez klucza)

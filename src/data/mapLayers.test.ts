@@ -4,7 +4,9 @@ import {
   getMapLayer,
   getMapOverlays,
   getOfflineMapLayer,
+  isBaseMapTileRequest,
   isCacheableOverlayRequest,
+  isLegacyOsmTileUrl,
   MAP_LAYERS,
   MAP_OVERLAYS,
   mapTileCacheKey,
@@ -60,11 +62,28 @@ describe('mapLayers', () => {
   })
 
   it('klucz cache kafli podkładu jest wspólny dla subdomen a/b/c', () => {
-    const key = 'https://a.tile.openstreetmap.org/16/36435/21024.png'
-    expect(mapTileCacheKey(new URL('https://b.tile.openstreetmap.org/16/36435/21024.png'))).toBe(key)
-    expect(mapTileCacheKey(new URL('https://c.tile.openstreetmap.org/16/36435/21024.png'))).toBe(key)
+    const key = 'https://a.tile.opentopomap.org/16/36435/21024.png'
+    expect(mapTileCacheKey(new URL('https://b.tile.opentopomap.org/16/36435/21024.png'))).toBe(key)
+    expect(mapTileCacheKey(new URL('https://c.tile.opentopomap.org/16/36435/21024.png'))).toBe(key)
     expect(mapTileCacheKey(new URL(key))).toBe(key)
-    expect(mapTileCacheKey(new URL('https://c.tile.opentopomap.org/14/1/2.png'))).toBe('https://a.tile.opentopomap.org/14/1/2.png')
+  })
+
+  it('mapa standardowa używa jednego adresu OSM, bez subdomen a/b/c', () => {
+    expect(getMapLayer('street').urlTemplate).toBe('https://tile.openstreetmap.org/{z}/{x}/{y}.png')
+  })
+
+  it('Service Worker zapisuje w cache kafle OSM i OpenTopoMap, ale nie ortofoto ani nakładek', () => {
+    expect(isBaseMapTileRequest(new URL('https://tile.openstreetmap.org/14/1/2.png'))).toBe(true)
+    expect(isBaseMapTileRequest(new URL('https://b.tile.opentopomap.org/14/1/2.png'))).toBe(true)
+    expect(isBaseMapTileRequest(new URL(`${getMapLayer('satellite').urlTemplate}?REQUEST=GetMap`))).toBe(false)
+    expect(isBaseMapTileRequest(new URL('https://tile.waymarkedtrails.org/hiking/14/1/2.png'))).toBe(false)
+  })
+
+  it('stare kafle OSM z subdomen a/b/c są rozpoznawane do usunięcia, nowe i OpenTopoMap nie', () => {
+    expect(isLegacyOsmTileUrl(new URL('https://a.tile.openstreetmap.org/14/1/2.png'))).toBe(true)
+    expect(isLegacyOsmTileUrl(new URL('https://c.tile.openstreetmap.org/14/1/2.png'))).toBe(true)
+    expect(isLegacyOsmTileUrl(new URL('https://tile.openstreetmap.org/14/1/2.png'))).toBe(false)
+    expect(isLegacyOsmTileUrl(new URL('https://a.tile.opentopomap.org/14/1/2.png'))).toBe(false)
   })
 
   it('klucz cache kafli nie zmienia adresów bez subdomeny a/b/c', () => {

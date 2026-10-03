@@ -28,12 +28,15 @@ export const OFFLINE_RADIUS_PRESETS = [
 function buildTileUrl(urlTemplate: string, z: number, x: number, y: number): string {
   return urlTemplate.replace('{s}', 'a').replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y))
 }
-const DEFAULT_TILE_URL_TEMPLATE = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+const DEFAULT_TILE_URL_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 const MAP_TILES_CACHE_NAME = 'map-tiles'
 // Największy preset (10 km, zoom 13-16) to ok. 3940 kafelków - limit z marginesem na nieregularne
 // kształty obszaru przy różnych szerokościach geograficznych.
 const MAX_TILES_PER_DOWNLOAD = 4500
-const CONCURRENCY = 6
+// Serwery kafli OSM/OpenTopoMap są utrzymywane przez społeczność, a ich zasady nie pozwalają na masowe
+// pobieranie z wyprzedzeniem - 2 zapytania naraz zamiast 6 (Faza 30 krok 2). Pomiar 2026-10-03: obszar
+// 5 km (1066 kafli) w 33 s zamiast 17 s - akceptowalne przy jednorazowym pobraniu przed wyprawą.
+const CONCURRENCY = 2
 // Heurystyka do szacowania rozmiaru pobierania przed startem - realne kafelki PNG bywają 5-40 KB.
 const AVG_TILE_BYTES = 20 * 1024
 

@@ -28,7 +28,9 @@ export const MAP_LAYERS: MapLayerDef[] = [
   {
     id: 'street',
     label: 'Standardowa',
-    urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    // Bez subdomen a/b/c - OSM zaleca jeden adres (HTTP/2), patrz zasady korzystania z kafli
+    // (operations.osmfoundation.org/policies/tiles). Zmiana 2026-10-03, Faza 30 krok 2.
+    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
     offline: true,
@@ -73,12 +75,24 @@ export function getOfflineMapLayer(id: MapLayerId): MapLayerDef {
 }
 
 // Leaflet rozkłada kafle `{s}` na subdomeny a/b/c według (x + y) % 3, więc ten sam kafel ma trzy
-// adresy. "Pobierz obszar offline" zapisuje każdy kafel pod "a", a Service Worker (trasa 'map-tiles'
-// w sw.ts) szukał po dokładnym adresie - offline trafiała tylko ok. 1/3 pobranych kafli (pomiar
-// 2026-10-03: na z16 13 z 20 widocznych kafli szło do sieci mimo pobranego obszaru). Wspólny klucz
-// dla obu miejsc.
+// adresy (dziś dotyczy to OpenTopoMap - OSM ma jeden adres). "Pobierz obszar offline" zapisuje każdy
+// kafel pod "a", a Service Worker (trasa 'map-tiles' w sw.ts) szukał po dokładnym adresie - offline
+// trafiała tylko ok. 1/3 pobranych kafli (pomiar 2026-10-03: na z16 13 z 20 widocznych kafli szło do
+// sieci mimo pobranego obszaru). Wspólny klucz dla obu miejsc.
 export function mapTileCacheKey(url: URL): string {
   return url.href.replace(/^https:\/\/[abc]\.tile\./, 'https://a.tile.')
+}
+
+// Kafle podkładów, które Service Worker cache'uje w 'map-tiles' (te same, które wolno pobrać przez
+// "Pobierz obszar offline" - `offline: true` w MAP_LAYERS).
+export function isBaseMapTileRequest(url: URL): boolean {
+  return url.host === 'tile.openstreetmap.org' || /^[abc]\.tile\.opentopomap\.org$/.test(url.host)
+}
+
+// Kafle OSM sprzed zmiany adresu na tile.openstreetmap.org - żadne zapytanie już ich nie trafi,
+// więc Service Worker usuwa je przy aktywacji, żeby nie zajmowały miejsca.
+export function isLegacyOsmTileUrl(url: URL): boolean {
+  return /^[abc]\.tile\.openstreetmap\.org$/.test(url.host)
 }
 
 // Nakładki - półprzezroczyste warstwy nad dowolnym podkładem, włączane niezależnie od siebie.

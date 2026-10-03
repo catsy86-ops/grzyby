@@ -132,6 +132,10 @@ export function OfflineAreaDownload({ open, onOpenChange, getCenter, activeLayer
           <p className="text-sm text-muted-foreground">
             {tiles.length} kafelków, ok. {formatBytes(estimatedBytes)}
           </p>
+          <p className="text-xs text-muted-foreground">
+            Kafle pochodzą z darmowych serwerów społeczności OpenStreetMap - pobieraj tylko obszar, na który
+            się wybierasz.
+          </p>
 
           {progress && (
             <div className="flex flex-col gap-1">

@@ -132,7 +132,7 @@ describe('downloadTilesForOfflineUse', () => {
     mockCachesAndFetch()
     await downloadTilesForOfflineUse([{ z: 14, x: 1, y: 2 }])
 
-    expect(fetch).toHaveBeenCalledWith('https://a.tile.openstreetmap.org/14/1/2.png', expect.anything())
+    expect(fetch).toHaveBeenCalledWith('https://tile.openstreetmap.org/14/1/2.png', expect.anything())
   })
 
   it('pobiera z przekazanego szablonu URL innej warstwy (np. OpenTopoMap)', async () => {
@@ -150,16 +150,41 @@ describe('downloadTilesForOfflineUse', () => {
   it('zapisuje kafel pod kluczem, którego użyje Service Worker niezależnie od subdomeny a/b/c', async () => {
     const { cache, putCalls } = mockCachesAndFetch()
     // Leaflet wybiera subdomenę według (x + y) % 3: dla x=1, y=3 to "b", dla x=2, y=3 to "c".
-    await downloadTilesForOfflineUse([
-      { z: 14, x: 1, y: 3 },
-      { z: 14, x: 2, y: 3 },
-    ])
+    await downloadTilesForOfflineUse(
+      [
+        { z: 14, x: 1, y: 3 },
+        { z: 14, x: 2, y: 3 },
+      ],
+      undefined,
+      undefined,
+      'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    )
 
     const keysSwWillLookUp = [
-      mapTileCacheKey(new URL('https://b.tile.openstreetmap.org/14/1/3.png')),
-      mapTileCacheKey(new URL('https://c.tile.openstreetmap.org/14/2/3.png')),
+      mapTileCacheKey(new URL('https://b.tile.opentopomap.org/14/1/3.png')),
+      mapTileCacheKey(new URL('https://c.tile.opentopomap.org/14/2/3.png')),
     ]
     expect(putCalls.sort()).toEqual(keysSwWillLookUp.sort())
     expect(cache.match.mock.calls.map(([key]) => key).sort()).toEqual(keysSwWillLookUp.sort())
+  })
+
+  it('pobiera najwyżej 2 kafle naraz (zasady serwerów kafli OSM)', async () => {
+    mockCachesAndFetch()
+    let inFlight = 0
+    let maxInFlight = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        inFlight++
+        maxInFlight = Math.max(maxInFlight, inFlight)
+        await new Promise((resolve) => setTimeout(resolve, 5))
+        inFlight--
+        return new Response('tile', { status: 200 })
+      }),
+    )
+
+    await downloadTilesForOfflineUse(Array.from({ length: 8 }, (_, i) => ({ z: 14, x: i, y: 0 })))
+
+    expect(maxInFlight).toBe(2)
   })
 })

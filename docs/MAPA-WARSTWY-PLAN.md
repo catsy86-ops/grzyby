@@ -116,7 +116,7 @@ Kolejność wykonania = numeracja kroków. Mapowanie na `ROADMAP.md`:
 ### Krok 1. Kafle offline: jeden klucz cache dla subdomen a/b/c (BŁĄD) - S
 
 > **ZROBIONE 2026-10-03.** `mapTileCacheKey` w `mapLayers.ts`, użyty w `sw.ts` (trasa `map-tiles`) i
-> `offlineMapTiles.ts`. Pomiar na buildzie (preview, obszar 2 km nad Puszczą Bukową): **przed** - na z16
+> `offlineMapTiles.ts`. Pomiar na buildzie (preview, domyślny obszar 5 km = 1066 kafli nad Puszczą Bukową): **przed** - na z16
 > 13 z 20 widocznych kafli (wszystkie `b`/`c`) szło do sieci mimo pobranego obszaru; **po** - z14, z15 i z16:
 > 0 nowych zapytań, wszystkie kafle z cache. Uwaga do weryfikacji: emulacja "Offline" w DevTools nie obejmuje
 > zapytań samego Service Workera, więc miarą jest przyrost kluczy w `map-tiles` (CacheFirst idzie do sieci
@@ -162,6 +162,15 @@ dokładnym URL-u. Offline trafia więc tylko ok. 1/3 pobranych kafli - w lesie m
 ---
 
 ### Krok 2. Pobieranie offline zgodne z zasadami serwerów OSM - S
+
+> **ZROBIONE 2026-10-03** (decyzja użytkownika: tak, przejście na adres bez subdomen).
+> - OSM: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`; trasa SW przez `isBaseMapTileRequest`;
+> - Service Worker przy aktywacji usuwa stare kafle `[abc].tile.openstreetmap.org` (`isLegacyOsmTileUrl`) -
+>   **obszary offline pobrane wcześniej trzeba pobrać ponownie**;
+> - 2 zapytania naraz (pomiar: 5 km / 1066 kafli w 33 s, wcześniej 17 s); informacja w panelu pobierania;
+> - domyślny promień zostaje **5 km** (nie 2 km, jak zakładał plan) - typowe wyjście do lasu obejmuje kilka km,
+>   a 2 km zmuszałoby do kilku pobrań;
+> - sprawdzone na buildzie: stare wpisy OSM usunięte, wpis OpenTopoMap zachowany, nowe kafle w `map-tiles`.
 
 **Problem.** Zasady korzystania z kafli OSM (tile usage policy) nie pozwalają na masowe pobieranie z
 wyprzedzeniem. Dziś do 4500 kafli, 6 zapytań naraz - ryzyko zablokowania.
