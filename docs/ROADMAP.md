@@ -43,8 +43,8 @@ REST warstwa `0`).
 - [x] **7. Cieniowanie rzeźby NMT (GUGiK, LIDAR)** (2026-10-03) - `mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WMS/ShadedRelief`
       (layers `Raster`), nakładka `mix-blend-mode: multiply`, ~0.4, od z11, bez cache SW. Wąwozy, mokradła,
       rowy pod koronami drzew. (S)
-- [ ] **8. Mapa topograficzna GUGiK** (podkład) - `.../wss/service/img/guest/TOPO/MapServer/WMSServer`. (S)
-- [ ] **9. CyclOSM** (podkład "dukty i ścieżki") - `{s}.tile-cyclosm.openstreetmap.fr`, bez pobierania offline. (S)
+- [x] **8. Mapa topograficzna GUGiK** (podkład; 2026-10-03) - `.../wss/service/img/guest/TOPO/MapServer/WMSServer`. (S)
+- [x] **9. CyclOSM** (podkład "dukty i ścieżki"; 2026-10-03) - `{s}.tile-cyclosm.openstreetmap.fr`, bez pobierania offline. (S)
 - [ ] **10. GDOŚ rozszerzone** - `GDOS:UzytkiEkologiczne`, `GDOS:ZespolyPrzyrodniczoKrajobrazowe` (bez Natury 2000 -
       tam zbiór jest dozwolony). Szlaki rowerowe Waymarked. Radar RainViewer (M, tylko użytek osobisty). (S/M)
 - Odrzucone: WMTS G2_MOBILE (tylko EPSG:2180), BDOT PZGIK (401), Esri (licencja), CARTO/Stadia/Tracestrack (klucze).

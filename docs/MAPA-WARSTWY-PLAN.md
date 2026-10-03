@@ -432,6 +432,10 @@ mapy; DevTools: odpowiedzi NMT nie trafiają do żadnego cache.
 
 ### Krok 8. Podkład "Topograficzna (GUGiK)" - S
 
+> **ZROBIONE 2026-10-03** (jeden commit z krokiem 9). WMS w JPEG. `maxNativeZoom` niepotrzebny - to WMS, serwer
+> sam dobiera skalę mapy: od ok. z15 szczegółowa mapa topograficzna (poziomice, dukty, oddziały, lokalne nazwy
+> typu "Szwecki Kamień"), przy z14 i niżej powiększona mapa przeglądowa. Ciemny motyw: tylko przyciemnienie.
+
 **Cel.** Polska mapa topograficzna: drogi leśne, przecinki, oddziały, bagna.
 
 **Pliki:** `src/data/mapLayers.ts`, `src/index.css`, testy.
@@ -453,6 +457,9 @@ mapy; DevTools: odpowiedzi NMT nie trafiają do żadnego cache.
 ---
 
 ### Krok 9. Podkład "Dukty i ścieżki (CyclOSM)" - S
+
+> **ZROBIONE 2026-10-03.** Kafle z subdomen a/b/c (12/12 załadowanych), filtry jak OSM, bez pobierania offline
+> i poza cache Service Workera (`isBaseMapTileRequest` go nie obejmuje).
 
 **Pliki:** `src/data/mapLayers.ts`, `src/index.css`, testy.
 

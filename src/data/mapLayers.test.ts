@@ -37,6 +37,15 @@ describe('mapLayers', () => {
     expect(getOfflineMapLayer('topo').id).toBe('topo')
   })
 
+  it('getOfflineMapLayer wraca do standardowej mapy dla podkładów bez zgody na masowe pobieranie', () => {
+    expect(getOfflineMapLayer('topoPl').id).toBe('street')
+    expect(getOfflineMapLayer('cyclosm').id).toBe('street')
+  })
+
+  it('topograficzna GUGiK jako JPEG (ok. 4x lżejsze kafle niż PNG)', () => {
+    expect(getMapLayer('topoPl').wms?.format).toBe('image/jpeg')
+  })
+
   it('getOfflineMapLayer wraca do standardowej mapy dla ortofotomapy (zakaz harvestingu GUGiK)', () => {
     expect(getMapLayer('satellite').offline).toBe(false)
     expect(getOfflineMapLayer('satellite').id).toBe('street')

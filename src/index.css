@@ -503,8 +503,17 @@ body {
   filter: saturate(0.7) sepia(0.1) hue-rotate(-6deg) brightness(0.65) invert(1) hue-rotate(180deg) contrast(0.9);
 }
 
-/* Mapa terenowa: invert odwracałby cieniowanie rzeźby (wzgórza wyglądałyby jak doliny) - tylko
-   przyciemnienie. */
+/* CyclOSM to styl OSM - ta sama kolorystyka, te same filtry. */
+.map-layer--cyclosm {
+  filter: saturate(0.85) sepia(0.12) hue-rotate(-6deg) brightness(1.02);
+}
+.dark .map-layer--cyclosm {
+  filter: saturate(0.7) sepia(0.1) hue-rotate(-6deg) brightness(0.65) invert(1) hue-rotate(180deg) contrast(0.9);
+}
+
+/* Mapy terenowe (OpenTopoMap, topograficzna GUGiK): invert odwracałby cieniowanie rzeźby (wzgórza
+   wyglądałyby jak doliny) - tylko przyciemnienie. */
+.dark .map-layer--topoPl,
 .dark .map-layer--topo {
   filter: saturate(0.85) brightness(0.75) contrast(0.95);
 }

@@ -14,7 +14,7 @@ export interface WmsParams {
 }
 
 export interface MapLayerDef {
-  id: 'street' | 'topo' | 'satellite'
+  id: 'street' | 'topo' | 'topoPl' | 'cyclosm' | 'satellite'
   label: string
   urlTemplate: string
   attribution: string
@@ -52,6 +52,31 @@ export const MAP_LAYERS: MapLayerDef[] = [
     maxZoom: 19,
     maxNativeZoom: 17,
     offline: true,
+  },
+  {
+    id: 'topoPl',
+    label: 'Topograficzna (GUGiK)',
+    // Polska mapa topograficzna z Geoportalu: drogi leśne, przecinki, oddziały, bagna i lokalne nazwy,
+    // których nie ma w OSM. Usługa sama zmienia skalę mapy - szczegółowa od ok. z15, przy z14 i niżej
+    // pokazuje powiększoną mapę przeglądową. JPEG zamiast PNG - ok. 29 KB zamiast 132 KB na kafel
+    // (pomiar 2026-10-03), przy mapie rastrowej bez przezroczystości.
+    urlTemplate: 'https://mapy.geoportal.gov.pl/wss/service/img/guest/TOPO/MapServer/WMSServer',
+    attribution: '&copy; <a href="https://www.geoportal.gov.pl">GUGiK</a>',
+    maxZoom: 19,
+    wms: { layers: 'Raster', format: 'image/jpeg', transparent: false },
+    // GUGiK zabrania masowego pobierania - "Pobierz obszar offline" bierze wtedy mapę standardową.
+    offline: false,
+  },
+  {
+    id: 'cyclosm',
+    label: 'Dukty i ścieżki (CyclOSM)',
+    // Styl OSM, który wyraźnie rysuje drogi gruntowe, dukty leśne i ścieżki z rodzajem nawierzchni.
+    urlTemplate: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+    attribution:
+      'Styl: <a href="https://www.cyclosm.org">CyclOSM</a> | Dane: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+    // Serwer społecznościowy (OSM France) - tylko przeglądanie, bez masowego pobierania.
+    offline: false,
   },
   {
     id: 'satellite',
