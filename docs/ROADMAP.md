@@ -30,7 +30,7 @@ jeszcze nie zrobione. Kolejność = priorytet.
       (`AddFindingForm`, no-op gdy już trwałe), w "Pamięć i dane" stan + przycisk "Chroń moje dane".
 - [x] **README nieaktualny** (zaktualizowany 2026-10-03) - nadal twierdzi, że "Model nie jest jeszcze dołączony" (model alpha jest w
       `public/models/` od Fazy 20), lista funkcji pochodzi z początków projektu.
-- [ ] **E2E w CI** - `.github/workflows/ci.yml` uruchamia tylko lint, vitest i build; 4 scenariusze
+- [x] **E2E w CI** (2026-10-03: osobny job `e2e` w `ci.yml`; specy naprawione - onboarding przykrywał apkę, zmienione etykiety FAB/GPX; wspólny fixture `e2e/test.ts`) - `.github/workflows/ci.yml` uruchamia tylko lint, vitest i build; 4 scenariusze
       Playwright (`e2e/`) nie są odpalane automatycznie.
 
 ### Etap 2 - Skaner AI na pełny atlas (największa luka produktu, wymaga czasu użytkownika)

@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { expect, test } from '@playwright/test'
+import { expect, test } from './test'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PHOTO_FIXTURE = path.join(__dirname, 'fixtures', 'finding.png')
@@ -12,7 +12,7 @@ test('eksport GPX pobiera plik dla znaleziska z lokalizacją', async ({ page }) 
   // kliknięcie mapy przed otwarciem formularza ustawia pinezkę kandydata, której pozycja trafia
   // do initialPosition AddFindingForm.
   await page.locator('.leaflet-container').click({ position: { x: 300, y: 300 } })
-  await page.getByRole('button', { name: '+ Dodaj znalezisko' }).click()
+  await page.getByRole('button', { name: 'Dodaj znalezisko', exact: true }).click()
   await page.setInputFiles('input[type="file"]', PHOTO_FIXTURE)
   await page.getByRole('button', { name: 'Zapisz' }).click()
 
@@ -20,7 +20,7 @@ test('eksport GPX pobiera plik dla znaleziska z lokalizacją', async ({ page }) 
 
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Eksport i import danych' }).click()
-  await page.getByText('Eksportuj trasę (GPX)').click()
+  await page.getByRole('menuitem', { name: 'Trasa (GPX)' }).click()
   const download = await downloadPromise
 
   expect(download.suggestedFilename()).toMatch(/\.gpx$/)
