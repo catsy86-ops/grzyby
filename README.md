@@ -7,33 +7,50 @@ PWA (Progressive Web App) do zbierania grzybów: mapa znalezisk, rozpoznawanie g
 ```bash
 npm install
 npm run dev       # tryb deweloperski (Service Worker nieaktywny)
-npm run build     # build produkcyjny
+npm run build     # build produkcyjny (tsc + vite)
 npm run preview   # podgląd builda z aktywnym Service Workerem/PWA
+npm run lint      # oxlint
+npm test          # testy jednostkowe i komponentów (vitest)
+npm run test:e2e  # scenariusze Playwright (e2e/)
 ```
 
 ## Funkcje
 
-- **Mapa** — geolokalizacja, dodawanie znalezisk ze zdjęciem, notatkami i współrzędnymi, oraz
-  pobieranie obszaru mapy do trybu offline przed wyprawą (przycisk "Pobierz obszar offline")
-- **Rozpoznaj** — identyfikacja gatunku ze zdjęcia modelem TensorFlow.js działającym lokalnie w przeglądarce
-- **Dziennik** — historia znalezisk, statystyki, eksport/import danych jako JSON (backup / przenoszenie między urządzeniami)
-- **Baza wiedzy** — wyszukiwarka gatunków z filtrowaniem po jadalności
+- **Mapa** — znaleziska, grzybowiska i punkt "auto" na mapie (Leaflet, region Szczecin i woj.
+  zachodniopomorskie); warstwy: standardowa, terenowa, satelitarna (ortofoto GUGiK) oraz nakładki
+  Drzewostany (BDL, z podglądem "co tu rośnie"), Obszary chronione (GDOŚ) i Szlaki; heatmapa znalezisk,
+  filtr gatunków, nawigacja do auta i do zapisanego grzybowiska, ślad GPS wyprawy, pobieranie obszaru
+  mapy do pracy offline, kompas, tryb oszczędzania baterii.
+- **Rozpoznaj** — identyfikacja gatunku ze zdjęcia modelem TensorFlow.js działającym lokalnie
+  (bez wysyłania zdjęć), z przejściem "Dodaj do dziennika".
+- **Dziennik** — znaleziska i wyprawy, statystyki, wykresy, osiągnięcia, podsumowanie sezonu,
+  filtry (gatunek, data, drzewostan), ilość i waga (także po suszeniu), eksport JSON/CSV/PDF/GPX
+  i import JSON, przypomnienie o kopii zapasowej.
+- **Baza wiedzy** — atlas 45 gatunków z jadalnością, sobowtórami, kalendarzem sezonu, "Leśny
+  asystent", porównywarka gatunków i quiz sobowtórów.
+- **Narzędzia** — karta ratunkowa (SMS z lokalizacją, 112), pierwsza pomoc, lista sprzętu,
+  "Pamięć i dane" (pamięć offline i ochrona danych przed usunięciem przez przeglądarkę),
+  odtwarzacz ambient.
+
+Dane są tylko na urządzeniu (IndexedDB) — jedyną kopią poza nim jest ręczny eksport JSON.
 
 ## Powiadomienia i widget na Androida
 
-- **Powiadomienia offline** — apka może przypomnieć o bardzo długiej (4h+) aktywnej wyprawie
-  (`src/utils/notifications.ts`, `src/features/journal/TripManager.tsx`). Działają lokalnie przez
-  Service Workera, bez backendu/push.
+- **Powiadomienia lokalne** — długa lub przeterminowana wyprawa, ostrzeżenie przed burzą/wiatrem,
+  przypomnienie o grzybowisku "do sprawdzenia w sezonie". Działają przez Service Workera, bez
+  backendu/push.
 - **Widget na ekran główny Androida** — osobny natywny projekt w `android/` (WebView + mostek JS),
   patrz `android/README.md`. Wymaga zbudowania w Android Studio — nie jest częścią `npm run build`.
 
 ## Model rozpoznawania AI
 
-Moduł rozpoznawania (`src/utils/mushroomModel.ts`) oczekuje wytrenowanego modelu TensorFlow.js w `public/models/model.json` (+ pliki wag). **Model nie jest jeszcze dołączony** — to osobny etap wymagający zbioru danych treningowych i treningu. Do czasu dodania modelu zakładka "Rozpoznaj" wyświetla stosowny komunikat zamiast wyniku.
+Model (`public/models/model.json` + wagi, ładowany przez `src/utils/mushroomModel.ts`) to wersja
+**alpha**: rozpoznaje 19 z 45 gatunków atlasu oraz klasę "inne" (`public/models/metadata.json`),
+około 69% trafień na zbiorze walidacyjnym. Klasy są mapowane po nazwie z `metadata.json`.
+Przygotowanie zbioru danych i trening opisują [`scripts/prepare-dataset/README.md`](scripts/prepare-dataset/README.md)
+i [`docs/MODEL-TRAINING.md`](docs/MODEL-TRAINING.md).
 
-Pełna instrukcja dostarczenia modelu (dwie darmowe ścieżki, bez kluczy API, bez backendu) jest w [`docs/MODEL-TRAINING.md`](docs/MODEL-TRAINING.md). Kolejność klas wyjściowych modelu domyślnie odpowiada kolejności `id` gatunków z `src/data/species.json`, ale `mushroomModel.ts` odczyta też opcjonalny `public/models/metadata.json` (eksport Google Teachable Machine) i zmapuje klasy po nazwie zamiast pozycyjnie.
-
-Plan dalszej rozbudowy aplikacji (offline, UI/animacje) jest w [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Historia i plan rozwoju aplikacji: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## ⚠️ Ważne zastrzeżenie
 

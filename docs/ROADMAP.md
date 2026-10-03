@@ -28,7 +28,7 @@ jeszcze nie zrobione. Kolejność = priorytet.
       ("chronione / mogą zostać usunięte") w "Pamięć i dane" (`StorageInfoDrawer.tsx`, `utils/storageInfo.ts`).
       **Zrobione (2026-10-03):** `utils/persistentStorage.ts` - prośba po każdym zapisie znaleziska
       (`AddFindingForm`, no-op gdy już trwałe), w "Pamięć i dane" stan + przycisk "Chroń moje dane".
-- [ ] **README nieaktualny** - nadal twierdzi, że "Model nie jest jeszcze dołączony" (model alpha jest w
+- [x] **README nieaktualny** (zaktualizowany 2026-10-03) - nadal twierdzi, że "Model nie jest jeszcze dołączony" (model alpha jest w
       `public/models/` od Fazy 20), lista funkcji pochodzi z początków projektu.
 - [ ] **E2E w CI** - `.github/workflows/ci.yml` uruchamia tylko lint, vitest i build; 4 scenariusze
       Playwright (`e2e/`) nie są odpalane automatycznie.
