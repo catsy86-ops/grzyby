@@ -6,10 +6,10 @@ export { expect } from '@playwright/test'
 // aplikacja - inaczej OnboardingOverlay (pokazywany raz, przy pustym localStorage czystego profilu
 // Playwrighta) przykrywa całą apkę i każde kliknięcie wisi do timeoutu.
 export const test = base.extend({
-  page: async ({ page }, use) => {
+  page: async ({ page }, provide) => {
     await page.addInitScript(() => {
       localStorage.setItem('lysy-onboarding-seen', '1')
     })
-    await use(page)
+    await provide(page)
   },
 })

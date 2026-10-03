@@ -27,8 +27,10 @@ describe('consumeSharedPhoto', () => {
   it('odczytuje i usuwa udostępnione zdjęcie z cache', async () => {
     const cacheStorage = window.caches as unknown as { open: (n: string) => Promise<Cache> }
     const cache = await cacheStorage.open('shared-photo')
-    const blob = new Blob(['dane-zdjecia'], { type: 'image/png' })
-    await cache.put(SHARED_PHOTO_CACHE_KEY, new Response(blob, { headers: { 'Content-Type': 'image/png' } }))
+    // Ciało jako string, nie jsdom-owy Blob - Response z Node (undici) na Node 22 woła na Blobie
+    // `.stream()`, którego jsdom nie ma (CI padało "object.stream is not a function"). Typ i tak
+    // pochodzi z nagłówka Content-Type.
+    await cache.put(SHARED_PHOTO_CACHE_KEY, new Response('dane-zdjecia', { headers: { 'Content-Type': 'image/png' } }))
 
     const file = await consumeSharedPhoto()
     expect(file).not.toBeNull()
