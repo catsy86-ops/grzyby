@@ -196,6 +196,14 @@ naraz do `tile.openstreetmap.org`.
 
 ### Krok 3. Filtr kolorów tylko dla podkładów (BŁĄD) - S
 
+> **ZROBIONE 2026-10-03.** Klasy `map-layer--<id>` / `map-overlay--<id>` na kontenerach warstw, filtry tylko
+> na podkładach (OSM: tint / invert w ciemnym; terenowa: tylko przyciemnienie; ortofoto: `brightness(0.8)` w
+> ciemnym). **Przy weryfikacji wyszedł drugi błąd:** podkład nie miał własnego `z-index` (przekazywane
+> `undefined` nadpisywało domyślne 1 Leafleta), więc jego wewnętrzny kontener kafli (`z-index` = maxZoom, np. 19)
+> przykrywał nakładkę (`z-index` 10) - nakładka nad ortofoto w jasnym motywie była niewidoczna. Wcześniej
+> maskował to filtr (filtr tworzy osobny kontekst warstw). Poprawka: podkład `zIndex: 1` + test regresji.
+> Sprawdzone zrzutami: ortofoto + Drzewostany (jasny i ciemny), terenowa w ciemnym, standardowa w ciemnym.
+
 **Problem.** Filtr w `index.css` działa na cały `.leaflet-tile-pane`: w ciemnym motywie ortofotomapa jest
 negatywem, a nakładki (drzewostany, obszary chronione, w przyszłości zakazy i pożary) zmieniają kolory, więc
 legenda przestaje się zgadzać.

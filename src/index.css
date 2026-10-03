@@ -484,25 +484,41 @@ body {
   --brand-accent: var(--color-slate-500);
 }
 
-/* Tint kafli mapy (Leaflet/OSM) pod zielono-bursztynową paletę marki - domyślna kolorystyka
-   OSM (niebiesko-beżowa) gryzła się z resztą apki. Filtr działa na całą warstwę kafli naraz
-   (nie per-<img>), więc jest tani, i nie dotyka źródła/URL kafli ani cache'u offline
-   (Service Worker cache'uje niezmienione pliki PNG - filtr jest czysto wizualny przy renderze). */
-.leaflet-tile-pane {
+/* Tint kafli mapy pod zielono-bursztynową paletę marki - domyślna kolorystyka OSM
+   (niebiesko-beżowa) gryzła się z resztą apki. Filtr działa na kontener warstwy (nie per-<img>),
+   więc jest tani, i nie dotyka źródła/URL kafli ani cache'u offline (Service Worker cache'uje
+   niezmienione pliki PNG - filtr jest czysto wizualny przy renderze).
+   Tylko PODKŁADY (klasy `map-layer--<id>` z MapTileLayers.tsx). Do 2026-10-03 filtr wisiał na całym
+   `.leaflet-tile-pane`: w ciemnym motywie ortofotomapa była negatywem, a nakładki (drzewostany,
+   obszary chronione) zmieniały kolory i przestawały zgadzać się z legendą serwera - nakładki
+   celowo zostają bez filtra (Faza 30, krok 3). */
+.map-layer--street,
+.map-layer--topo {
   filter: saturate(0.85) sepia(0.12) hue-rotate(-6deg) brightness(1.02);
 }
 
 /* W trybie ciemnym jasne kafle OSM świeciłyby na tle ciemnej apki - klasyczna sztuczka
    invert+counter-hue-rotate odwraca jasność bez drastycznego psucia odcieni wody/lasu. */
-.dark .leaflet-tile-pane {
+.dark .map-layer--street {
   filter: saturate(0.7) sepia(0.1) hue-rotate(-6deg) brightness(0.65) invert(1) hue-rotate(180deg) contrast(0.9);
+}
+
+/* Mapa terenowa: invert odwracałby cieniowanie rzeźby (wzgórza wyglądałyby jak doliny) - tylko
+   przyciemnienie. */
+.dark .map-layer--topo {
+  filter: saturate(0.85) brightness(0.75) contrast(0.95);
+}
+
+/* Zdjęcia lotnicze nigdy nie są odwracane - w nocnym motywie tylko lekko ciemniejsze. */
+.dark .map-layer--satellite {
+  filter: brightness(0.8);
 }
 
 /* Kontrolki Leaflet (zoom, popup, atrybucja) przeflancowane na tokeny motywu apki - to jedyne
    elementy mapy, które wciąż wyglądały jak domyślny, generyczny widget biblioteki (białe
    kwadraty, "Lucida Console" +/-, ostre rogi) wśród reszty UI zbudowanego na kartach/cieniach
    OKLCH. W trybie ciemnym raziło to najbardziej - zostawały jaskrawo białe mimo przyciemnionych
-   kafli mapy tuż obok (patrz `.dark .leaflet-tile-pane` wyżej). Kolory idą przez te same
+   kafli mapy tuż obok (patrz `.dark .map-layer--street` wyżej). Kolory idą przez te same
    zmienne co reszta apki, więc jasny/ciemny motyw obsługuje się automatycznie, bez osobnych
    `.dark`-reguł tutaj.
    `!important` tam, gdzie domyślny leaflet.css ma wyższą lub równą specyficzność (np.

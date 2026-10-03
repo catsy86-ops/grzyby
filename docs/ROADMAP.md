@@ -26,7 +26,7 @@ REST warstwa `0`).
       rotuje `{s}` a/b/c, a trasa `map-tiles` w `sw.ts` (CacheFirst) nie normalizuje klucza -> dziury w mapie
       offline. Poprawka: `cacheKeyWillBeUsed` (subdomena -> `a`, wzorem `overlayCacheKey`) albo OSM bez `{s}`
       (`tile.openstreetmap.org`, zalecane przez OSM) + regex w `sw.ts` + test. (S, najwyższy priorytet)
-- [ ] **2. Filtr ciemnego motywu na całym `.leaflet-tile-pane`** (`index.css`) - ortofotomapa w negatywie,
+- [x] **2. Filtr ciemnego motywu na całym `.leaflet-tile-pane`** (2026-10-03, + naprawiony brak `z-index` podkładu, przez który nakładka mogła być przykryta) (`index.css`) - ortofotomapa w negatywie,
       zmienione kolory nakładek BDL/GDOŚ. Poprawka: `className` per warstwa (`map-layer--street` itd.), invert
       tylko dla OSM, topo/orto tylko przyciemnione, nakładki bez filtra. (S)
 - [ ] **3. `maxNativeZoom`** (OpenTopoMap natywnie 17 / max 19, szlaki 18/19), `detectRetina` tylko dla orto,
