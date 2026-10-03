@@ -29,6 +29,7 @@ describe('getCacheInfo', () => {
     expect(info).toEqual([
       { name: 'map-tiles', label: 'Kafelki mapy (offline)', entryCount: 42, sizeBytes: 4200 },
       { name: 'map-overlays', label: 'Nakładki mapy (obejrzane)', entryCount: 3, sizeBytes: 150 },
+      { name: 'map-overlays-short', label: 'Nakładki bieżące (zakazy, pożary)', entryCount: 3, sizeBytes: 150 },
       { name: 'ai-model', label: 'Model rozpoznawania AI', entryCount: 3, sizeBytes: 150 },
     ])
   })

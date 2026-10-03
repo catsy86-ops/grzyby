@@ -8,15 +8,16 @@
 
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
-import { CacheFirst } from 'workbox-strategies'
+import { CacheFirst, NetworkFirst } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { SHARED_PHOTO_CACHE, SHARED_PHOTO_CACHE_KEY } from './utils/sharedPhoto'
 import {
+  getOverlayCachePolicy,
   isBaseMapTileRequest,
-  isCacheableOverlayRequest,
   isLegacyOsmTileUrl,
   MAP_OVERLAYS_CACHE_NAME,
+  MAP_OVERLAYS_SHORT_CACHE_NAME,
   mapTileCacheKey,
   overlayCacheKey,
 } from './data/mapLayers'
@@ -47,12 +48,28 @@ registerRoute(
 // (MapTileLayers.tsx), więc nie ma tu nieprzezroczystych odpowiedzi, które Chrome liczy do limitu
 // pamięci po kilka MB każdą.
 registerRoute(
-  ({ url }) => isCacheableOverlayRequest(url),
+  ({ url }) => getOverlayCachePolicy(url) === 'long',
   new CacheFirst({
     cacheName: MAP_OVERLAYS_CACHE_NAME,
     plugins: [
       { cacheKeyWillBeUsed: async ({ request }) => overlayCacheKey(new URL(request.url)) },
       new ExpirationPlugin({ maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 60 }),
+      new CacheableResponsePlugin({ statuses: [200] }),
+    ],
+  }),
+)
+
+// Nakładki zmienne z dnia na dzień (zakazy wstępu, zagrożenie pożarowe - `cache: 'short'` w
+// mapLayers.ts): zawsze najpierw sieć, a cache tylko jako zapas bez zasięgu i najwyżej z ostatniej
+// doby. Zakaz sprzed tygodni pokazany offline byłby gorszy niż brak warstwy.
+registerRoute(
+  ({ url }) => getOverlayCachePolicy(url) === 'short',
+  new NetworkFirst({
+    cacheName: MAP_OVERLAYS_SHORT_CACHE_NAME,
+    networkTimeoutSeconds: 5,
+    plugins: [
+      { cacheKeyWillBeUsed: async ({ request }) => overlayCacheKey(new URL(request.url)) },
+      new ExpirationPlugin({ maxEntries: 1000, maxAgeSeconds: 60 * 60 * 24 }),
       new CacheableResponsePlugin({ statuses: [200] }),
     ],
   }),

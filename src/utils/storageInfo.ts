@@ -16,6 +16,7 @@ export interface CacheInfo {
 const MANAGED_CACHES: { name: string; label: string }[] = [
   { name: 'map-tiles', label: 'Kafelki mapy (offline)' },
   { name: 'map-overlays', label: 'Nakładki mapy (obejrzane)' },
+  { name: 'map-overlays-short', label: 'Nakładki bieżące (zakazy, pożary)' },
   { name: 'ai-model', label: 'Model rozpoznawania AI' },
 ]
 

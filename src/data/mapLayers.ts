@@ -121,6 +121,11 @@ export interface MapOverlayDef {
   // Kolejność rysowania: plamy (drzewostany, obszary) pod liniami (szlaki), niezależnie od kolejności
   // włączania. Zarezerwowane na przyszłe nakładki (Faza 30): rzeźba 5, zakazy 12, pożary 13.
   zIndex: number
+  // Jak Service Worker przechowuje obejrzane kafle: 'long' - CacheFirst 60 dni (dane zmieniają się
+  // rzadko: drzewostany, obszary chronione, szlaki); 'short' - NetworkFirst, najwyżej 1 dzień (zakazy
+  // wstępu, zagrożenie pożarowe - stary zakaz pokazany offline byłby błędną informacją); 'none' - bez
+  // cache (usługi GUGiK zabraniają gromadzenia kafli).
+  cache: 'long' | 'short' | 'none'
   wms?: WmsParams
 }
 
@@ -136,6 +141,7 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     maxZoom: 19,
     opacity: 0.85,
     zIndex: 10,
+    cache: 'long',
     // 1 = wydzielenia (Lasy Państwowe), 0 = wydzielenia poza LP, 3 = granice oddziałów.
     wms: { layers: '0,1,3', format: 'image/png', transparent: true },
   },
@@ -149,6 +155,7 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     maxZoom: 19,
     opacity: 0.45,
     zIndex: 11,
+    cache: 'long',
     wms: { layers: 'GDOS:Rezerwaty,GDOS:ParkiNarodowe', format: 'image/png', transparent: true },
   },
   {
@@ -163,6 +170,7 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     maxNativeZoom: 18,
     opacity: 0.9,
     zIndex: 15,
+    cache: 'long',
   },
 ]
 
@@ -179,12 +187,23 @@ export function getMapOverlays(ids: readonly MapOverlayId[]): MapOverlayDef[] {
 // zapamiętywanie obejrzanego, nie masowe pobieranie - "Pobierz obszar offline" nakładek nie
 // pobiera. Ortofotomapa GUGiK celowo poza tym cache'em (regulamin zabrania gromadzenia kafli).
 export const MAP_OVERLAYS_CACHE_NAME = 'map-overlays'
+export const MAP_OVERLAYS_SHORT_CACHE_NAME = 'map-overlays-short'
 
-const overlayHosts = new Set(MAP_OVERLAYS.map((overlay) => new URL(overlay.urlTemplate.replace(/\{[a-z]\}/g, '0')).host))
+export type OverlayCachePolicy = 'long' | 'short'
 
-export function isCacheableOverlayRequest(url: URL): boolean {
+// Rozpoznanie nakładki po PREFIKSIE usługi, nie po hoście: drzewostany, zakazy wstępu i zagrożenie
+// pożarowe są na tym samym serwerze BDL, a mają różne polityki cache. Dla kafli XYZ prefiks to szablon
+// do pierwszego "{", dla WMS adres usługi + "?" (Leaflet dokleja tylko parametry zapytania).
+const overlayPrefixes = MAP_OVERLAYS.map((overlay) => ({
+  overlay,
+  prefix: overlay.wms ? `${overlay.urlTemplate}?` : overlay.urlTemplate.split('{')[0],
+}))
+
+export function getOverlayCachePolicy(url: URL): OverlayCachePolicy | null {
   // Zapytania o atrybuty wydzielenia (karta "co tu rośnie") muszą być zawsze świeże.
-  return overlayHosts.has(url.host) && url.searchParams.get('REQUEST') !== 'GetFeatureInfo'
+  if (url.searchParams.get('REQUEST') === 'GetFeatureInfo') return null
+  const overlay = overlayPrefixes.find(({ prefix }) => url.href.startsWith(prefix))?.overlay
+  return overlay && overlay.cache !== 'none' ? overlay.cache : null
 }
 
 // Ponowienia kafli WMS (utils/wmsTileRetry.ts) dopisują `retry=N` - to ten sam obraz, więc klucz

@@ -280,6 +280,10 @@ Szlaki znikają na z19. Wszystkie nakładki mają `zIndex: 10`, więc kolejnoś�
 
 ### Krok 5. Cache per nakładka: długi / krótki / bez cache - S
 
+> **ZROBIONE 2026-10-03.** `MapOverlayDef.cache`, `getOverlayCachePolicy` (prefiks usługi zamiast hosta),
+> trasa `map-overlays-short` (NetworkFirst, 5 s, 1 doba) w `sw.ts`, nowa pozycja w "Pamięć i dane".
+> Weryfikacja na buildzie razem z krokiem 6 (pierwsza nakładka z `cache: 'short'`).
+
 **Problem.** Zakazy wstępu i zagrożenie pożarowe zmieniają się codziennie. Dzisiejsza reguła (każdy host z
 `MAP_OVERLAYS` -> CacheFirst 60 dni) pokazałaby offline zakaz sprzed tygodni - błędna informacja
 bezpieczeństwa. Zakazy są na tym samym hoście co BDL, więc trzeba rozróżniać po **ścieżce usługi**.

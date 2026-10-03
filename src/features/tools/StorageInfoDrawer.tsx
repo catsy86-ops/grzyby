@@ -25,6 +25,7 @@ interface StorageInfoDrawerProps {
 const CLEAR_DESCRIPTIONS: Record<string, string> = {
   'map-tiles': 'Pobrane obszary mapy przestaną być dostępne offline - będziesz musiał(a) pobrać je ponownie będąc online.',
   'map-overlays': 'Obejrzane wcześniej drzewostany, obszary chronione i szlaki przestaną być widoczne offline, dopóki nie obejrzysz ich ponownie online.',
+  'map-overlays-short': 'Zapas zakazów wstępu i zagrożenia pożarowego z ostatniej doby zniknie - online pobiorą się aktualne dane.',
   'ai-model': 'Model rozpoznawania AI zostanie usunięty z pamięci podręcznej i pobierze się ponownie przy kolejnym uruchomieniu online.',
 }
 

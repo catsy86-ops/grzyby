@@ -5,7 +5,7 @@ import {
   getMapOverlays,
   getOfflineMapLayer,
   isBaseMapTileRequest,
-  isCacheableOverlayRequest,
+  getOverlayCachePolicy,
   isLegacyOsmTileUrl,
   MAP_LAYERS,
   MAP_OVERLAYS,
@@ -79,11 +79,22 @@ describe('mapLayers', () => {
 
   it('cache nakładek obejmuje kafle BDL/GDOŚ/szlaków, ale nie ortofotomapę ani GetFeatureInfo', () => {
     const bdl = 'https://mapserver.bdl.lasy.gov.pl/ArcGIS/services/WMS_BDL/mapserver/WMSServer'
-    expect(isCacheableOverlayRequest(new URL(`${bdl}?REQUEST=GetMap&BBOX=1,2,3,4`))).toBe(true)
-    expect(isCacheableOverlayRequest(new URL('https://tile.waymarkedtrails.org/hiking/13/1/2.png'))).toBe(true)
-    expect(isCacheableOverlayRequest(new URL('https://sdi.gdos.gov.pl/wms?REQUEST=GetMap'))).toBe(true)
-    expect(isCacheableOverlayRequest(new URL(`${bdl}?REQUEST=GetFeatureInfo`))).toBe(false)
-    expect(isCacheableOverlayRequest(new URL(`${getMapLayer('satellite').urlTemplate}?REQUEST=GetMap`))).toBe(false)
+    expect(getOverlayCachePolicy(new URL(`${bdl}?REQUEST=GetMap&BBOX=1,2,3,4`))).toBe('long')
+    expect(getOverlayCachePolicy(new URL('https://tile.waymarkedtrails.org/hiking/13/1/2.png'))).toBe('long')
+    expect(getOverlayCachePolicy(new URL('https://sdi.gdos.gov.pl/wms?REQUEST=GetMap'))).toBe('long')
+    expect(getOverlayCachePolicy(new URL(`${bdl}?REQUEST=GetFeatureInfo`))).toBeNull()
+    expect(getOverlayCachePolicy(new URL(`${getMapLayer('satellite').urlTemplate}?REQUEST=GetMap`))).toBeNull()
+  })
+
+  it('polityka cache rozpoznaje usługę po ścieżce, nie po hoście - inna usługa na serwerze BDL nie trafia do cache drzewostanów', () => {
+    const otherBdlService = 'https://mapserver.bdl.lasy.gov.pl/ArcGIS/services/WMS_zakazy_wstepu_do_lasu/MapServer/WMSServer'
+    expect(getOverlayCachePolicy(new URL(`${otherBdlService}?REQUEST=GetMap&LAYERS=3`))).not.toBe('long')
+    // Szlaki rowerowe (ten sam host co piesze) - też nie są nakładką "piesze".
+    expect(getOverlayCachePolicy(new URL('https://tile.waymarkedtrails.org/cycling/13/1/2.png'))).toBeNull()
+  })
+
+  it('każda nakładka ma politykę cache', () => {
+    for (const overlay of MAP_OVERLAYS) expect(['long', 'short', 'none']).toContain(overlay.cache)
   })
 
   it('klucz cache kafli podkładu jest wspólny dla subdomen a/b/c', () => {

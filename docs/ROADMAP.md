@@ -31,7 +31,7 @@ REST warstwa `0`).
       tylko dla OSM, topo/orto tylko przyciemnione, nakładki bez filtra. (S)
 - [x] **3. `maxNativeZoom`** (2026-10-03) (OpenTopoMap natywnie 17 / max 19, szlaki 18/19), `detectRetina` tylko dla orto,
       stały `zIndex` per nakładka (dziś wszystkie 10 - kolejność zależy od kolejności włączania). (S)
-- [ ] **4. Krótki cache dla warstw zmiennych** - pole `cache: 'long'|'short'|'none'` w `MapOverlayDef`; zakazy i
+- [x] **4. Krótki cache dla warstw zmiennych** (2026-10-03) - pole `cache: 'long'|'short'|'none'` w `MapOverlayDef`; zakazy i
       pożary NetworkFirst 1 dzień (zakaz sprzed 50 dni offline = błędna informacja), radar bez cache. (S)
 - [x] **5. Regulamin kafli OSM** (2026-10-03: OSM bez subdomen, 2 zapytania naraz, informacja w panelu; domyślne 5 km zostaje) - "Pobierz obszar offline" (do 4500 kafli) to prefetch zabroniony przez OSM
       tile policy: CONCURRENCY 6 -> 2, limit dzienny, informacja; do zbadania źródło Geoportalu (licencja). (S-M)
