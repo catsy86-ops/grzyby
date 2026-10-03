@@ -263,7 +263,7 @@ Szlaki znikają na z19. Wszystkie nakładki mają `zIndex: 10`, więc kolejnoś�
    - `trails`: `maxNativeZoom: 18`, `maxZoom: 19`;
    - `satellite`: `detectRetina: true` (Leaflet dla WMS prosi wtedy o obraz 512 px na kafel 256 px - ostrzej,
      bez zmiany poziomów zoomu; **nie** dla OSM i BDL - drobny tekst i 4x więcej kafli);
-   - `zIndex` nakładek (plamy pod liniami): `relief 5`, `forest 10`, `protected 11`, `bans 12`, `fire 13`,
+   - `zIndex` nakładek (plamy pod liniami): `relief 5`, `fire 6` (zmienione w kroku 6), `forest 10`, `protected 11`, `bans 12`,
      `trails 15` (wartości dla przyszłych nakładek zarezerwowane już teraz w komentarzu).
 3. `MapTileLayer`: `maxNativeZoom: def.maxNativeZoom`, `detectRetina: 'detectRetina' in def ? def.detectRetina : undefined`,
    `zIndex: overlay?.zIndex`.
@@ -325,6 +325,18 @@ w `map-overlays`; po kroku 6 zakazy trafiają do `map-overlays-short`.
 ## Etap B - Nowe warstwy
 
 ### Krok 6. Nakładki "Zakazy wstępu" i "Zagrożenie pożarowe" (BDL) - S
+
+> **ZROBIONE 2026-10-03.** Sprawdzone na buildzie nad nadl. Gościno (leśnictwo Grzybowo, zakazy do 31.12.2026):
+> zakazy widoczne od z10, kafle zakazów i pożarów w `map-overlays-short`, drzewostanów w `map-overlays`.
+> **Różnice względem planu wykryte przy weryfikacji:**
+> - WMS rysuje zakazy na **żółto (`#ffff4d`)**, nie na czerwono, jak opisuje renderer REST - legenda poprawiona
+>   na kolor zmierzony z pikseli kafla;
+> - kolory pożarów w WMS to kolory REST rozjaśnione ~30% bielą (zmierzone: małe `#88ff4d`, brak `#4d9bff`;
+>   duże `#ff4d4d` i średnie `#ffff4d` wyliczone tym samym przekształceniem);
+> - pożary pokrywają cały region, więc dostały **`zIndex: 6`** (pod drzewostanami i zakazami, nie 13) - nad
+>   nimi zielone tło zmieniało kolor zakazów.
+> - Do kroku 12 (legenda): zakazy i "średnie" zagrożenie mają w WMS ten sam żółty - rozważyć `hue-rotate` dla
+>   zakazów (z legendą liczoną po filtrze), żeby zakaz zawsze był jednoznaczny.
 
 **Cel.** Legalność i bezpieczeństwo: czasowe zakazy wstępu do lasu (mandat) i strefy zagrożenia pożarowego.
 To realizuje Fazę 29 pkt 4, krok 1.

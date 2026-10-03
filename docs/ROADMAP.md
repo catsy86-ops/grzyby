@@ -37,7 +37,7 @@ REST warstwa `0`).
       tile policy: CONCURRENCY 6 -> 2, limit dzienny, informacja; do zbadania źródło Geoportalu (licencja). (S-M)
 
 ### Nowe warstwy (darmowe, bez klucza)
-- [ ] **6. Zakazy wstępu + zagrożenie pożarowe (BDL)** = Faza 29 pkt 4 -
+- [x] **6. Zakazy wstępu + zagrożenie pożarowe (BDL)** (2026-10-03; legenda wg kolorów WMS, pożary pod drzewostanami) = Faza 29 pkt 4 -
       `.../WMS_zakazy_wstepu_do_lasu/MapServer/WMSServer` (layers `3`),
       `.../WMS_zagrozenie_pozarowe_w_lasach/MapServer/WMSServer` (layers `0`); wymaga pkt 4 (krótki cache). (S)
 - [ ] **7. Cieniowanie rzeźby NMT (GUGiK, LIDAR)** - `mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WMS/ShadedRelief`
@@ -86,7 +86,7 @@ operację `query` z `f=geojson`, paginacją i max 2000 rekordów; pola m.in. `sp
       zamiast base64 w jednym JSON-ie (ryzyko braku pamięci). Nowa zależność `fflate` (lazy).
 
 ### Następnie (małe, przed testem terenowym)
-- [ ] **4. Nakładka "Zakazy wstępu do lasu"** (S) - BDL `WMS_zakazy_wstepu_do_lasu` (i ew. zagrożenie
+- [x] **4. Nakładka "Zakazy wstępu do lasu"** (S - krok 1 zrobiony 2026-10-03 razem z zagrożeniem pożarowym; krok 2 "czy tu wolno" = MAPA-WARSTWY-PLAN.md krok 14) - BDL `WMS_zakazy_wstepu_do_lasu` (i ew. zagrożenie
       pożarowe) jako nowy wpis w `MAP_OVERLAYS`; w drugim kroku (M) jednorazowe sprawdzenie "czy tu wolno"
       przy zapisie - tylko przy włączonej nakładce (ta sama zasada prywatności co drzewostan).
 - [ ] **5. Screen Wake Lock** (S) - podczas nawigacji do auta/grzybowiska i w `CompassPanel`; wyłączony w

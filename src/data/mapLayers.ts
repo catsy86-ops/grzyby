@@ -107,7 +107,7 @@ export function isLegacyOsmTileUrl(url: URL): boolean {
 
 // Nakładki - półprzezroczyste warstwy nad dowolnym podkładem, włączane niezależnie od siebie.
 export interface MapOverlayDef {
-  id: 'forest' | 'protected' | 'trails'
+  id: 'forest' | 'protected' | 'bans' | 'fire' | 'trails'
   label: string
   description: string
   urlTemplate: string
@@ -118,14 +118,18 @@ export interface MapOverlayDef {
   maxZoom: number
   maxNativeZoom?: number
   opacity: number
-  // Kolejność rysowania: plamy (drzewostany, obszary) pod liniami (szlaki), niezależnie od kolejności
-  // włączania. Zarezerwowane na przyszłe nakładki (Faza 30): rzeźba 5, zakazy 12, pożary 13.
+  // Kolejność rysowania, niezależna od kolejności włączania: tło regionu (pożary 6) pod plamami
+  // (drzewostany 10, obszary chronione 11, zakazy 12), te pod liniami (szlaki 15). Zarezerwowane:
+  // rzeźba terenu 5 (Faza 30).
   zIndex: number
   // Jak Service Worker przechowuje obejrzane kafle: 'long' - CacheFirst 60 dni (dane zmieniają się
   // rzadko: drzewostany, obszary chronione, szlaki); 'short' - NetworkFirst, najwyżej 1 dzień (zakazy
   // wstępu, zagrożenie pożarowe - stary zakaz pokazany offline byłby błędną informacją); 'none' - bez
   // cache (usługi GUGiK zabraniają gromadzenia kafli).
   cache: 'long' | 'short' | 'none'
+  // Kolory tak, jak rysuje je WMS (zmierzone z pikseli kafli - opis renderera w REST bywa inny niż obraz
+  // WMS) - pod panel warstw i legendę na mapie.
+  legend?: { color: string; label: string }[]
   wms?: WmsParams
 }
 
@@ -157,6 +161,48 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     zIndex: 11,
     cache: 'long',
     wms: { layers: 'GDOS:Rezerwaty,GDOS:ParkiNarodowe', format: 'image/png', transparent: true },
+  },
+  // Zakazy i pożary: usługi Lasów Państwowych na tym samym serwerze co drzewostany (sprawdzone
+  // 2026-10-03: CORS odbija origin strony, w regionie 79 aktywnych zakazów, m.in. nadl. Gościno, Głusko).
+  {
+    id: 'bans',
+    label: 'Zakazy wstępu',
+    description: 'Okresowe zakazy wstępu do lasu (Lasy Państwowe), aktualizowane na bieżąco',
+    urlTemplate: 'https://mapserver.bdl.lasy.gov.pl/ArcGIS/services/WMS_zakazy_wstepu_do_lasu/MapServer/WMSServer',
+    attribution: '<a href="https://www.bdl.lasy.gov.pl">Bank Danych o Lasach</a>',
+    // Od z10 widać cały region - zakaz trzeba zobaczyć przed wyjazdem, nie dopiero w lesie.
+    minZoom: 10,
+    maxZoom: 19,
+    opacity: 0.6,
+    zIndex: 12,
+    cache: 'short',
+    // WMS rysuje zakazy na żółto (#ffff4d, pomiar 2026-10-03), choć renderer REST opisuje czerwień.
+    legend: [{ color: '#ffff4d', label: 'Okresowy zakaz wstępu' }],
+    // WMS numeruje warstwy odwrotnie niż REST: 3 = zakazy (0-2 to granice leśnictw, nadleśnictw, RDLP).
+    wms: { layers: '3', format: 'image/png', transparent: true },
+  },
+  {
+    id: 'fire',
+    label: 'Zagrożenie pożarowe',
+    description: 'Strefy zagrożenia pożarowego lasów - prognoza Lasów Państwowych',
+    urlTemplate: 'https://mapserver.bdl.lasy.gov.pl/ArcGIS/services/WMS_zagrozenie_pozarowe_w_lasach/MapServer/WMSServer',
+    attribution: '<a href="https://www.bdl.lasy.gov.pl">Bank Danych o Lasach</a>',
+    minZoom: 8,
+    maxZoom: 19,
+    // Strefy pokrywają cały region - niskie krycie i rysowanie POD drzewostanami i zakazami, żeby
+    // zielone/żółte tło nie zmieniało ich kolorów.
+    opacity: 0.35,
+    zIndex: 6,
+    cache: 'short',
+    // WMS = kolor renderera REST rozjaśniony ~30% bielą. "Małe" i "brak" zmierzone z pikseli
+    // 2026-10-03; "duże" i "średnie" wyliczone tym samym przekształceniem (nie występowały w regionie).
+    legend: [
+      { color: '#ff4d4d', label: 'Duże' },
+      { color: '#ffff4d', label: 'Średnie' },
+      { color: '#88ff4d', label: 'Małe' },
+      { color: '#4d9bff', label: 'Brak zagrożenia' },
+    ],
+    wms: { layers: '0', format: 'image/png', transparent: true },
   },
   {
     id: 'trails',

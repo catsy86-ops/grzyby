@@ -93,6 +93,17 @@ describe('mapLayers', () => {
     expect(getOverlayCachePolicy(new URL('https://tile.waymarkedtrails.org/cycling/13/1/2.png'))).toBeNull()
   })
 
+  it('zakazy wstępu i zagrożenie pożarowe idą do krótkiego cache, nie do 60-dniowego', () => {
+    for (const overlay of getMapOverlays(['bans', 'fire'])) {
+      expect(overlay.cache).toBe('short')
+      expect(getOverlayCachePolicy(new URL(`${overlay.urlTemplate}?SERVICE=WMS&REQUEST=GetMap&BBOX=1,2,3,4`))).toBe('short')
+    }
+  })
+
+  it('zakazy to warstwa WMS 3 (numeracja odwrotna niż w REST, gdzie zakazy to 0)', () => {
+    expect(getMapOverlays(['bans'])[0].wms?.layers).toBe('3')
+  })
+
   it('każda nakładka ma politykę cache', () => {
     for (const overlay of MAP_OVERLAYS) expect(['long', 'short', 'none']).toContain(overlay.cache)
   })
