@@ -45,7 +45,7 @@ REST warstwa `0`).
       rowy pod koronami drzew. (S)
 - [x] **8. Mapa topograficzna GUGiK** (podkład; 2026-10-03) - `.../wss/service/img/guest/TOPO/MapServer/WMSServer`. (S)
 - [x] **9. CyclOSM** (podkład "dukty i ścieżki"; 2026-10-03) - `{s}.tile-cyclosm.openstreetmap.fr`, bez pobierania offline. (S)
-- [ ] **10. GDOŚ rozszerzone** - `GDOS:UzytkiEkologiczne`, `GDOS:ZespolyPrzyrodniczoKrajobrazowe` (bez Natury 2000 -
+- [x] **10. GDOŚ rozszerzone** (2026-10-03; szlaki rowerowe i radar odłożone) - `GDOS:UzytkiEkologiczne`, `GDOS:ZespolyPrzyrodniczoKrajobrazowe` (bez Natury 2000 -
       tam zbiór jest dozwolony). Szlaki rowerowe Waymarked. Radar RainViewer (M, tylko użytek osobisty). (S/M)
 - Odrzucone: WMTS G2_MOBILE (tylko EPSG:2180), BDOT PZGIK (401), Esri (licencja), CARTO/Stadia/Tracestrack (klucze).
 

@@ -477,6 +477,12 @@ mapy; DevTools: odpowiedzi NMT nie trafiają do żadnego cache.
 
 ### Krok 10. Obszary chronione rozszerzone (+ opcjonalnie szlaki rowerowe) - S
 
+> **ZROBIONE 2026-10-03.** Dodane `GDOS:UzytkiEkologiczne` i `GDOS:ZespolyPrzyrodniczoKrajobrazowe` (GetMap z
+> czterema warstwami zwraca PNG), nowy opis i legenda z kolorów zmierzonych z pikseli (GeoServer GDOŚ nie
+> obsługuje legendy w JSON): rezerwat `#ff7f00`, park narodowy `#4daf4b`, użytek ekologiczny `#7bfc00`, zespół
+> przyrodniczo-krajobrazowy `#e600a8`. **Szlaki rowerowe pominięte** - menu warstw jest już długie; wrócić przy
+> panelu warstw (krok 11) albo w Etapie E.
+
 **Kroki:**
 1. `protected.wms.layers`: dodać `GDOS:UzytkiEkologiczne,GDOS:ZespolyPrzyrodniczoKrajobrazowe`.
    **Bez** Natury 2000 i parków krajobrazowych - tam zbiór grzybów jest dozwolony, byłby to fałszywy alarm.

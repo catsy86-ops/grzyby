@@ -119,6 +119,14 @@ describe('mapLayers', () => {
     expect(getOverlayCachePolicy(new URL(`${relief.urlTemplate}?SERVICE=WMS&REQUEST=GetMap`))).toBeNull()
   })
 
+  it('obszary chronione obejmują użytki ekologiczne i zespoły przyrodniczo-krajobrazowe, ale nie Naturę 2000', () => {
+    const layers = getMapOverlays(['protected'])[0].wms?.layers.split(',') ?? []
+    expect(layers).toEqual(
+      expect.arrayContaining(['GDOS:Rezerwaty', 'GDOS:ParkiNarodowe', 'GDOS:UzytkiEkologiczne', 'GDOS:ZespolyPrzyrodniczoKrajobrazowe']),
+    )
+    expect(layers.some((layer) => /natura|krajobrazowe$|ParkiKrajobrazowe|OSO|SOO/i.test(layer) && !layer.includes('Zespoly'))).toBe(false)
+  })
+
   it('każda nakładka ma politykę cache', () => {
     for (const overlay of MAP_OVERLAYS) expect(['long', 'short', 'none']).toContain(overlay.cache)
   })

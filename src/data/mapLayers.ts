@@ -195,7 +195,8 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
   {
     id: 'protected',
     label: 'Obszary chronione',
-    description: 'Rezerwaty i parki narodowe - zbieranie grzybów zakazane',
+    description:
+      'Rezerwaty i parki narodowe (zbiór zakazany), użytki ekologiczne i zespoły przyrodniczo-krajobrazowe (zakazy w uchwale)',
     urlTemplate: 'https://sdi.gdos.gov.pl/wms',
     attribution: '&copy; <a href="https://www.gdos.gov.pl">GDOŚ</a>',
     minZoom: 9,
@@ -203,7 +204,21 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     opacity: 0.45,
     zIndex: 11,
     cache: 'long',
-    wms: { layers: 'GDOS:Rezerwaty,GDOS:ParkiNarodowe', format: 'image/png', transparent: true },
+    // Kolory zmierzone z pikseli GetMap każdej warstwy osobno (2026-10-03).
+    legend: [
+      { color: '#ff7f00', label: 'Rezerwat' },
+      { color: '#4daf4b', label: 'Park narodowy' },
+      { color: '#7bfc00', label: 'Użytek ekologiczny' },
+      { color: '#e600a8', label: 'Zespół przyrodniczo-krajobrazowy' },
+    ],
+    // Użytki ekologiczne i zespoły przyrodniczo-krajobrazowe: zakazy (często także zbioru) zależą od uchwały
+    // ustanawiającej. Bez Natury 2000 i parków krajobrazowych - tam zbiór grzybów jest dozwolony, więc
+    // byłby to fałszywy alarm na większości lasów regionu.
+    wms: {
+      layers: 'GDOS:Rezerwaty,GDOS:ParkiNarodowe,GDOS:UzytkiEkologiczne,GDOS:ZespolyPrzyrodniczoKrajobrazowe',
+      format: 'image/png',
+      transparent: true,
+    },
   },
   // Zakazy i pożary: usługi Lasów Państwowych na tym samym serwerze co drzewostany (sprawdzone
   // 2026-10-03: CORS odbija origin strony, w regionie 79 aktywnych zakazów, m.in. nadl. Gościno, Głusko).
