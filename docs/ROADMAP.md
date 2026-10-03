@@ -40,7 +40,7 @@ REST warstwa `0`).
 - [x] **6. Zakazy wstępu + zagrożenie pożarowe (BDL)** (2026-10-03; legenda wg kolorów WMS, pożary pod drzewostanami) = Faza 29 pkt 4 -
       `.../WMS_zakazy_wstepu_do_lasu/MapServer/WMSServer` (layers `3`),
       `.../WMS_zagrozenie_pozarowe_w_lasach/MapServer/WMSServer` (layers `0`); wymaga pkt 4 (krótki cache). (S)
-- [ ] **7. Cieniowanie rzeźby NMT (GUGiK, LIDAR)** - `mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WMS/ShadedRelief`
+- [x] **7. Cieniowanie rzeźby NMT (GUGiK, LIDAR)** (2026-10-03) - `mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WMS/ShadedRelief`
       (layers `Raster`), nakładka `mix-blend-mode: multiply`, ~0.4, od z11, bez cache SW. Wąwozy, mokradła,
       rowy pod koronami drzew. (S)
 - [ ] **8. Mapa topograficzna GUGiK** (podkład) - `.../wss/service/img/guest/TOPO/MapServer/WMSServer`. (S)

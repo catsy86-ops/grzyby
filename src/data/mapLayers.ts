@@ -107,7 +107,7 @@ export function isLegacyOsmTileUrl(url: URL): boolean {
 
 // Nakładki - półprzezroczyste warstwy nad dowolnym podkładem, włączane niezależnie od siebie.
 export interface MapOverlayDef {
-  id: 'forest' | 'protected' | 'bans' | 'fire' | 'trails'
+  id: 'forest' | 'relief' | 'protected' | 'bans' | 'fire' | 'trails'
   label: string
   description: string
   urlTemplate: string
@@ -130,6 +130,9 @@ export interface MapOverlayDef {
   // Kolory tak, jak rysuje je WMS (zmierzone z pikseli kafli - opis renderera w REST bywa inny niż obraz
   // WMS) - pod panel warstw i legendę na mapie.
   legend?: { color: string; label: string }[]
+  // Mieszanie z podkładem zamiast zwykłego krycia - cieniowanie rzeźby (szare) ma przyciemniać mapę
+  // pod spodem, a nie zakrywać jej kolorów (klasa CSS w MapTileLayers.tsx / index.css).
+  blend?: 'multiply'
   wms?: WmsParams
 }
 
@@ -148,6 +151,21 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     cache: 'long',
     // 1 = wydzielenia (Lasy Państwowe), 0 = wydzielenia poza LP, 3 = granice oddziałów.
     wms: { layers: '0,1,3', format: 'image/png', transparent: true },
+  },
+  {
+    id: 'relief',
+    label: 'Rzeźba terenu',
+    description: 'Cieniowanie z lotniczego skanowania laserowego - wąwozy, skarpy, mokradła i rowy pod drzewami',
+    urlTemplate: 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WMS/ShadedRelief',
+    attribution: 'NMT &copy; <a href="https://www.geoportal.gov.pl">GUGiK</a>',
+    minZoom: 11,
+    maxZoom: 19,
+    opacity: 0.45,
+    zIndex: 5,
+    // GUGiK zabrania gromadzenia kafli (jak ortofotomapa) - bez cache Service Workera.
+    cache: 'none',
+    blend: 'multiply',
+    wms: { layers: 'Raster', format: 'image/png', transparent: true },
   },
   {
     id: 'protected',

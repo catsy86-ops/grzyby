@@ -391,6 +391,11 @@ To realizuje Fazę 29 pkt 4, krok 1.
 
 ### Krok 7. Nakładka "Rzeźba terenu" (cieniowanie NMT, GUGiK) - S
 
+> **ZROBIONE 2026-10-03.** Nakładka `relief` (WMS `ShadedRelief`, od z11, krycie 0.45, `zIndex: 5`, bez cache),
+> klasa `map-overlay--blend-multiply` + `mix-blend-mode: multiply`. Sprawdzone nad Puszczą Bukową: wąwozy i
+> doliny wyraźne w obu motywach; osobny wariant dla ciemnego motywu (`soft-light`) okazał się **niepotrzebny** -
+> ciemny podkład jest szarozielony, więc mnożenie nadal daje czytelne cienie.
+
 **Cel.** Cieniowanie z lotniczego skanowania laserowego pokazuje wąwozy, skarpy, zagłębienia, mokradła i
 stare rowy pod koronami drzew - tego nie widać na ortofoto ani OSM.
 

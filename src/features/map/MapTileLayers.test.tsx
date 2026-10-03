@@ -59,4 +59,17 @@ describe('MapTileLayer', () => {
     const forestZ = Number((container.querySelector('.map-overlay--forest') as HTMLElement).style.zIndex)
     expect(trailsZ).toBeGreaterThan(forestZ)
   })
+
+  it('nakładka z mieszaniem (rzeźba terenu) dostaje klasę blend, zwykła nakładka nie', () => {
+    const [relief, forest] = getMapOverlays(['relief', 'forest'])
+    const { container } = renderInMap(
+      <>
+        <MapTileLayer def={relief} />
+        <MapTileLayer def={forest} />
+      </>,
+    )
+
+    expect(container.querySelector('.map-overlay--relief')).toHaveClass('map-overlay--blend-multiply')
+    expect(container.querySelector('.map-overlay--forest')).not.toHaveClass('map-overlay--blend-multiply')
+  })
 })

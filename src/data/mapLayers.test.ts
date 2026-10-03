@@ -104,6 +104,12 @@ describe('mapLayers', () => {
     expect(getMapOverlays(['bans'])[0].wms?.layers).toBe('3')
   })
 
+  it('rzeźba terenu (GUGiK) bez cache - regulamin zabrania gromadzenia kafli', () => {
+    const [relief] = getMapOverlays(['relief'])
+    expect(relief.cache).toBe('none')
+    expect(getOverlayCachePolicy(new URL(`${relief.urlTemplate}?SERVICE=WMS&REQUEST=GetMap`))).toBeNull()
+  })
+
   it('każda nakładka ma politykę cache', () => {
     for (const overlay of MAP_OVERLAYS) expect(['long', 'short', 'none']).toContain(overlay.cache)
   })

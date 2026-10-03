@@ -514,6 +514,13 @@ body {
   filter: brightness(0.8);
 }
 
+/* Cieniowanie rzeźby terenu (nakładka "Rzeźba terenu") - szary obraz mnożony z podkładem: biel nic nie
+   zmienia, cienie przyciemniają mapę pod spodem, kolory podkładu zostają. Mieszanie działa, bo
+   podkład i nakładka są w tym samym kontekście warstw (.leaflet-tile-pane). */
+.map-overlay--blend-multiply {
+  mix-blend-mode: multiply;
+}
+
 /* Kontrolki Leaflet (zoom, popup, atrybucja) przeflancowane na tokeny motywu apki - to jedyne
    elementy mapy, które wciąż wyglądały jak domyślny, generyczny widget biblioteki (białe
    kwadraty, "Lucida Console" +/-, ostre rogi) wśród reszty UI zbudowanego na kartach/cieniach

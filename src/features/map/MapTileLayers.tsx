@@ -32,7 +32,9 @@ export function MapTileLayer({
     // Klasa na kontenerze warstwy (opcja Leafleta) - filtry kolorów z index.css działają tylko na
     // podkładach; nakładki (BDL, GDOŚ) muszą zachować kolory zgodne z legendą serwera. Ustawiana
     // przy tworzeniu warstwy, co wystarcza, bo warstwy w MapView mają `key` po id.
-    className: overlay ? `map-overlay map-overlay--${def.id}` : `map-layer map-layer--${def.id}`,
+    className: overlay
+      ? `map-overlay map-overlay--${def.id}${overlay.blend ? ` map-overlay--blend-${overlay.blend}` : ''}`
+      : `map-layer map-layer--${def.id}`,
     attribution: def.attribution,
     maxZoom: def.maxZoom,
     maxNativeZoom: def.maxNativeZoom,
