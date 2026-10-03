@@ -244,6 +244,11 @@ odcieni).
 
 ### Krok 4. Zoom natywny, ostrość ortofoto, stała kolejność nakładek - S
 
+> **ZROBIONE 2026-10-03.** `maxNativeZoom` (terenowa 17 -> do z19, szlaki 18 -> do z19), `detectRetina` dla
+> ortofoto, stały `zIndex` nakładek (drzewostany 10, chronione 11, szlaki 15; podkład 1 - z kroku 3),
+> `MapContainer maxZoom={19}`. Sprawdzone w przeglądarce (ekran 2x): ortofoto prosi o 512x512 zamiast 256;
+> terenowa przybliża się do z19 (kafle z17 powiększone, 16/16 załadowanych); szlaki widoczne na z19.
+
 **Problemy.** OpenTopoMap ma `maxZoom: 17`, więc po przełączeniu na mapę terenową nie da się przybliżyć dalej;
 Szlaki znikają na z19. Wszystkie nakładki mają `zIndex: 10`, więc kolejność zależy od kolejności włączania
 (komentarz przy `getMapOverlays` obiecuje co innego). Ortofoto na telefonie jest rozmyte.

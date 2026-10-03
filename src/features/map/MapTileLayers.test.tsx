@@ -44,4 +44,19 @@ describe('MapTileLayer', () => {
     expect((container.querySelector('.map-layer--satellite') as HTMLElement).style.zIndex).toBe('1')
     expect((container.querySelector('.map-overlay--forest') as HTMLElement).style.zIndex).toBe('10')
   })
+
+  it('kolejność nakładek wynika z zIndex, nie z kolejności włączania - szlaki nad drzewostanami', () => {
+    const [forest, trails] = getMapOverlays(['forest', 'trails'])
+    // Szlaki włączone PRZED drzewostanami - i tak mają być wyżej.
+    const { container } = renderInMap(
+      <>
+        <MapTileLayer def={trails} />
+        <MapTileLayer def={forest} />
+      </>,
+    )
+
+    const trailsZ = Number((container.querySelector('.map-overlay--trails') as HTMLElement).style.zIndex)
+    const forestZ = Number((container.querySelector('.map-overlay--forest') as HTMLElement).style.zIndex)
+    expect(trailsZ).toBeGreaterThan(forestZ)
+  })
 })

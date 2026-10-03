@@ -234,6 +234,8 @@ export function MapView({ headerActionsSlot }: MapViewProps) {
           maxBounds={REGION_BOUNDS}
           maxBoundsViscosity={1}
           minZoom={REGION_MIN_ZOOM}
+          // Stały górny limit niezależny od podkładu - przełączenie warstwy nie "przeskakuje" zoomem.
+          maxZoom={19}
         >
           <MapTileLayer key={activeMapLayer.id} def={activeMapLayer} eventHandlers={tileLayerEventHandlers} />
           {activeMapOverlays.map((overlay) => (

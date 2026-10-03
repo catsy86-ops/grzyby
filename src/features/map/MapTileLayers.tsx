@@ -35,13 +35,16 @@ export function MapTileLayer({
     className: overlay ? `map-overlay map-overlay--${def.id}` : `map-layer map-layer--${def.id}`,
     attribution: def.attribution,
     maxZoom: def.maxZoom,
+    maxNativeZoom: def.maxNativeZoom,
+    detectRetina: 'detectRetina' in def ? def.detectRetina : undefined,
     minZoom: overlay?.minZoom,
     opacity: overlay?.opacity,
-    // Nakładki nad podkładem i pod markerami (tilePane ma z-index 200, markery 600). Podkład MUSI mieć
+    // Nakładki nad podkładem i pod markerami (tilePane ma z-index 200, markery 600), między sobą według
+    // `zIndex` z data/mapLayers.ts (plamy pod liniami). Podkład MUSI mieć
     // własny z-index (1, domyślny w Leaflecie) - z `undefined` jego kontener nie tworzył osobnego
     // kontekstu warstw i wewnętrzny kontener kafli (z-index = maxZoom, np. 19) przykrywał nakładkę
-    // (z-index 10). Do 2026-10-03 maskował to filtr kolorów; wyszło na ortofoto w jasnym motywie.
-    zIndex: overlay ? 10 : 1,
+    // (z-index >= 10). Do 2026-10-03 maskował to filtr kolorów; wyszło na ortofoto w jasnym motywie.
+    zIndex: overlay ? overlay.zIndex : 1,
     // Serwery nakładek wysyłają CORS - dzięki temu Service Worker cache'uje zwykłe odpowiedzi 200
     // zamiast nieprzezroczystych (patrz sw.ts, cache 'map-overlays').
     crossOrigin: overlay ? ('anonymous' as const) : undefined,

@@ -29,7 +29,7 @@ REST warstwa `0`).
 - [x] **2. Filtr ciemnego motywu na całym `.leaflet-tile-pane`** (2026-10-03, + naprawiony brak `z-index` podkładu, przez który nakładka mogła być przykryta) (`index.css`) - ortofotomapa w negatywie,
       zmienione kolory nakładek BDL/GDOŚ. Poprawka: `className` per warstwa (`map-layer--street` itd.), invert
       tylko dla OSM, topo/orto tylko przyciemnione, nakładki bez filtra. (S)
-- [ ] **3. `maxNativeZoom`** (OpenTopoMap natywnie 17 / max 19, szlaki 18/19), `detectRetina` tylko dla orto,
+- [x] **3. `maxNativeZoom`** (2026-10-03) (OpenTopoMap natywnie 17 / max 19, szlaki 18/19), `detectRetina` tylko dla orto,
       stały `zIndex` per nakładka (dziś wszystkie 10 - kolejność zależy od kolejności włączania). (S)
 - [ ] **4. Krótki cache dla warstw zmiennych** - pole `cache: 'long'|'short'|'none'` w `MapOverlayDef`; zakazy i
       pożary NetworkFirst 1 dzień (zakaz sprzed 50 dni offline = błędna informacja), radar bez cache. (S)

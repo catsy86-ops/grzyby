@@ -47,6 +47,31 @@ describe('mapLayers', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
+  it('nakładki mają unikalny zIndex, szlaki (linie) rysowane nad plamami drzewostanów i obszarów', () => {
+    const zIndexes = MAP_OVERLAYS.map((overlay) => overlay.zIndex)
+    expect(new Set(zIndexes).size).toBe(zIndexes.length)
+    const [forest, protectedAreas, trails] = getMapOverlays(['forest', 'protected', 'trails'])
+    expect(trails.zIndex).toBeGreaterThan(forest.zIndex)
+    expect(trails.zIndex).toBeGreaterThan(protectedAreas.zIndex)
+    // Nad podkładem (z-index 1, MapTileLayers.tsx).
+    expect(Math.min(...zIndexes)).toBeGreaterThan(1)
+  })
+
+  it('maxNativeZoom nigdy nie przekracza maxZoom; terenowa i szlaki przybliżają się do z19', () => {
+    for (const def of [...MAP_LAYERS, ...MAP_OVERLAYS]) {
+      if (def.maxNativeZoom !== undefined) expect(def.maxNativeZoom).toBeLessThanOrEqual(def.maxZoom)
+    }
+    expect(getMapLayer('topo')).toMatchObject({ maxZoom: 19, maxNativeZoom: 17 })
+    expect(getMapOverlays(['trails'])[0]).toMatchObject({ maxZoom: 19, maxNativeZoom: 18 })
+  })
+
+  it('detectRetina tylko dla warstw WMS (dla kafli XYZ psułby czytelność i mnożył zapytania)', () => {
+    for (const layer of MAP_LAYERS) {
+      if (layer.detectRetina) expect(layer.wms).toBeDefined()
+    }
+    expect(getMapLayer('satellite').detectRetina).toBe(true)
+  })
+
   it('getMapOverlays zachowuje kolejność MAP_OVERLAYS i pomija nieznane id', () => {
     // @ts-expect-error - nieznane id, np. z localStorage po usunięciu nakładki.
     expect(getMapOverlays(['trails', 'nieznana', 'forest']).map((overlay) => overlay.id)).toEqual(['forest', 'trails'])

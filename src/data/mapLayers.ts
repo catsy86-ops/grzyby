@@ -19,6 +19,12 @@ export interface MapLayerDef {
   urlTemplate: string
   attribution: string
   maxZoom: number
+  // Najwyższy poziom, na którym serwer ma własne kafle - powyżej Leaflet powiększa kafle z tego poziomu
+  // zamiast blokować przybliżanie całej mapy (brak = taki sam jak maxZoom).
+  maxNativeZoom?: number
+  // Dla ekranów o gęstości > 1 prosi o obraz 2x większy (tylko WMS - dla kafli XYZ Leaflet przesuwa
+  // poziomy zoomu, co dla OSM daje drobny, nieczytelny tekst i 4x więcej kafli).
+  detectRetina?: boolean
   wms?: WmsParams
   // Czy "Pobierz obszar offline" może pobierać kafle tej warstwy - patrz OfflineAreaDownload.tsx.
   offline: boolean
@@ -41,9 +47,10 @@ export const MAP_LAYERS: MapLayerDef[] = [
     urlTemplate: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
     attribution:
       '&copy; OpenStreetMap contributors, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
-    // Serwer OpenTopoMap wspiera kafle tylko do z17 (w odróżnieniu od z19 dla standardowej mapy
-    // OSM) - powyżej tego poziomu kafle po prostu nie istnieją.
-    maxZoom: 17,
+    // Serwer OpenTopoMap ma kafle tylko do z17 - wyżej Leaflet powiększa kafle z17, zamiast (jak do
+    // 2026-10-03) blokować przybliżanie całej mapy po przełączeniu na widok terenowy.
+    maxZoom: 19,
+    maxNativeZoom: 17,
     offline: true,
   },
   {
@@ -52,6 +59,9 @@ export const MAP_LAYERS: MapLayerDef[] = [
     urlTemplate: 'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution',
     attribution: 'Ortofotomapa &copy; <a href="https://www.geoportal.gov.pl">GUGiK</a>',
     maxZoom: 19,
+    // Zdjęcia lotnicze na telefonie (gęstość ekranu 2-3) były wyraźnie rozmyte - obraz 512 px na
+    // kafel 256 px.
+    detectRetina: true,
     wms: { layers: 'Raster', format: 'image/jpeg', transparent: false },
     offline: false,
   },
@@ -106,7 +116,11 @@ export interface MapOverlayDef {
   // w nieczytelną plamę), więc Leaflet nawet nie wysyła zapytań.
   minZoom: number
   maxZoom: number
+  maxNativeZoom?: number
   opacity: number
+  // Kolejność rysowania: plamy (drzewostany, obszary) pod liniami (szlaki), niezależnie od kolejności
+  // włączania. Zarezerwowane na przyszłe nakładki (Faza 30): rzeźba 5, zakazy 12, pożary 13.
+  zIndex: number
   wms?: WmsParams
 }
 
@@ -121,6 +135,7 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     minZoom: 14,
     maxZoom: 19,
     opacity: 0.85,
+    zIndex: 10,
     // 1 = wydzielenia (Lasy Państwowe), 0 = wydzielenia poza LP, 3 = granice oddziałów.
     wms: { layers: '0,1,3', format: 'image/png', transparent: true },
   },
@@ -133,6 +148,7 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     minZoom: 9,
     maxZoom: 19,
     opacity: 0.45,
+    zIndex: 11,
     wms: { layers: 'GDOS:Rezerwaty,GDOS:ParkiNarodowe', format: 'image/png', transparent: true },
   },
   {
@@ -142,15 +158,18 @@ export const MAP_OVERLAYS: MapOverlayDef[] = [
     urlTemplate: 'https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://hiking.waymarkedtrails.org">Waymarked Trails</a> (CC-BY-SA)',
     minZoom: 9,
-    maxZoom: 18,
+    // Waymarked Trails ma kafle do z18 - wyżej powiększone, żeby szlak nie znikał przy z19.
+    maxZoom: 19,
+    maxNativeZoom: 18,
     opacity: 0.9,
+    zIndex: 15,
   },
 ]
 
 export type MapOverlayId = MapOverlayDef['id']
 
 // Nieznane id (np. z localStorage po usunięciu nakładki w przyszłej wersji) są pomijane, a
-// kolejność zawsze odpowiada MAP_OVERLAYS - niezależnie od kolejności włączania.
+// kolejność listy odpowiada MAP_OVERLAYS. Kolejność RYSOWANIA wyznacza `zIndex` każdej nakładki.
 export function getMapOverlays(ids: readonly MapOverlayId[]): MapOverlayDef[] {
   return MAP_OVERLAYS.filter((overlay) => ids.includes(overlay.id))
 }
