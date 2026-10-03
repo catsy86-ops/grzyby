@@ -7,6 +7,7 @@ import {
   isCacheableOverlayRequest,
   MAP_LAYERS,
   MAP_OVERLAYS,
+  mapTileCacheKey,
   overlayCacheKey,
 } from './mapLayers'
 
@@ -56,6 +57,20 @@ describe('mapLayers', () => {
     expect(isCacheableOverlayRequest(new URL('https://sdi.gdos.gov.pl/wms?REQUEST=GetMap'))).toBe(true)
     expect(isCacheableOverlayRequest(new URL(`${bdl}?REQUEST=GetFeatureInfo`))).toBe(false)
     expect(isCacheableOverlayRequest(new URL(`${getMapLayer('satellite').urlTemplate}?REQUEST=GetMap`))).toBe(false)
+  })
+
+  it('klucz cache kafli podkładu jest wspólny dla subdomen a/b/c', () => {
+    const key = 'https://a.tile.openstreetmap.org/16/36435/21024.png'
+    expect(mapTileCacheKey(new URL('https://b.tile.openstreetmap.org/16/36435/21024.png'))).toBe(key)
+    expect(mapTileCacheKey(new URL('https://c.tile.openstreetmap.org/16/36435/21024.png'))).toBe(key)
+    expect(mapTileCacheKey(new URL(key))).toBe(key)
+    expect(mapTileCacheKey(new URL('https://c.tile.opentopomap.org/14/1/2.png'))).toBe('https://a.tile.opentopomap.org/14/1/2.png')
+  })
+
+  it('klucz cache kafli nie zmienia adresów bez subdomeny a/b/c', () => {
+    for (const href of ['https://tile.openstreetmap.org/14/1/2.png', 'https://tile.waymarkedtrails.org/hiking/14/1/2.png']) {
+      expect(mapTileCacheKey(new URL(href))).toBe(href)
+    }
   })
 
   it('klucz cache nakładek pomija parametr ponowienia kafla', () => {

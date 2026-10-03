@@ -1,6 +1,8 @@
 // Pobieranie kafelków mapy do trybu offline - zapisuje bezpośrednio do tego samego
-// cache'a ('map-tiles'), którego używa runtime CacheFirst w konfiguracji PWA (vite.config.ts),
-// więc Service Worker later serwuje te same kafelki bez dodatkowej konfiguracji.
+// cache'a ('map-tiles'), którego używa runtime CacheFirst w Service Workerze (src/sw.ts), pod tym
+// samym kluczem (mapTileCacheKey), więc SW serwuje te kafelki bez względu na subdomenę a/b/c.
+
+import { mapTileCacheKey } from '../data/mapLayers'
 
 export interface TileCoord {
   z: number
@@ -21,7 +23,8 @@ export const OFFLINE_RADIUS_PRESETS = [
 
 // `urlTemplate` to ten sam format co w react-leaflet TileLayer ({s}/{z}/{x}/{y}) - patrz
 // data/mapLayers.ts. Subdomena {s} jest tu zawsze ustalona na 'a' (dowolna z rotacji wystarcza
-// do pobrania, kafel jest identyczny niezależnie od tego, przez którą subdomenę trafił).
+// do pobrania, kafel jest identyczny niezależnie od tego, przez którą subdomenę trafił) - klucz
+// w cache'u i tak liczy mapTileCacheKey, wspólny z Service Workerem.
 function buildTileUrl(urlTemplate: string, z: number, x: number, y: number): string {
   return urlTemplate.replace('{s}', 'a').replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y))
 }
@@ -122,12 +125,13 @@ export async function downloadTilesForOfflineUse(
       if (signal?.aborted) return
       const tile = tiles[nextIndex++]
       const url = buildTileUrl(tileUrlTemplate, tile.z, tile.x, tile.y)
+      const cacheKey = mapTileCacheKey(new URL(url))
       try {
-        const alreadyCached = await cache.match(url)
+        const alreadyCached = await cache.match(cacheKey)
         if (!alreadyCached) {
           const response = await fetch(url, { signal })
           if (response.ok) {
-            await cache.put(url, response)
+            await cache.put(cacheKey, response)
           } else {
             failedTiles.push(tile)
           }

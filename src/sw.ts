@@ -12,7 +12,7 @@ import { CacheFirst } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { SHARED_PHOTO_CACHE, SHARED_PHOTO_CACHE_KEY } from './utils/sharedPhoto'
-import { isCacheableOverlayRequest, MAP_OVERLAYS_CACHE_NAME, overlayCacheKey } from './data/mapLayers'
+import { isCacheableOverlayRequest, MAP_OVERLAYS_CACHE_NAME, mapTileCacheKey, overlayCacheKey } from './data/mapLayers'
 
 declare let self: ServiceWorkerGlobalScope
 
@@ -21,12 +21,14 @@ cleanupOutdatedCaches()
 
 // Ten sam cache/parametry co poprzednio deklaratywny workbox.runtimeCaching w vite.config.ts -
 // oba warianty podkładu mapy (standard OSM + terenowy OpenTopoMap, patrz src/data/mapLayers.ts)
-// tym samym cache'em.
+// tym samym cache'em. Klucz bez subdomeny a/b/c (mapTileCacheKey) - inaczej kafle pobrane przez
+// "Pobierz obszar offline" (zapisane pod "a") nie trafiały, gdy Leaflet prosił o nie przez "b"/"c".
 registerRoute(
   ({ url }) => /^https:\/\/[abc]\.tile\.(openstreetmap|opentopomap)\.org\/.*/i.test(url.href),
   new CacheFirst({
     cacheName: 'map-tiles',
     plugins: [
+      { cacheKeyWillBeUsed: async ({ request }) => mapTileCacheKey(new URL(request.url)) },
       new ExpirationPlugin({ maxEntries: 4000, maxAgeSeconds: 60 * 60 * 24 * 90 }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],

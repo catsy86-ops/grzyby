@@ -115,6 +115,13 @@ Kolejność wykonania = numeracja kroków. Mapowanie na `ROADMAP.md`:
 
 ### Krok 1. Kafle offline: jeden klucz cache dla subdomen a/b/c (BŁĄD) - S
 
+> **ZROBIONE 2026-10-03.** `mapTileCacheKey` w `mapLayers.ts`, użyty w `sw.ts` (trasa `map-tiles`) i
+> `offlineMapTiles.ts`. Pomiar na buildzie (preview, obszar 2 km nad Puszczą Bukową): **przed** - na z16
+> 13 z 20 widocznych kafli (wszystkie `b`/`c`) szło do sieci mimo pobranego obszaru; **po** - z14, z15 i z16:
+> 0 nowych zapytań, wszystkie kafle z cache. Uwaga do weryfikacji: emulacja "Offline" w DevTools nie obejmuje
+> zapytań samego Service Workera, więc miarą jest przyrost kluczy w `map-tiles` (CacheFirst idzie do sieci
+> tylko przy braku trafienia w cache).
+
 **Problem.** Leaflet rozkłada kafle `{s}` na subdomeny według `(x + y) % 3` (a, b, c). "Pobierz obszar
 offline" zapisuje każdy kafel pod `a.tile...`, a trasa `map-tiles` w `sw.ts` (CacheFirst) szuka po
 dokładnym URL-u. Offline trafia więc tylko ok. 1/3 pobranych kafli - w lesie mapa ma dziury.

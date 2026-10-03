@@ -22,7 +22,7 @@ kolejności wykonania, z plikami, testami, weryfikacją i decyzjami; tam też po
 REST warstwa `0`).
 
 ### Błędy i poprawki istniejących warstw
-- [ ] **1. Cache offline OSM trafia ~1/3 kafli** - `offlineMapTiles.ts` zapisuje pod `a.tile...`, Leaflet
+- [x] **1. Cache offline OSM trafia ~1/3 kafli** (2026-10-03: wspólny klucz `mapTileCacheKey`; zmierzone przed/po, patrz MAPA-WARSTWY-PLAN.md krok 1) - `offlineMapTiles.ts` zapisuje pod `a.tile...`, Leaflet
       rotuje `{s}` a/b/c, a trasa `map-tiles` w `sw.ts` (CacheFirst) nie normalizuje klucza -> dziury w mapie
       offline. Poprawka: `cacheKeyWillBeUsed` (subdomena -> `a`, wzorem `overlayCacheKey`) albo OSM bez `{s}`
       (`tile.openstreetmap.org`, zalecane przez OSM) + regex w `sw.ts` + test. (S, najwyższy priorytet)

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { mapTileCacheKey } from '../data/mapLayers'
 import {
   computeTilesForArea,
   downloadTilesForOfflineUse,
@@ -53,7 +54,7 @@ describe('downloadTilesForOfflineUse', () => {
   function mockCachesAndFetch({ alreadyCached = false, failRate = 0 } = {}) {
     const putCalls: string[] = []
     const cache = {
-      match: vi.fn(async () => (alreadyCached ? new Response('cached') : undefined)),
+      match: vi.fn(async (_key: string) => (alreadyCached ? new Response('cached') : undefined)),
       put: vi.fn(async (url: string) => {
         putCalls.push(url)
       }),
@@ -144,5 +145,21 @@ describe('downloadTilesForOfflineUse', () => {
     )
 
     expect(fetch).toHaveBeenCalledWith('https://a.tile.opentopomap.org/14/1/2.png', expect.anything())
+  })
+
+  it('zapisuje kafel pod kluczem, którego użyje Service Worker niezależnie od subdomeny a/b/c', async () => {
+    const { cache, putCalls } = mockCachesAndFetch()
+    // Leaflet wybiera subdomenę według (x + y) % 3: dla x=1, y=3 to "b", dla x=2, y=3 to "c".
+    await downloadTilesForOfflineUse([
+      { z: 14, x: 1, y: 3 },
+      { z: 14, x: 2, y: 3 },
+    ])
+
+    const keysSwWillLookUp = [
+      mapTileCacheKey(new URL('https://b.tile.openstreetmap.org/14/1/3.png')),
+      mapTileCacheKey(new URL('https://c.tile.openstreetmap.org/14/2/3.png')),
+    ]
+    expect(putCalls.sort()).toEqual(keysSwWillLookUp.sort())
+    expect(cache.match.mock.calls.map(([key]) => key).sort()).toEqual(keysSwWillLookUp.sort())
   })
 })
