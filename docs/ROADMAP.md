@@ -13,6 +13,51 @@ zakres i priorytet.
 
 ---
 
+## Faza 30 - Warstwy i wygląd mapy (2026-10-03, agent planujący, "jak poprawić i dodać więcej warstw, upiększyć mapę")
+
+Endpointy sprawdzone przez agenta (GetMap w EPSG:3857 + nagłówki CORS, 2026-10-03). Kolejność = priorytet.
+
+### Błędy i poprawki istniejących warstw
+- [ ] **1. Cache offline OSM trafia ~1/3 kafli** - `offlineMapTiles.ts` zapisuje pod `a.tile...`, Leaflet
+      rotuje `{s}` a/b/c, a trasa `map-tiles` w `sw.ts` (CacheFirst) nie normalizuje klucza -> dziury w mapie
+      offline. Poprawka: `cacheKeyWillBeUsed` (subdomena -> `a`, wzorem `overlayCacheKey`) albo OSM bez `{s}`
+      (`tile.openstreetmap.org`, zalecane przez OSM) + regex w `sw.ts` + test. (S, najwyższy priorytet)
+- [ ] **2. Filtr ciemnego motywu na całym `.leaflet-tile-pane`** (`index.css`) - ortofotomapa w negatywie,
+      zmienione kolory nakładek BDL/GDOŚ. Poprawka: `className` per warstwa (`map-layer--street` itd.), invert
+      tylko dla OSM, topo/orto tylko przyciemnione, nakładki bez filtra. (S)
+- [ ] **3. `maxNativeZoom`** (OpenTopoMap natywnie 17 / max 19, szlaki 18/19), `detectRetina` tylko dla orto,
+      stały `zIndex` per nakładka (dziś wszystkie 10 - kolejność zależy od kolejności włączania). (S)
+- [ ] **4. Krótki cache dla warstw zmiennych** - pole `cache: 'long'|'short'|'none'` w `MapOverlayDef`; zakazy i
+      pożary NetworkFirst 1 dzień (zakaz sprzed 50 dni offline = błędna informacja), radar bez cache. (S)
+- [ ] **5. Regulamin kafli OSM** - "Pobierz obszar offline" (do 4500 kafli) to prefetch zabroniony przez OSM
+      tile policy: CONCURRENCY 6 -> 2, limit dzienny, informacja; do zbadania źródło Geoportalu (licencja). (S-M)
+
+### Nowe warstwy (darmowe, bez klucza)
+- [ ] **6. Zakazy wstępu + zagrożenie pożarowe (BDL)** = Faza 29 pkt 4 -
+      `.../WMS_zakazy_wstepu_do_lasu/MapServer/WMSServer` (layers `3`),
+      `.../WMS_zagrozenie_pozarowe_w_lasach/MapServer/WMSServer` (layers `0`); wymaga pkt 4 (krótki cache). (S)
+- [ ] **7. Cieniowanie rzeźby NMT (GUGiK, LIDAR)** - `mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WMS/ShadedRelief`
+      (layers `Raster`), nakładka `mix-blend-mode: multiply`, ~0.4, od z11, bez cache SW. Wąwozy, mokradła,
+      rowy pod koronami drzew. (S)
+- [ ] **8. Mapa topograficzna GUGiK** (podkład) - `.../wss/service/img/guest/TOPO/MapServer/WMSServer`. (S)
+- [ ] **9. CyclOSM** (podkład "dukty i ścieżki") - `{s}.tile-cyclosm.openstreetmap.fr`, bez pobierania offline. (S)
+- [ ] **10. GDOŚ rozszerzone** - `GDOS:UzytkiEkologiczne`, `GDOS:ZespolyPrzyrodniczoKrajobrazowe` (bez Natury 2000 -
+      tam zbiór jest dozwolony). Szlaki rowerowe Waymarked. Radar RainViewer (M, tylko użytek osobisty). (S/M)
+- Odrzucone: WMTS G2_MOBILE (tylko EPSG:2180), BDOT PZGIK (401), Esri (licencja), CARTO/Stadia/Tracestrack (klucze).
+
+### Wygląd
+- [ ] **11. Panel warstw** zamiast sekcji w menu "Więcej" - Drawer z miniaturami podkładów
+      (`public/map-previews/`), nakładki w grupach (Teren / Przepisy / Turystyka / Pogoda) z ikonami, suwak
+      przezroczystości (`appStore.overlayOpacity`, nowy `ui/slider`), legenda, "od przybliżenia 14 - Przybliż". (M)
+- [ ] **12. Skala** (`ScaleControl`, metryczna, styl tokenów) i **flyTo** (lokalizacja, klik w klaster ->
+      `flyToBounds`, "Pokaż na mapie"; `setView` przy reduced-motion). (S)
+- [ ] **13. Później**: klaster jako pierścień udziałów jadalności (`conic-gradient`), wspólny `MapPopupCard`,
+      stożek kierunku przy kropce pozycji (`useDeviceHeading`), poświata pod śladem wyprawy, wskaźnik ładowania
+      warstw WMS, płynne przejście przy zmianie podkładu, zwijana atrybucja, maska poza województwem.
+- [ ] **14. Wielokąty "Gdzie szukać" na mapie** (dopisane: Faza 29 pkt 2 pokazuje tylko listę).
+
+---
+
 ## Faza 29 - Plan rozbudowy funkcji (2026-10-03, agent planujący, "uruchom agenta w celu rozbudowy")
 
 Propozycje zweryfikowane w kodzie (żadna z nich jeszcze nie istnieje). Uzupełniają Fazę 28 - Etap 1 Fazy 28
@@ -28,7 +73,7 @@ operację `query` z `f=geojson`, paginacją i max 2000 rekordów; pola m.in. `sp
       (`public/models/metadata.json`). Komunikat w `IdentifyView` z listą, plakietka "nieobjęty skanerem" w
       Atlasie, ostrzeżenie w `PredictionCard`, gdy wynik ma sobowtóra spoza modelu. Liczone z `metadata.json`,
       więc po retreningu zaktualizuje się samo.
-- [ ] **2. "Gdzie szukać" przez BDL REST** (M) - w `ForestAssistant` zapytanie o wydzielenia z drzewami
+- [x] **2. "Gdzie szukać" przez BDL REST** (2026-10-03, MVP: lista najbliższych wydzieleń w Leśnym asystencie, filtr wieku 40+/80+, "Prowadź" zapisuje grzybowisko i ustawia nawigację; CORS i kody sprawdzone - `utils/forestStandSearch.ts`, `NearbyStandsSection.tsx`. Bez wielokątów na mapie i cache IndexedDB - do Fazy 30/pkt 9) (M) - w `ForestAssistant` zapytanie o wydzielenia z drzewami
       gatunku (`data/speciesTrees.ts`) w promieniu 3-5 km, wielokąty na mapie + lista najbliższych z
       "Prowadź"/"Zapisz jako grzybowisko", cache w IndexedDB. Wiek drzew tylko jako filtr użytkownika, nie
       rekomendacja (zasada z Faz 25-26). Najpierw: test CORS i kodów `species_cd_d`.

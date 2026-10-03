@@ -5,10 +5,15 @@ import { db } from '../../db/db'
 import { useAppStore } from '../../stores/appStore'
 import * as geolocation from '../../utils/geolocation'
 import * as mushroomWeather from '../../utils/mushroomWeather'
+import * as forestStandSearch from '../../utils/forestStandSearch'
 
 vi.mock('../../utils/geolocation', () => ({
   getCurrentPosition: vi.fn(),
 }))
+vi.mock('../../utils/forestStandSearch', async () => {
+  const actual = await vi.importActual<typeof import('../../utils/forestStandSearch')>('../../utils/forestStandSearch')
+  return { ...actual, searchMatchingStands: vi.fn() }
+})
 vi.mock('../../utils/mushroomWeather', async () => {
   const actual = await vi.importActual<typeof import('../../utils/mushroomWeather')>('../../utils/mushroomWeather')
   return {
@@ -126,4 +131,41 @@ describe('ForestAssistant', () => {
     expect(screen.getByPlaceholderText(/Borowik szlachetny/)).toBeInTheDocument()
     expect(screen.queryByText(/Lasy liściaste i iglaste/)).not.toBeInTheDocument()
   })
+
+  it('"Gdzie szukać": szuka drzewostanów z drzewami gatunku i "Prowadź" zapisuje grzybowisko jako cel nawigacji', async () => {
+    vi.mocked(geolocation.getCurrentPosition).mockResolvedValue({ latitude: 53.35, longitude: 14.65 } as GeolocationCoordinates)
+    vi.mocked(mushroomWeather.fetchMushroomOutlook).mockRejectedValue(new Error('offline'))
+    vi.mocked(forestStandSearch.searchMatchingStands).mockResolvedValue([
+      { id: '10-12-2-08-300-b-00', treeCode: 'BK', treeName: 'Buk', age: 121, siteType: 'las świeży', latitude: 53.36, longitude: 14.66, distanceM: 850 },
+    ])
+    const onOpenChange = vi.fn()
+    render(<ForestAssistant open onOpenChange={onOpenChange} />)
+
+    fireEvent.change(screen.getByPlaceholderText(/Borowik szlachetny/), { target: { value: 'borowik szlach' } })
+    fireEvent.click(screen.getByText('Borowik szlachetny'))
+    fireEvent.click(await screen.findByRole('button', { name: /Szukaj drzewostanów w pobliżu/ }))
+
+    expect(await screen.findByText('850 m · las świeży')).toBeInTheDocument()
+    expect(vi.mocked(forestStandSearch.searchMatchingStands).mock.calls[0][2]).toEqual(['DB', 'BK', 'SW'])
+
+    fireEvent.click(screen.getByRole('button', { name: /Prowadź/ }))
+
+    await waitFor(() => expect(useAppStore.getState().navigationTargetSpotId).not.toBeNull())
+    const spot = await db.spots.get(useAppStore.getState().navigationTargetSpotId!)
+    expect(spot?.name).toBe('Buk 121 lat - Borowik szlachetny')
+    expect(useAppStore.getState().activeTab).toBe('mapa')
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it('"Gdzie szukać": gatunek bez drzew w atlasie dostaje wyjaśnienie zamiast przycisku', async () => {
+    vi.mocked(geolocation.getCurrentPosition).mockRejectedValue(new Error('brak GPS'))
+    render(<ForestAssistant open onOpenChange={vi.fn()} />)
+
+    fireEvent.change(screen.getByPlaceholderText(/Borowik szlachetny/), { target: { value: 'czubajka' } })
+    fireEvent.click(screen.getByText('Czubajka kania'))
+
+    expect(await screen.findByText(/nie wiąże tego gatunku z konkretnymi drzewami/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Szukaj drzewostanów/ })).not.toBeInTheDocument()
+  })
 })
+

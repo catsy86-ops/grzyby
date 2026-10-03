@@ -16,6 +16,7 @@ import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '../../components/ui/drawer'
 import { Input } from '../../components/ui/input'
+import { NearbyStandsSection } from './NearbyStandsSection'
 
 const species = ALL_SPECIES
 
@@ -29,8 +30,8 @@ interface ForestAssistantProps {
 // gatunku (Baza wiedzy), bieżące warunki pogodowe (ten sam algorytm co useMushroomOutlook, ale
 // jednorazowo - to narzędzie "sprawdzam z kanapy przed wyjściem", nie ciągłe śledzenie GPS),
 // podobne gatunki (LookalikesWarning) i własną historię - w których zapisanych grzybowiskach ten
-// gatunek już się znalazł (getSpeciesSpotHistory). Celowo NIE zgaduje "istotnych drzew" - to pole
-// nie istnieje w danych o gatunkach (Species) i wymagałoby nowej treści redakcyjnej, nie kodu.
+// gatunek już się znalazł (getSpeciesSpotHistory), a od Fazy 29 także "Gdzie szukać" - najbliższe
+// drzewostany z drzewami, które atlas wymienia w siedlisku gatunku (data/speciesTrees.ts).
 export function ForestAssistant({ open, onOpenChange }: ForestAssistantProps) {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Species | null>(null)
@@ -237,6 +238,8 @@ export function ForestAssistant({ open, onOpenChange }: ForestAssistantProps) {
               </div>
 
               <LookalikesWarning species={selected} allSpecies={species} />
+
+              <NearbyStandsSection key={selected.id} species={selected} onNavigate={() => onOpenChange(false)} />
 
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Twoje sprawdzone miejsca</p>
