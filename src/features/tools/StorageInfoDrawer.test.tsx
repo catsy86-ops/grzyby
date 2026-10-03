@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { StorageInfoDrawer } from './StorageInfoDrawer'
 import { Toaster } from '../../components/ui/sonner'
 import * as storageInfo from '../../utils/storageInfo'
+import * as persistentStorage from '../../utils/persistentStorage'
 
 function renderDrawer() {
   return render(
@@ -22,6 +23,11 @@ vi.mock('../../utils/storageInfo', async () => {
     clearCache: vi.fn(),
   }
 })
+
+vi.mock('../../utils/persistentStorage', () => ({
+  getPersistenceStatus: vi.fn(async () => 'unsupported'),
+  requestPersistentStorage: vi.fn(),
+}))
 
 describe('StorageInfoDrawer', () => {
   beforeEach(() => {
@@ -107,5 +113,31 @@ describe('StorageInfoDrawer', () => {
     renderDrawer()
 
     expect(await screen.findByText('1 plik')).toBeInTheDocument()
+  })
+
+  it('gdy dane nie są trwałe, pozwala poprosić o ochronę i pokazuje nowy stan', async () => {
+    vi.mocked(storageInfo.getCacheInfo).mockResolvedValue([])
+    vi.mocked(storageInfo.getStorageEstimate).mockResolvedValue(null)
+    vi.mocked(persistentStorage.getPersistenceStatus).mockResolvedValue('not-persisted')
+    vi.mocked(persistentStorage.requestPersistentStorage).mockResolvedValue('persisted')
+
+    renderDrawer()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Chroń moje dane' }))
+
+    expect(await screen.findByText(/Znaleziska i zdjęcia są chronione/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Chroń moje dane' })).not.toBeInTheDocument()
+  })
+
+  it('nie pokazuje sekcji trwałości, gdy przeglądarka nie wspiera Storage API', async () => {
+    vi.mocked(storageInfo.getCacheInfo).mockResolvedValue([])
+    vi.mocked(storageInfo.getStorageEstimate).mockResolvedValue(null)
+    vi.mocked(persistentStorage.getPersistenceStatus).mockResolvedValue('unsupported')
+
+    renderDrawer()
+
+    await screen.findByText('Brak zapisanych danych offline.')
+    expect(screen.queryByText(/Znaleziska i zdjęcia są chronione/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Chroń moje dane' })).not.toBeInTheDocument()
   })
 })

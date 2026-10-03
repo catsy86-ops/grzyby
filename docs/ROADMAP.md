@@ -21,11 +21,13 @@ jeszcze nie zrobione. Kolejność = priorytet.
 
 ### Etap 1 - Bezpieczeństwo danych i porządki (małe, warto od razu, jedna zmiana)
 
-- [ ] **`navigator.storage.persist()`** - w `src/` nie ma ani `persist()`, ani `persisted()`, a wszystkie
+- [x] **`navigator.storage.persist()`** - w `src/` nie ma ani `persist()`, ani `persisted()`, a wszystkie
       dane (znaleziska, zdjęcia, miejscówki) żyją wyłącznie w IndexedDB. Bez trwałego przechowywania Chrome
       może je usunąć przy braku miejsca, a Safari w zwykłej karcie (PWA niezainstalowana na ekranie głównym)
       kasuje dane po 7 dniach nieużywania. Do zrobienia: prośba o trwałość przy pierwszym znalezisku + stan
       ("chronione / mogą zostać usunięte") w "Pamięć i dane" (`StorageInfoDrawer.tsx`, `utils/storageInfo.ts`).
+      **Zrobione (2026-10-03):** `utils/persistentStorage.ts` - prośba po każdym zapisie znaleziska
+      (`AddFindingForm`, no-op gdy już trwałe), w "Pamięć i dane" stan + przycisk "Chroń moje dane".
 - [ ] **README nieaktualny** - nadal twierdzi, że "Model nie jest jeszcze dołączony" (model alpha jest w
       `public/models/` od Fazy 20), lista funkcji pochodzi z początków projektu.
 - [ ] **E2E w CI** - `.github/workflows/ci.yml` uruchamia tylko lint, vitest i build; 4 scenariusze

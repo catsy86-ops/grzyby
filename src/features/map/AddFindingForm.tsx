@@ -25,6 +25,7 @@ import { Input } from '../../components/ui/input'
 import { SporeBurst } from '../../components/SporeBurst'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { Textarea } from '../../components/ui/textarea'
+import { requestPersistentStorage } from '../../utils/persistentStorage'
 
 const NONE_SPECIES = '__none__'
 const NONE_SPOT = '__none__'
@@ -165,6 +166,9 @@ export function AddFindingForm({ initialPosition, initialPhoto, initialSpeciesId
         return findingId
       })
       if (initialPosition) void attachForestStand(savedFindingId, initialPosition[0], initialPosition[1])
+      // Pierwszy realny zapis danych użytkownika = moment, by poprosić przeglądarkę o trwałe
+      // przechowywanie (nie przy starcie - Firefox może pokazać pytanie, ma ono sens po akcji).
+      void requestPersistentStorage()
       // Potwierdzenie zapisu - dotąd formularz po prostu cicho się zamykał, bez żadnego
       // sygnału "udało się". Ten sam moment co w Dzienniku (pusty koszyk -> pierwszy wpis),
       // tylko odwrotnie - to jest "nagroda" za dodanie znaleziska w terenie.
