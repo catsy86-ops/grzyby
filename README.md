@@ -52,6 +52,9 @@ i [`docs/MODEL-TRAINING.md`](docs/MODEL-TRAINING.md).
 
 Historia i plan rozwoju aplikacji: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
+Krótki opis aplikacji, jej wyróżników i porównanie z innymi aplikacjami dla grzybiarzy:
+[`docs/O-APLIKACJI.md`](docs/O-APLIKACJI.md).
+
 ## ⚠️ Ważne zastrzeżenie
 
 Rozpoznawanie AI **nie jest profesjonalną weryfikacją**. Aplikacja zawsze wyświetla ostrzeżenie, by nie spożywać grzyba wyłącznie na podstawie wyniku — w razie wątpliwości należy skonsultować się z mikologiem lub punktem klasyfikacji grzybów (Sanepid).
